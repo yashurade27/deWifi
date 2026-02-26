@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Wifi, Eye, EyeOff, ArrowRight, ShieldCheck, Zap, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/context/AuthContext';
 
 const TESTIMONIAL = {
     quote: "I made ₹6,200 last month just by sharing my home broadband. Setup took 5 minutes.",
@@ -24,11 +25,24 @@ export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const { signin } = useAuth();
+    const navigate = useNavigate();
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO: connect to auth service
-        console.log({ email, password, rememberMe });
+        setError('');
+        setLoading(true);
+        try {
+            await signin({ email, password });
+            navigate('/');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Sign in failed.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -149,6 +163,12 @@ export default function Login() {
                     </div>
 
                     {/* Form */}
+                    {error && (
+                        <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-600 font-medium">
+                            {error}
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-5">
                         {/* Email */}
                         <div className="space-y-2">
@@ -217,10 +237,11 @@ export default function Login() {
                         {/* Submit */}
                         <Button
                             type="submit"
-                            className="w-full h-12 bg-[#0055FF] hover:bg-[#0044CC] text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 mt-2"
+                            disabled={loading}
+                            className="w-full h-12 bg-[#0055FF] hover:bg-[#0044CC] text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                            Sign in to deWifi
-                            <ArrowRight className="w-4 h-4 ml-2" />
+                            {loading ? 'Signing in…' : 'Sign in to deWifi'}
+                            {!loading && <ArrowRight className="w-4 h-4 ml-2" />}
                         </Button>
                     </form>
 
