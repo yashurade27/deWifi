@@ -4,6 +4,8 @@ import cors from "cors";
 import { MONGO_URI, PORT, CLIENT_URL } from "./config";
 import authRoutes from "./routes/auth";
 import spotRoutes from "./routes/spots";
+import ownerRoutes from "./routes/owner";
+import bookingRoutes from "./routes/bookings";
 
 const app = express();
 
@@ -30,8 +32,10 @@ app.use(express.json());
 app.get("/", (_req, res) => res.send("API running 🚀"));
 
 // Routes
-app.use("/api/auth",  authRoutes);
-app.use("/api/spots", spotRoutes);
+app.use("/api/auth",     authRoutes);
+app.use("/api/spots",    spotRoutes);
+app.use("/api/owner",    ownerRoutes);
+app.use("/api/bookings", bookingRoutes);
 
 // MongoDB connection
 mongoose

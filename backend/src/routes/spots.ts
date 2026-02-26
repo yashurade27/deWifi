@@ -42,7 +42,7 @@ router.get("/", async (req: Request, res: Response) => {
 
     const [spots, total] = await Promise.all([
       WifiSpot.find(filter)
-        .select("-ssid")              // never expose credentials in list view
+        .select("-ssid -wifiPassword -paymentSetup")  // never expose credentials in list view
         .sort(sort as string)
         .skip(skip)
         .limit(limitNum)
@@ -66,7 +66,9 @@ router.get("/", async (req: Request, res: Response) => {
 // ─── GET /api/spots/:id ────────────────────────────────────────────────────
 router.get("/:id", async (req: Request, res: Response) => {
   try {
-    const spot = await WifiSpot.findById(req.params.id).select("-ssid").lean();
+    const spot = await WifiSpot.findById(req.params.id)
+      .select("-ssid -wifiPassword -paymentSetup")
+      .lean();
 
     if (!spot) {
       res.status(404).json({ success: false, message: "Spot not found." });

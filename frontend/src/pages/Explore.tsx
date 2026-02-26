@@ -2,6 +2,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSpots } from '@/hooks/useSpots';
 import type { ApiSpot } from '@/hooks/useSpots';
 import { Navbar } from '@/components/layout/Navbar';
@@ -18,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleDot,
+  Activity,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { WifiSpot } from '@/data/dummySpots';
@@ -156,6 +158,7 @@ function SpotCard({
 // ─── Main Explore Page ────────────────────────────────────────────────────────
 export default function Explore() {
   const { spots, loading, error, refetch } = useSpots();
+  const navigate = useNavigate();
 
   const [selectedSpot, setSelectedSpot] = useState<ApiSpot | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -470,14 +473,29 @@ export default function Explore() {
                       )}
                     </div>
 
+                    {/* Monitoring Status */}
+                    <div className="mt-2 flex items-center gap-2 text-xs">
+                      <Activity size={12} className={spot.isActive ? 'text-green-500' : 'text-red-500'} />
+                      <span className={spot.isActive ? 'text-green-600' : 'text-red-600'}>
+                        {spot.isActive ? 'Available' : 'Offline'}
+                      </span>
+                    </div>
+
                     {/* CTA */}
                     <div className="mt-3 flex items-center justify-between">
                       <span className="text-lg font-black text-[#0055FF]">
                         ₹{spot.pricePerHour}
                         <span className="text-xs font-medium text-gray-400">/hr</span>
                       </span>
-                      <button className="text-xs font-semibold text-white bg-[#0055FF] hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors">
-                        Book Now →
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/book/${spot._id}`);
+                        }}
+                        disabled={!spot.isActive}
+                        className="text-xs font-semibold text-white bg-[#0055FF] hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {spot.isActive ? 'Book Now →' : 'Unavailable'}
                       </button>
                     </div>
                   </div>
