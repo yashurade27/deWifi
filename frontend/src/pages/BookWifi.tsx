@@ -10,7 +10,6 @@ import {
   Zap,
   Star,
   Users,
-  IndianRupee,
   Shield,
   ArrowLeft,
   CheckCircle,
@@ -83,18 +82,24 @@ export default function BookWifi() {
   const total = subtotal;
 
   const handleBooking = async () => {
-    if (!spot) return;
+    if (!spot || !user) return;
 
     setBooking(true);
     setError('');
 
     try {
-      // Create booking
+      // Step 1: Get Razorpay key
+      const keyRes = await apiFetch<{ key: string }>('/api/bookings/razorpay-key', {
+        token: token!,
+      });
+
+      // Step 2: Create booking and get Razorpay order
       const bookingRes = await apiFetch<{
         booking: {
           id: string;
           razorpayOrderId: string;
           amount: number;
+          currency: string;
         };
       }>('/api/bookings', {
         method: 'POST',
@@ -106,26 +111,60 @@ export default function BookWifi() {
         token: token!,
       });
 
-      // For demo, simulate payment verification
-      // In production, integrate with Razorpay checkout
-      const verifyRes = await apiFetch<{
-        booking: { id: string };
-      }>('/api/bookings/verify-payment', {
-        method: 'POST',
-        body: {
-          bookingId: bookingRes.booking.id,
-          razorpay_payment_id: `demo_pay_${Date.now()}`,
-          razorpay_signature: 'demo_signature',
-        },
-        token: token!,
-      });
+      const { booking: bookingData } = bookingRes;
 
-      setSuccess(true);
-      setBookingId(verifyRes.booking.id);
+      // Step 3: Initialize Razorpay checkout
+      const options = {
+        key: keyRes.key,
+        amount: bookingData.amount,
+        currency: bookingData.currency,
+        name: 'deWifi',
+        description: `WiFi Access - ${spot.name}`,
+        order_id: bookingData.razorpayOrderId,
+        handler: async (response: any) => {
+          try {
+            // Step 4: Verify payment on backend
+            const verifyRes = await apiFetch<{
+              booking: { id: string };
+            }>('/api/bookings/verify-payment', {
+              method: 'POST',
+              body: {
+                bookingId: bookingData.id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              },
+              token: token!,
+            });
+
+            setSuccess(true);
+            setBookingId(verifyRes.booking.id);
+          } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'Payment verification failed';
+            setError(message);
+            setBooking(false);
+          }
+        },
+        prefill: {
+          name: user.name,
+          email: user.email,
+        },
+        theme: {
+          color: '#2563eb',
+        },
+        modal: {
+          ondismiss: () => {
+            setBooking(false);
+            setError('Payment cancelled');
+          },
+        },
+      };
+
+      const razorpay = new (window as any).Razorpay(options);
+      razorpay.open();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Booking failed';
       setError(message);
-    } finally {
       setBooking(false);
     }
   };
