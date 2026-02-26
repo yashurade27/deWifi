@@ -1,21 +1,37 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import { JWT_SECRET, MONGO_URI, PORT, CLIENT_URL } from "./config";
+import { MONGO_URI, PORT, CLIENT_URL } from "./config";
 import authRoutes from "./routes/auth";
+import spotRoutes from "./routes/spots";
 
 const app = express();
 
-app.use(cors({ origin: CLIENT_URL, credentials: true }));
+// Allow the configured CLIENT_URL + any localhost port (handy when Vite picks a free port)
+const allowedOrigins = [
+  CLIENT_URL,
+  /^http:\/\/localhost:\d+$/,
+];
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true); // same-origin / curl / Postman
+      const ok = allowedOrigins.some((o) =>
+        typeof o === "string" ? o === origin : o.test(origin)
+      );
+      cb(ok ? null : new Error("CORS blocked"), ok);
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 
-// Test route
-app.get("/", (req, res) => {
-  res.send("API running 🚀");
-});
+// Health check
+app.get("/", (_req, res) => res.send("API running 🚀"));
 
-// Auth routes
-app.use("/api/auth", authRoutes);
+// Routes
+app.use("/api/auth",  authRoutes);
+app.use("/api/spots", spotRoutes);
 
 // MongoDB connection
 mongoose
