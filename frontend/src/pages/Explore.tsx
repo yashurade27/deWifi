@@ -20,6 +20,8 @@ import {
   ChevronRight,
   CircleDot,
   Activity,
+  AlertTriangle,
+  CheckCircle2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { WifiSpot } from '@/data/dummySpots';
@@ -66,6 +68,145 @@ const TAG_COLORS: Record<ApiSpot['tag'], string> = {
   Library: '#8b5cf6',
   CoWorking: '#0055FF',
 };
+
+// ─── Freshness helpers ────────────────────────────────────────────────────────
+function getMonitoringFreshness(spot: ApiSpot): 'verified' | 'stale' | 'unknown' {
+  if (!spot.monitoring?.lastPingAt) return 'unknown';
+  const minutesAgo = (Date.now() - new Date(spot.monitoring.lastPingAt).getTime()) / 60000;
+  if (minutesAgo <= 15) return 'verified';
+  if (minutesAgo <= 120) return 'stale';
+  return 'unknown';
+}
+
+function getLastPingLabel(lastPingAt: string | null): string {
+  if (!lastPingAt) return 'Never checked';
+  const minutesAgo = Math.round((Date.now() - new Date(lastPingAt).getTime()) / 60000);
+  if (minutesAgo < 1) return 'Just now';
+  if (minutesAgo < 60) return `${minutesAgo}m ago`;
+  const hoursAgo = Math.round(minutesAgo / 60);
+  if (hoursAgo < 24) return `${hoursAgo}h ago`;
+  return `${Math.round(hoursAgo / 24)}d ago`;
+}
+
+// ─── LiveStatusBadge (compact — for SpotCard footer) ─────────────────────────
+function LiveStatusBadge({ spot }: { spot: ApiSpot }) {
+  const freshness = getMonitoringFreshness(spot);
+  const isOnline = spot.monitoring?.isOnline ?? spot.isActive;
+  const uptime = spot.monitoring?.uptimePercent;
+
+  if (!spot.isActive) {
+    return (
+      <span className="flex items-center gap-1 text-xs text-red-500 font-medium">
+        <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+        Offline
+      </span>
+    );
+  }
+  if (freshness === 'verified' && isOnline) {
+    return (
+      <span className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        Live{uptime !== undefined ? ` \u00b7 ${uptime}%` : ''}
+      </span>
+    );
+  }
+  if (freshness === 'verified' && !isOnline) {
+    return (
+      <span className="flex items-center gap-1 text-xs text-red-500 font-medium">
+        <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+        Down
+      </span>
+    );
+  }
+  if (freshness === 'stale') {
+    return (
+      <span className="flex items-center gap-1 text-xs text-amber-600 font-medium">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+        {isOnline ? 'Unverified' : 'May be down'}
+      </span>
+    );
+  }
+  // unknown
+  return (
+    <span className="flex items-center gap-1 text-xs text-gray-400 font-medium">
+      <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+      Unverified
+    </span>
+  );
+}
+
+// ─── PopupHealthRow (rich — for map popup) ───────────────────────────────────
+function PopupHealthRow({ spot }: { spot: ApiSpot }) {
+  const freshness = getMonitoringFreshness(spot);
+  const isOnline = spot.monitoring?.isOnline ?? spot.isActive;
+  const uptime = spot.monitoring?.uptimePercent;
+  const latency = spot.monitoring?.latencyMs;
+  const lastPingLabel = getLastPingLabel(spot.monitoring?.lastPingAt ?? null);
+
+  const dotColors = {
+    verified: isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-red-500',
+    stale: 'bg-amber-400',
+    unknown: 'bg-gray-300',
+  };
+  const textColors = {
+    verified: isOnline ? 'text-emerald-700' : 'text-red-600',
+    stale: 'text-amber-700',
+    unknown: 'text-gray-500',
+  };
+  const statusText = {
+    verified: isOnline ? 'Live' : 'Offline',
+    stale: isOnline ? 'Unverified · may be up' : 'Unverified · may be down',
+    unknown: 'No ping data',
+  };
+
+  return (
+    <div className="mt-2.5 pt-2.5 border-t border-gray-100">
+      <div className="flex items-center justify-between">
+        <div className={`flex items-center gap-1.5 text-xs font-semibold ${textColors[freshness]}`}>
+          <span className={`w-2 h-2 rounded-full ${dotColors[freshness]}`} />
+          {statusText[freshness]}
+        </div>
+        <div className="flex items-center gap-2 text-[10px] text-gray-400">
+          {freshness === 'verified' ? (
+            <span className="flex items-center gap-0.5 text-emerald-600">
+              <CheckCircle2 size={9} />
+              {lastPingLabel}
+            </span>
+          ) : freshness === 'stale' ? (
+            <span className="flex items-center gap-0.5 text-amber-600">
+              <AlertTriangle size={9} />
+              {lastPingLabel}
+            </span>
+          ) : (
+            <span className="text-gray-400">Never verified</span>
+          )}
+        </div>
+      </div>
+      {(uptime !== undefined || latency) && (
+        <div className="mt-1 flex items-center gap-3 text-[10px] text-gray-500">
+          {uptime !== undefined && (
+            <span className="flex items-center gap-1">
+              <Activity size={9} className="text-green-500" />
+              {uptime}% uptime
+            </span>
+          )}
+          {latency !== null && latency !== undefined && latency > 0 && (
+            <span className="flex items-center gap-1">
+              <Zap size={9} className="text-blue-400" />
+              {latency}ms latency
+            </span>
+          )}
+          {freshness !== 'verified' && (
+            <span className="flex items-center gap-1 text-amber-600">
+              <AlertTriangle size={9} />
+              Verify before booking
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── Helper: fly to selected spot ────────────────────────────────────────────
 function FlyToSpot({ spot }: { spot: ApiSpot | null }) {
@@ -142,9 +283,7 @@ function SpotCard({
           {spot.availableFrom} – {spot.availableTo}
         </div>
         <div className="flex items-center gap-1.5">
-          {!spot.isActive && (
-            <span className="text-xs text-red-500 font-medium">Offline</span>
-          )}
+          <LiveStatusBadge spot={spot} />
           <span className="text-sm font-black text-[#0055FF]">
             ₹{spot.pricePerHour}
             <span className="text-xs font-medium text-gray-400">/hr</span>
@@ -473,13 +612,8 @@ export default function Explore() {
                       )}
                     </div>
 
-                    {/* Monitoring Status */}
-                    <div className="mt-2 flex items-center gap-2 text-xs">
-                      <Activity size={12} className={spot.isActive ? 'text-green-500' : 'text-red-500'} />
-                      <span className={spot.isActive ? 'text-green-600' : 'text-red-600'}>
-                        {spot.isActive ? 'Available' : 'Offline'}
-                      </span>
-                    </div>
+                    {/* Live status — freshness-aware */}
+                    <PopupHealthRow spot={spot} />
 
                     {/* CTA */}
                     <div className="mt-3 flex items-center justify-between">

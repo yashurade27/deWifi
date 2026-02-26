@@ -32,6 +32,7 @@ export interface ApiSpot {
     isOnline: boolean;
     uptimePercent: number;
     lastPingAt: string | null;
+    latencyMs?: number | null;  // from last ping entry
   };
   createdAt: string;
   updatedAt: string;

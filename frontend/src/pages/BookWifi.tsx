@@ -19,6 +19,9 @@ import {
   Check,
   ExternalLink,
   Key,
+  AlertTriangle,
+  RefreshCw,
+  CheckCircle2,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -41,8 +44,24 @@ interface SpotDetails {
   monitoring: {
     isOnline: boolean;
     uptimePercent: number;
+    lastPingAt?: string | null;
+    latencyMs?: number | null;
   };
   images: string[];
+}
+
+interface HealthData {
+  isActive: boolean;
+  isOnline: boolean;
+  uptimePercent: number;
+  lastPingAt: string | null;
+  latencyMs: number | null;
+  freshness: 'verified' | 'stale' | 'unknown';
+  freshnessLabel: string;
+  minutesAgoChecked: number | null;
+  currentUsers: number;
+  maxUsers: number;
+  recommendation: string;
 }
 
 export default function BookWifi() {
@@ -65,6 +84,36 @@ export default function BookWifi() {
   const [accessToken, setAccessToken] = useState('');
   const [accessTokenOTP, setAccessTokenOTP] = useState('');
   const [copied, setCopied] = useState<'token' | 'otp' | null>(null);
+
+  // Live health check
+  const [healthData, setHealthData] = useState<HealthData | null>(null);
+  const [healthLoading, setHealthLoading] = useState(false);
+  const [healthError, setHealthError] = useState<string | null>(null);
+  const [justVerified, setJustVerified] = useState(false);
+
+  const checkHealth = async () => {
+    if (!spotId || healthLoading) return;
+    setHealthLoading(true);
+    setHealthError(null);
+    setJustVerified(false);
+    try {
+      const res = await apiFetch<{ health: HealthData }>(`/api/spots/${spotId}/health`);
+      setHealthData(res.health);
+      setJustVerified(true);
+      // Clear the "just verified" tick after 3 seconds
+      setTimeout(() => setJustVerified(false), 3000);
+    } catch (err: unknown) {
+      setHealthError(err instanceof Error ? err.message : 'Health check failed');
+    } finally {
+      setHealthLoading(false);
+    }
+  };
+
+  // Auto-run health check when spot loads
+  useEffect(() => {
+    if (spot) checkHealth();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spot?._id]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -382,9 +431,70 @@ export default function BookWifi() {
                       {spot.address}, {spot.city}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`w-3 h-3 rounded-full ${spot.monitoring.isOnline ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                    <span className="text-sm text-gray-600">{spot.monitoring.isOnline ? 'Online' : 'Offline'}</span>
+                  {/* Live Status — freshness-aware */}
+                  <div className="flex flex-col items-end gap-1">
+                    {healthLoading ? (
+                      <span className="flex items-center gap-1.5 text-xs text-gray-400">
+                        <RefreshCw size={12} className="animate-spin" />
+                        Checking…
+                      </span>
+                    ) : healthData ? (
+                      <>
+                        <span
+                          className={`flex items-center gap-1.5 text-sm font-semibold ${
+                            healthData.freshness === 'verified' && healthData.isOnline
+                              ? 'text-emerald-600'
+                              : healthData.freshness === 'verified' && !healthData.isOnline
+                              ? 'text-red-600'
+                              : healthData.freshness === 'stale'
+                              ? 'text-amber-600'
+                              : 'text-gray-500'
+                          }`}
+                        >
+                          <span
+                            className={`w-2.5 h-2.5 rounded-full ${
+                              healthData.freshness === 'verified' && healthData.isOnline
+                                ? 'bg-emerald-500 animate-pulse'
+                                : healthData.freshness === 'verified' && !healthData.isOnline
+                                ? 'bg-red-500'
+                                : healthData.freshness === 'stale'
+                                ? 'bg-amber-400'
+                                : 'bg-gray-300'
+                            }`}
+                          />
+                          {healthData.freshness === 'verified'
+                            ? healthData.isOnline ? 'Live' : 'Offline'
+                            : healthData.freshness === 'stale'
+                            ? 'Unverified'
+                            : 'Unknown'}
+                        </span>
+                        <span className="text-[10px] text-gray-400">{healthData.freshnessLabel}</span>
+                      </>
+                    ) : (
+                      <span className="flex items-center gap-1.5 text-xs text-gray-400">
+                        <span className="w-2 h-2 rounded-full bg-gray-300" />
+                        {spot.monitoring.isOnline ? 'Online' : 'Offline'}
+                      </span>
+                    )}
+                    <button
+                      onClick={checkHealth}
+                      disabled={healthLoading}
+                      className={`mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                        justVerified
+                          ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                          : healthLoading
+                          ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
+                          : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-300 active:scale-95 cursor-pointer'
+                      }`}
+                    >
+                      {healthLoading ? (
+                        <><RefreshCw size={11} className="animate-spin" /> Checking…</>
+                      ) : justVerified ? (
+                        <><CheckCircle2 size={11} /> Verified! ✓</>
+                      ) : (
+                        <><RefreshCw size={11} /> Verify now</>
+                      )}
+                    </button>
                   </div>
                 </div>
 
@@ -410,6 +520,36 @@ export default function BookWifi() {
                     <p className="text-xs text-gray-500">Uptime</p>
                   </div>
                 </div>
+
+                {/* Health recommendation banner */}
+                {healthData && (
+                  <div
+                    className={`mt-4 p-3 rounded-lg text-sm flex items-start gap-2 ${
+                      healthData.freshness === 'verified' && healthData.isOnline
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
+                        : healthData.freshness === 'verified' && !healthData.isOnline
+                        ? 'bg-red-50 text-red-800 border border-red-100'
+                        : 'bg-amber-50 text-amber-800 border border-amber-100'
+                    }`}
+                  >
+                    {healthData.freshness === 'verified' && healthData.isOnline ? (
+                      <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-600" />
+                    ) : (
+                      <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+                    )}
+                    <div>
+                      <p className="font-medium">{healthData.recommendation}</p>
+                      {healthData.latencyMs !== null && healthData.latencyMs !== undefined && healthData.latencyMs > 0 && (
+                        <p className="text-xs mt-0.5 opacity-75">Last measured latency: {healthData.latencyMs}ms</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {healthError && (
+                  <div className="mt-4 p-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-500">
+                    Could not fetch live health data. Showing last known status.
+                  </div>
+                )}
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   {spot.amenities.map((amenity) => (
@@ -563,15 +703,38 @@ export default function BookWifi() {
                 </div>
               )}
 
-              {!spot.monitoring.isOnline && (
-                <div className="mb-4 p-3 bg-yellow-50 rounded-lg text-yellow-700 text-sm">
-                  This WiFi spot is currently offline. Booking may not be available.
-                </div>
-              )}
+              {/* Offline / stale warning */}
+              {(() => {
+                const definitelyOffline =
+                  healthData?.freshness === 'verified' && !healthData.isOnline;
+                const staleWarning =
+                  healthData?.freshness === 'stale' || healthData?.freshness === 'unknown';
+                const fallbackOffline = !healthData && !spot.monitoring.isOnline;
+
+                if (definitelyOffline || fallbackOffline) {
+                  return (
+                    <div className="mb-4 p-3 bg-red-50 rounded-lg flex items-start gap-2 text-red-700 text-sm">
+                      <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+                      <span>This WiFi spot is <strong>offline</strong>. Booking is disabled until the connection is restored.</span>
+                    </div>
+                  );
+                }
+                if (staleWarning) {
+                  return (
+                    <div className="mb-4 p-3 bg-amber-50 rounded-lg flex items-start gap-2 text-amber-700 text-sm">
+                      <AlertTriangle size={15} className="mt-0.5 shrink-0" />
+                      <span>Connection status hasn’t been verified recently. You can still book, but confirm connectivity on-site.</span>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
 
               <button
                 onClick={handleBooking}
-                disabled={booking || !spot.monitoring.isOnline || spot.currentUsers >= spot.maxUsers}
+                disabled={booking ||
+                  (healthData?.freshness === 'verified' ? !healthData.isOnline : !spot.monitoring.isOnline) ||
+                  spot.currentUsers >= spot.maxUsers}
                 className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {booking ? (
