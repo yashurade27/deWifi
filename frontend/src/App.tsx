@@ -8,6 +8,7 @@ import WifiSetup from './pages/WifiSetup';
 import BookWifi from './pages/BookWifi';
 import WifiSession from './pages/WifiSession';
 import UserDashboard from './pages/UserDashboard';
+import CaptivePortal from './pages/CaptivePortal';
 import { AuthProvider } from './context/AuthContext';
 import './index.css';
 
@@ -26,6 +27,9 @@ export function App() {
         <Route path="/owner/spots/:id/edit" element={<WifiSetup />} />
         <Route path="/book/:spotId" element={<BookWifi />} />
         <Route path="/session/:id" element={<WifiSession />} />
+        {/* Captive Portal - redirected to when connecting to WiFi */}
+        <Route path="/portal" element={<CaptivePortal />} />
+        <Route path="/captive" element={<CaptivePortal />} />
       </Routes>
     </BrowserRouter>
     </AuthProvider>
