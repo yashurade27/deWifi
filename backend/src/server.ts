@@ -1,22 +1,21 @@
 import express from "express";
 import mongoose from "mongoose";
-import dotenv from "dotenv";
 import cors from "cors";
-
-dotenv.config();
+import { JWT_SECRET, MONGO_URI, PORT, CLIENT_URL } from "./config";
+import authRoutes from "./routes/auth";
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: CLIENT_URL, credentials: true }));
 app.use(express.json());
-
-const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI as string;
 
 // Test route
 app.get("/", (req, res) => {
   res.send("API running 🚀");
 });
+
+// Auth routes
+app.use("/api/auth", authRoutes);
 
 // MongoDB connection
 mongoose

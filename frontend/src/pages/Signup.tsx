@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Wifi, Eye, EyeOff, ArrowRight, ShieldCheck, User, Zap, CheckCircle2,
@@ -7,6 +7,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/context/AuthContext';
 
 type Role = 'user' | 'owner';
 
@@ -59,16 +60,29 @@ export default function Signup() {
     const [showConfirm, setShowConfirm] = useState(false);
     const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirm: '' });
     const [agreed, setAgreed] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const { signup } = useAuth();
+    const navigate = useNavigate();
 
     const handleChange = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm(prev => ({ ...prev, [field]: e.target.value }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (form.password !== form.confirm) return;
-        // TODO: connect to auth service
-        console.log({ ...form, role, agreed });
+        setError('');
+        setLoading(true);
+        try {
+            await signup({ name: form.name, email: form.email, phone: form.phone, password: form.password, role });
+            navigate('/');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Sign up failed.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const panel = LEFT_PANEL_CONTENT[role];
@@ -217,6 +231,12 @@ export default function Signup() {
                     </div>
 
                     {/* Form */}
+                    {error && (
+                        <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-600 font-medium">
+                            {error}
+                        </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Name */}
                         <div className="space-y-1.5">
@@ -342,11 +362,11 @@ export default function Signup() {
                         {/* Submit */}
                         <Button
                             type="submit"
-                            disabled={!agreed || (form.confirm !== '' && form.password !== form.confirm)}
+                            disabled={!agreed || loading || (form.confirm !== '' && form.password !== form.confirm)}
                             className="w-full h-12 bg-[#0055FF] hover:bg-[#0044CC] text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Create free account
-                            <ArrowRight className="w-4 h-4 ml-2" />
+                            {loading ? 'Creating account…' : 'Create free account'}
+                            {!loading && <ArrowRight className="w-4 h-4 ml-2" />}
                         </Button>
                     </form>
 

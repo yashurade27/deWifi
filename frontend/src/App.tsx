@@ -2,10 +2,12 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import { AuthProvider } from './context/AuthContext';
 import './index.css';
 
 export function App() {
   return (
+    <AuthProvider>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -15,6 +17,7 @@ export function App() {
         <Route path="/explore" element={<div className="p-10">Explore Page</div>} />
       </Routes>
     </BrowserRouter>
+    </AuthProvider>
   );
 }
 
