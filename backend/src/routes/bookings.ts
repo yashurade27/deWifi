@@ -2,7 +2,8 @@ import { Router, Response } from "express";
 import Booking from "../models/Booking";
 import WifiSpot from "../models/WifiSpot";
 import { protect, AuthRequest } from "../middleware/auth";
-import crypto from "crypto";
+import { createRazorpayOrder, verifyRazorpaySignature, createRefund } from "../utils/razorpay";
+import { RAZORPAY_KEY_ID } from "../config";
 
 const router = Router();
 
@@ -11,6 +12,16 @@ router.use(protect);
 
 // Platform fee percentage
 const PLATFORM_FEE_PERCENT = 2;
+
+// ─── GET /api/bookings/razorpay-key - Get Razorpay key for frontend ────────
+router.get("/razorpay-key", async (req: AuthRequest, res: Response) => {
+  try {
+    res.json({ success: true, key: RAZORPAY_KEY_ID });
+  } catch (err) {
+    console.error("[GET /bookings/razorpay-key]", err);
+    res.status(500).json({ success: false, message: "Internal server error." });
+  }
+});
 
 // ─── POST /api/bookings - Create a new booking ─────────────────────────────
 router.post("/", async (req: AuthRequest, res: Response) => {
@@ -62,8 +73,13 @@ router.post("/", async (req: AuthRequest, res: Response) => {
     const bookingStartTime = startTime ? new Date(startTime) : new Date();
     const bookingEndTime = new Date(bookingStartTime.getTime() + durationHours * 60 * 60 * 1000);
 
-    // Generate a mock Razorpay order ID (in production, integrate with actual Razorpay)
-    const razorpayOrderId = `order_${crypto.randomBytes(12).toString("hex")}`;
+    // Create Razorpay order (receipt must be <= 40 chars)
+    const receipt = `bk_${Date.now()}_${String(req.userId).slice(-8)}`;
+    const razorpayOrder = await createRazorpayOrder(totalAmount, receipt, {
+      userId: String(req.userId),
+      wifiSpotId: String(spot._id),
+      durationHours: String(durationHours),
+    });
 
     const booking = await Booking.create({
       user: req.userId,
@@ -79,16 +95,16 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       totalAmount,
       status: "pending",
       paymentStatus: "pending",
-      razorpayOrderId,
+      razorpayOrderId: razorpayOrder.id,
     });
 
     res.status(201).json({
       success: true,
       booking: {
         id: (booking as any)._id,
-        razorpayOrderId,
-        amount: totalAmount * 100, // Razorpay expects amount in paise
-        currency: "INR",
+        razorpayOrderId: razorpayOrder.id,
+        amount: razorpayOrder.amount, // Amount in paise
+        currency: razorpayOrder.currency,
         spot: {
           id: spot._id,
           name: spot.name,
@@ -119,7 +135,12 @@ router.post("/verify-payment", async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    const { bookingId, razorpay_payment_id, razorpay_signature } = req.body;
+    const { bookingId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      res.status(400).json({ success: false, message: "Missing payment details." });
+      return;
+    }
 
     const booking = await Booking.findOne({
       _id: bookingId,
@@ -136,10 +157,21 @@ router.post("/verify-payment", async (req: AuthRequest, res: Response) => {
       return;
     }
 
-    // In production, verify signature with Razorpay secret
-    // For demo, we'll accept any payment details
-    booking.razorpayPaymentId = razorpay_payment_id || `pay_${crypto.randomBytes(12).toString("hex")}`;
-    booking.razorpaySignature = razorpay_signature || "demo_signature";
+    // Verify Razorpay signature
+    const isValidSignature = verifyRazorpaySignature(
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature
+    );
+
+    if (!isValidSignature) {
+      res.status(400).json({ success: false, message: "Invalid payment signature." });
+      return;
+    }
+
+    // Payment verified, update booking
+    booking.razorpayPaymentId = razorpay_payment_id;
+    booking.razorpaySignature = razorpay_signature;
     booking.paymentStatus = "paid";
     booking.status = "confirmed";
     booking.wifiCredentialsRevealed = true;
@@ -357,10 +389,24 @@ router.post("/:id/cancel", async (req: AuthRequest, res: Response) => {
     }
 
     booking.status = "cancelled";
-    if (booking.paymentStatus === "paid") {
-      // In production, initiate refund via Razorpay
-      booking.paymentStatus = "refunded";
+    
+    // Process refund if payment was made
+    if (booking.paymentStatus === "paid" && booking.razorpayPaymentId) {
+      try {
+        await createRefund(booking.razorpayPaymentId);
+        booking.paymentStatus = "refunded";
+      } catch (refundError) {
+        console.error("Refund failed:", refundError);
+        // Save the cancellation but note the refund failed
+        await booking.save();
+        res.status(500).json({ 
+          success: false, 
+          message: "Booking cancelled but refund processing failed. Please contact support." 
+        });
+        return;
+      }
     }
+    
     await booking.save();
 
     // Decrement current users if booking was active
