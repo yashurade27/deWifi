@@ -17,6 +17,7 @@ export interface ApiSpot {
   pricePerHour: number;
   speedMbps: number;
   maxUsers: number;
+  currentUsers: number;
   rating: number;
   reviewCount: number;
   isActive: boolean;
@@ -26,6 +27,12 @@ export interface ApiSpot {
   availableTo: string;
   images: string[];
   tag: 'Home' | 'Cafe' | 'Office' | 'Library' | 'CoWorking';
+  // Monitoring data
+  monitoring?: {
+    isOnline: boolean;
+    uptimePercent: number;
+    lastPingAt: string | null;
+  };
   createdAt: string;
   updatedAt: string;
 }

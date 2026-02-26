@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Wifi, LogOut, Settings } from 'lucide-react';
+import { Menu, X, Wifi, LogOut, Settings, LayoutDashboard, Plus } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const NAV_LINKS = [
@@ -105,6 +105,35 @@ export const Navbar = () => {
                                             <span className="inline-block mt-2 px-2 py-1 text-xs font-bold rounded-full bg-blue-50 text-[#0055FF] capitalize">{user.role}</span>
                                         </div>
                                         <div className="py-2">
+                                            {user.role === 'owner' ? (
+                                                <>
+                                                    <Link
+                                                        to="/owner/dashboard"
+                                                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                        onClick={() => setDropdownOpen(false)}
+                                                    >
+                                                        <LayoutDashboard className="w-4 h-4" />
+                                                        Owner Dashboard
+                                                    </Link>
+                                                    <Link
+                                                        to="/owner/spots/new"
+                                                        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                        onClick={() => setDropdownOpen(false)}
+                                                    >
+                                                        <Plus className="w-4 h-4" />
+                                                        Add WiFi Spot
+                                                    </Link>
+                                                </>
+                                            ) : (
+                                                <Link
+                                                    to="/dashboard"
+                                                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                                                    onClick={() => setDropdownOpen(false)}
+                                                >
+                                                    <LayoutDashboard className="w-4 h-4" />
+                                                    My Bookings
+                                                </Link>
+                                            )}
                                             <Link
                                                 to="/profile"
                                                 className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
