@@ -16,6 +16,7 @@ import {
   Shield,
   ArrowLeft,
   RefreshCw,
+  ExternalLink,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import QRCode from 'react-qr-code';
@@ -368,12 +369,23 @@ export default function WifiSession() {
 
                   {/* Device limit info */}
                   {booking.maxDevices && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
                       <span className="text-blue-500">📱</span>
                       <span>
                         Devices: {booking.activeDeviceCount || 0} / {booking.maxDevices} connected
                       </span>
                     </div>
+                  )}
+
+                  {/* Open Captive Portal Button */}
+                  {booking.accessToken && (
+                    <button
+                      onClick={() => navigate(`/portal?spot=${spot._id}&token=${booking.accessToken}`)}
+                      className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <ExternalLink size={18} />
+                      Open Captive Portal
+                    </button>
                   )}
                 </div>
               )}

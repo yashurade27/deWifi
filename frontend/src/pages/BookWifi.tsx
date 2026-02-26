@@ -15,6 +15,10 @@ import {
   CheckCircle,
   CreditCard,
   Activity,
+  Copy,
+  Check,
+  ExternalLink,
+  Key,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -56,6 +60,11 @@ export default function BookWifi() {
   const [duration, setDuration] = useState(1);
   const [startTime, setStartTime] = useState<'now' | 'scheduled'>('now');
   const [scheduledTime, setScheduledTime] = useState('');
+
+  // Post-payment credentials
+  const [accessToken, setAccessToken] = useState('');
+  const [accessTokenOTP, setAccessTokenOTP] = useState('');
+  const [copied, setCopied] = useState<'token' | 'otp' | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -125,7 +134,7 @@ export default function BookWifi() {
           try {
             // Step 4: Verify payment on backend
             const verifyRes = await apiFetch<{
-              booking: { id: string };
+              booking: { id: string; accessToken?: string; accessTokenOTP?: string };
             }>('/api/bookings/verify-payment', {
               method: 'POST',
               body: {
@@ -139,6 +148,8 @@ export default function BookWifi() {
 
             setSuccess(true);
             setBookingId(verifyRes.booking.id);
+            if (verifyRes.booking.accessToken) setAccessToken(verifyRes.booking.accessToken);
+            if (verifyRes.booking.accessTokenOTP) setAccessTokenOTP(verifyRes.booking.accessTokenOTP);
           } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Payment verification failed';
             setError(message);
@@ -199,6 +210,16 @@ export default function BookWifi() {
     );
   }
 
+  const copyToClipboard = async (text: string, type: 'token' | 'otp') => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(type);
+      setTimeout(() => setCopied(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   // Success State
   if (success) {
     return (
@@ -208,43 +229,120 @@ export default function BookWifi() {
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-2xl shadow-xl p-8 text-center"
+            className="bg-white rounded-2xl shadow-xl p-8"
           >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: 'spring' }}
-              className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
-            >
-              <CheckCircle className="w-10 h-10 text-green-600" />
-            </motion.div>
-            
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
-            <p className="text-gray-600 mb-6">
-              Your WiFi access has been activated. You can now connect to the network.
-            </p>
+            {/* Header */}
+            <div className="text-center mb-6">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: 'spring' }}
+                className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
+                <CheckCircle className="w-10 h-10 text-green-600" />
+              </motion.div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Payment Successful!</h1>
+              <p className="text-gray-500 text-sm">Your WiFi access has been activated.</p>
+            </div>
 
-            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+            {/* Booking Summary */}
+            <div className="bg-gray-50 rounded-xl p-4 mb-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-500">WiFi Spot</span>
-                <span className="font-medium">{spot.name}</span>
+                <span className="text-gray-500 text-sm">WiFi Spot</span>
+                <span className="font-medium text-sm">{spot.name}</span>
               </div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-500">Duration</span>
-                <span className="font-medium">{duration} hour{duration > 1 ? 's' : ''}</span>
+                <span className="text-gray-500 text-sm">Duration</span>
+                <span className="font-medium text-sm">{duration} hour{duration > 1 ? 's' : ''}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-500">Amount Paid</span>
+                <span className="text-gray-500 text-sm">Amount Paid</span>
                 <span className="font-bold text-green-600">₹{total}</span>
               </div>
             </div>
 
+            {/* Generated Credentials */}
+            {(accessToken || accessTokenOTP) && (
+              <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                <div className="flex items-center gap-2 mb-3">
+                  <Key size={16} className="text-blue-600" />
+                  <h3 className="font-semibold text-blue-900 text-sm">Your WiFi Access Credentials</h3>
+                </div>
+                <p className="text-xs text-blue-600 mb-3">
+                  Use these to authenticate on the captive portal after connecting to the WiFi network.
+                </p>
+
+                {accessToken && (
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-blue-700 mb-1">Access Token</label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 px-3 py-2 bg-white border border-blue-200 rounded-lg font-mono text-base tracking-widest text-center text-blue-800">
+                        {accessToken}
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(accessToken, 'token')}
+                        className={`p-2 rounded-lg transition-colors ${
+                          copied === 'token'
+                            ? 'bg-green-100 text-green-600'
+                            : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                        }`}
+                      >
+                        {copied === 'token' ? <Check size={16} /> : <Copy size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {accessTokenOTP && (
+                  <div>
+                    <label className="block text-xs font-medium text-blue-700 mb-1">OTP (Alternative)</label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 px-3 py-2 bg-white border border-blue-200 rounded-lg font-mono text-xl tracking-[0.4em] text-center text-green-700">
+                        {accessTokenOTP}
+                      </div>
+                      <button
+                        onClick={() => copyToClipboard(accessTokenOTP, 'otp')}
+                        className={`p-2 rounded-lg transition-colors ${
+                          copied === 'otp'
+                            ? 'bg-green-100 text-green-600'
+                            : 'bg-green-100 text-green-600 hover:bg-green-200'
+                        }`}
+                      >
+                        {copied === 'otp' ? <Check size={16} /> : <Copy size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Step-by-step instructions */}
+            <div className="mb-5 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+              <h4 className="text-xs font-semibold text-yellow-800 mb-2">How to connect:</h4>
+              <ol className="text-xs text-yellow-700 space-y-1 list-decimal list-inside">
+                <li>Connect your device to the <strong>{spot.name}</strong> WiFi network</li>
+                <li>A captive portal page will open automatically (or click below)</li>
+                <li>Enter your Access Token or OTP to authenticate</li>
+                <li>Enjoy your internet access!</li>
+              </ol>
+            </div>
+
+            {/* Primary CTA - Open Captive Portal */}
+            <button
+              onClick={() => navigate(`/portal?spot=${spot._id}&token=${accessToken}`)}
+              className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 mb-3"
+            >
+              <ExternalLink size={20} />
+              Open Captive Portal
+            </button>
+
+            {/* Secondary - View Session */}
             <button
               onClick={() => navigate(`/session/${bookingId}`)}
-              className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
             >
               <Wifi size={20} />
-              Access WiFi Now
+              View Session Details
             </button>
           </motion.div>
         </div>

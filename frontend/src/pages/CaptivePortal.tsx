@@ -45,6 +45,8 @@ interface AuthResult {
 export default function CaptivePortal() {
   const [searchParams] = useSearchParams();
   const spotId = searchParams.get('spot') || searchParams.get('spotId') || '';
+  const tokenParam = (searchParams.get('token') || '').toUpperCase();
+  const otpParam = searchParams.get('otp') || '';
   
   const [spot, setSpot] = useState<SpotInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,9 +55,9 @@ export default function CaptivePortal() {
   const [error, setError] = useState('');
   const [errorCode, setErrorCode] = useState('');
   
-  const [accessToken, setAccessToken] = useState('');
-  const [otp, setOtp] = useState('');
-  const [useOTP, setUseOTP] = useState(false);
+  const [accessToken, setAccessToken] = useState(tokenParam);
+  const [otp, setOtp] = useState(otpParam);
+  const [useOTP, setUseOTP] = useState(!tokenParam && !!otpParam);
   
   const [sessionToken, setSessionToken] = useState('');
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
@@ -71,6 +73,56 @@ export default function CaptivePortal() {
       detectCaptivePortal();
     }
   }, [spotId]);
+
+  // Auto-authenticate when token is passed via URL and spot info is ready
+  useEffect(() => {
+    if (!tokenParam || !spot || authenticated || authenticating) return;
+
+    const autoAuth = async () => {
+      setAuthenticating(true);
+      setError('');
+      setErrorCode('');
+      try {
+        const res = await fetch(`${API_BASE}/api/captive/authenticate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ spotId, accessToken: tokenParam }),
+        });
+        const data: AuthResult = await res.json();
+
+        if (data.success && data.sessionToken) {
+          setSessionToken(data.sessionToken);
+          setAuthenticated(true);
+          setExpiresAt(new Date(data.expiresAt!));
+          if (data.deviceInfo) {
+            setDeviceInfo({
+              type: data.deviceInfo.type,
+              active: data.deviceInfo.activeDevices,
+              max: data.deviceInfo.maxDevices,
+            });
+          }
+          localStorage.setItem(`captive_session_${spotId}`, data.sessionToken);
+        } else {
+          setError(data.message);
+          setErrorCode(data.errorCode || '');
+          if (data.errorCode === 'DEVICE_LIMIT_REACHED') {
+            setDeviceInfo({
+              type: '',
+              active: data.activeDevices || 0,
+              max: data.maxDevices || 1,
+            });
+          }
+        }
+      } catch {
+        setError('Auto-authentication failed. Please enter your token manually.');
+      } finally {
+        setAuthenticating(false);
+      }
+    };
+
+    autoAuth();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spot]);
 
   // Countdown timer
   useEffect(() => {
