@@ -64,8 +64,8 @@ export const Navbar = () => {
                     >
                         Log in
                     </Link>
-                    <Button className="bg-[#0055FF] text-white hover:bg-[#0044CC] rounded-full px-6 h-10 text-sm font-bold shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300">
-                        Get Started
+                    <Button asChild className="bg-[#0055FF] text-white hover:bg-[#0044CC] rounded-full px-6 h-10 text-sm font-bold shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300">
+                        <Link to="/signup">Get Started</Link>
                     </Button>
                 </div>
 
@@ -120,8 +120,8 @@ export const Navbar = () => {
                             <Link to="/login" className="px-4 py-3 text-base font-semibold text-gray-700 hover:text-[#0055FF]" onClick={() => setIsOpen(false)}>
                                 Log in
                             </Link>
-                            <Button className="bg-[#0055FF] w-full rounded-full py-5 text-base font-bold mt-1 shadow-md shadow-blue-500/25">
-                                Get Started
+                            <Button asChild className="bg-[#0055FF] w-full rounded-full py-5 text-base font-bold mt-1 shadow-md shadow-blue-500/25">
+                                <Link to="/signup" onClick={() => setIsOpen(false)}>Get Started</Link>
                             </Button>
                         </div>
                     </motion.div>
