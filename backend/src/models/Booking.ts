@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema, Types } from "mongoose";
+import crypto from "crypto";
 
 export interface IBooking extends Document {
   user: Types.ObjectId;
@@ -29,12 +30,22 @@ export interface IBooking extends Document {
   // WiFi Access (revealed after payment)
   wifiCredentialsRevealed: boolean;
   
+  // Captive Portal Access Token
+  accessToken: string;           // Unique token for portal authentication
+  accessTokenOTP: string;        // 6-digit OTP alternative
+  maxDevices: number;            // Max concurrent devices allowed
+  activeDeviceCount: number;     // Current active device count
+  
   // Tracking
   usageStartedAt: Date | null;
   usageEndedAt: Date | null;
   
   createdAt: Date;
   updatedAt: Date;
+  
+  // Methods
+  generateAccessToken(): void;
+  isAccessValid(): boolean;
 }
 
 const BookingSchema = new Schema<IBooking>(
@@ -72,11 +83,37 @@ const BookingSchema = new Schema<IBooking>(
     
     wifiCredentialsRevealed: { type: Boolean, default: false },
     
+    // Captive Portal fields
+    accessToken:      { type: String, default: "", index: true },
+    accessTokenOTP:   { type: String, default: "" },
+    maxDevices:       { type: Number, default: 1 },
+    activeDeviceCount: { type: Number, default: 0 },
+    
     usageStartedAt: { type: Date, default: null },
     usageEndedAt:   { type: Date, default: null },
   },
   { timestamps: true }
 );
+
+// Generate access token for captive portal
+BookingSchema.methods.generateAccessToken = function () {
+  // Generate a unique 16-character access token
+  this.accessToken = crypto.randomBytes(8).toString("hex").toUpperCase();
+  // Generate 6-digit OTP
+  this.accessTokenOTP = Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// Check if access is still valid
+BookingSchema.methods.isAccessValid = function (): boolean {
+  const now = new Date();
+  return (
+    this.paymentStatus === "paid" &&
+    this.status !== "cancelled" &&
+    this.status !== "completed" &&
+    now >= this.startTime &&
+    now <= this.endTime
+  );
+};
 
 // Indexes for efficient queries
 BookingSchema.index({ startTime: 1, endTime: 1 });

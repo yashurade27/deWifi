@@ -175,6 +175,9 @@ router.post("/verify-payment", async (req: AuthRequest, res: Response) => {
     booking.paymentStatus = "paid";
     booking.status = "confirmed";
     booking.wifiCredentialsRevealed = true;
+    
+    // Generate captive portal access token
+    booking.generateAccessToken();
 
     await booking.save();
 
@@ -194,6 +197,9 @@ router.post("/verify-payment", async (req: AuthRequest, res: Response) => {
         status: booking.status,
         startTime: booking.startTime,
         endTime: booking.endTime,
+        accessToken: booking.accessToken,
+        accessTokenOTP: booking.accessTokenOTP,
+        maxDevices: booking.maxDevices,
       },
       wifiCredentials: spot ? {
         ssid: spot.ssid,

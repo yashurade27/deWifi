@@ -28,6 +28,10 @@ interface BookingDetails {
   status: string;
   paymentStatus: string;
   totalAmount: number;
+  accessToken?: string;
+  accessTokenOTP?: string;
+  maxDevices?: number;
+  activeDeviceCount?: number;
   wifiSpot: {
     _id: string;
     name: string;
@@ -44,16 +48,17 @@ interface BookingDetails {
 }
 
 export default function WifiSession() {
-  const { user, token, isAuthenticated } = useAuth();
+  const { token, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
 
   const [booking, setBooking] = useState<BookingDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [copied, setCopied] = useState<'ssid' | 'password' | null>(null);
+  const [copied, setCopied] = useState<'ssid' | 'password' | 'token' | 'otp' | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [showQR, setShowQR] = useState(false);
+  const [showPortalInfo, setShowPortalInfo] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -106,7 +111,7 @@ export default function WifiSession() {
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }, []);
 
-  const copyToClipboard = async (text: string, type: 'ssid' | 'password') => {
+  const copyToClipboard = async (text: string, type: 'ssid' | 'password' | 'token' | 'otp') => {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(type);
@@ -282,6 +287,96 @@ export default function WifiSession() {
                 <Shield size={16} />
                 Security: {spot.securityType}
               </div>
+
+              {/* Captive Portal Access Token */}
+              {(booking.accessToken || booking.accessTokenOTP) && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                      <Shield size={18} className="text-blue-600" />
+                      Captive Portal Authentication
+                    </h3>
+                    <button
+                      onClick={() => setShowPortalInfo(!showPortalInfo)}
+                      className="text-sm text-blue-600 hover:text-blue-700"
+                    >
+                      {showPortalInfo ? 'Hide Info' : 'What is this?'}
+                    </button>
+                  </div>
+
+                  {showPortalInfo && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800"
+                    >
+                      <p className="mb-2">
+                        <strong>This WiFi uses a Captive Portal for security:</strong>
+                      </p>
+                      <ul className="list-disc list-inside space-y-1 text-blue-700">
+                        <li>Connect to the WiFi network (open/no password)</li>
+                        <li>A login page will appear automatically</li>
+                        <li>Enter your Access Token or OTP to authenticate</li>
+                        <li>Only devices with valid tokens can access the internet</li>
+                      </ul>
+                    </motion.div>
+                  )}
+
+                  {/* Access Token */}
+                  {booking.accessToken && (
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-500 mb-1">
+                        Access Token
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg font-mono text-lg tracking-wider text-center text-blue-800">
+                          {booking.accessToken}
+                        </div>
+                        <button
+                          onClick={() => copyToClipboard(booking.accessToken!, 'token')}
+                          className={`p-3 rounded-lg transition-colors ${
+                            copied === 'token' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                          }`}
+                        >
+                          {copied === 'token' ? <Check size={20} /> : <Copy size={20} />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* OTP */}
+                  {booking.accessTokenOTP && (
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-500 mb-1">
+                        OTP Code (Alternative)
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 px-4 py-3 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg font-mono text-2xl tracking-[0.3em] text-center text-green-800">
+                          {booking.accessTokenOTP}
+                        </div>
+                        <button
+                          onClick={() => copyToClipboard(booking.accessTokenOTP!, 'otp')}
+                          className={`p-3 rounded-lg transition-colors ${
+                            copied === 'otp' ? 'bg-green-100 text-green-600' : 'bg-green-100 text-green-600 hover:bg-green-200'
+                          }`}
+                        >
+                          {copied === 'otp' ? <Check size={20} /> : <Copy size={20} />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Device limit info */}
+                  {booking.maxDevices && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <span className="text-blue-500">📱</span>
+                      <span>
+                        Devices: {booking.activeDeviceCount || 0} / {booking.maxDevices} connected
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

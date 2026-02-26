@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth";
 import spotRoutes from "./routes/spots";
 import ownerRoutes from "./routes/owner";
 import bookingRoutes from "./routes/bookings";
+import captiveRoutes from "./routes/captive";
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use("/api/auth",     authRoutes);
 app.use("/api/spots",    spotRoutes);
 app.use("/api/owner",    ownerRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/captive",  captiveRoutes);
 
 // MongoDB connection
 mongoose

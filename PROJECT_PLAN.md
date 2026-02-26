@@ -1400,6 +1400,157 @@ Failure: 4111 1111 1111 1234
 
 ---
 
+## Captive Portal Security System
+
+### Overview
+The platform uses a **Captive Portal** system to ensure secure WiFi access control. Instead of sharing WiFi passwords directly, users authenticate through a portal using booking tokens.
+
+### How It Works
+
+#### For WiFi Owners:
+1. WiFi network should be set to **Open** (no password) or use a shared network
+2. Router must redirect unauthenticated users to the captive portal URL
+3. Only users with valid booking tokens can access the internet
+
+#### For Users:
+1. **Pay & Get Token**: After payment, users receive a unique Access Token and OTP
+2. **Connect to WiFi**: User connects to the open WiFi network
+3. **Portal Appears**: Login portal automatically appears (or navigate to `/portal?spot=<spotId>`)
+4. **Authenticate**: Enter Access Token or OTP to authenticate
+5. **Internet Access**: Once authenticated, internet access is granted until booking expires
+
+### Authentication Methods
+
+| Method | Format | Example |
+|--------|--------|---------|
+| Access Token | 16-character alphanumeric | `A3B5C7D9E1F2G4H6` |
+| OTP | 6-digit numeric | `847293` |
+
+### Security Features
+
+1. **Token-Based Access**: No WiFi password exposed to users
+2. **Device Limit**: Each booking has a maximum device limit (default: 1)
+3. **Real-Time Validation**: Sessions validated every 30 seconds
+4. **Auto-Expiry**: Access automatically revoked when booking ends
+5. **Device Tracking**: Monitor and revoke individual device sessions
+6. **Friend Prevention**: Others connecting to WiFi need valid tokens
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/captive/detect/:spotId` | Check if device needs authentication |
+| POST | `/api/captive/authenticate` | Authenticate with token/OTP |
+| POST | `/api/captive/validate` | Validate ongoing session (heartbeat) |
+| POST | `/api/captive/disconnect` | Disconnect device |
+| GET | `/api/captive/status/:spotId` | Get portal status |
+| GET | `/api/captive/sessions/:bookingId` | View connected devices |
+| POST | `/api/captive/revoke` | Revoke device access |
+| POST | `/api/captive/cleanup` | Clean expired sessions (cron job) |
+
+### Frontend Routes
+
+| Route | Description |
+|-------|-------------|
+| `/portal?spot=<spotId>` | Captive Portal login page |
+| `/session/:bookingId` | User's session page with tokens |
+
+### Database Schema Updates
+
+#### Booking Model (Additional Fields)
+```javascript
+{
+  accessToken: String,        // 16-char token for portal auth
+  accessTokenOTP: String,     // 6-digit OTP alternative
+  maxDevices: Number,         // Max concurrent devices (default: 1)
+  activeDeviceCount: Number,  // Current connected devices
+}
+```
+
+#### CaptiveSession Model (New)
+```javascript
+{
+  booking: ObjectId,          // Reference to Booking
+  wifiSpot: ObjectId,         // Reference to WifiSpot
+  user: ObjectId,             // Reference to User
+  deviceId: String,           // Unique device identifier
+  deviceType: String,         // mobile/tablet/laptop
+  deviceName: String,         // User agent string
+  ipAddress: String,          // IP address
+  isActive: Boolean,          // Session status
+  sessionToken: String,       // Session auth token
+  expiresAt: Date,            // Auto-expire datetime
+  lastActivityAt: Date,       // Last activity timestamp
+}
+```
+
+### Router Configuration (For WiFi Owners)
+
+To enable captive portal on your router:
+
+1. **Set up captive portal redirect** on your router to:
+   ```
+   http://your-domain.com/portal?spot=<your-spot-id>
+   ```
+
+2. **Configure DNS/HTTP intercept** to redirect all unauthenticated traffic
+
+3. **Whitelist** the captive portal domain for authentication requests
+
+### Example Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                      CAPTIVE PORTAL FLOW                             │
+└─────────────────────────────────────────────────────────────────────┘
+
+User A (Paying Customer)          Friend B (No Booking)
+         │                                  │
+         ▼                                  │
+   ┌─────────────┐                          │
+   │  Book WiFi  │                          │
+   │   & Pay     │                          │
+   └─────────────┘                          │
+         │                                  │
+         ▼                                  │
+   ┌─────────────┐                          │
+   │ Get Token:  │                          │
+   │ A3B5C7D9... │                          │
+   └─────────────┘                          │
+         │                                  │
+         ▼                                  ▼
+   ┌─────────────────────────────────────────────┐
+   │         Connect to WiFi Network              │
+   │              "CafeSpot"                      │
+   └─────────────────────────────────────────────┘
+         │                                  │
+         ▼                                  ▼
+   ┌─────────────────────────────────────────────┐
+   │        Captive Portal Appears                │
+   │      "Enter Access Token or OTP"             │
+   └─────────────────────────────────────────────┘
+         │                                  │
+         ▼                                  ▼
+   ┌─────────────┐                   ┌─────────────┐
+   │Enter Token: │                   │ No Token    │
+   │ A3B5C7D9... │                   │  ❌ DENIED  │
+   └─────────────┘                   └─────────────┘
+         │
+         ▼
+   ┌─────────────┐
+   │ ✅ GRANTED  │
+   │ Internet OK │
+   └─────────────┘
+         │
+         ▼ (After booking time ends)
+   ┌─────────────┐
+   │ ⏰ EXPIRED  │
+   │ Access Cut  │
+   └─────────────┘
+```
+
+---
+
 ## Future Enhancements (Post-MVP)
 
 1. **Mobile App** - React Native version
