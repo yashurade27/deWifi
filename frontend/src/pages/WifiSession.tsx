@@ -17,6 +17,8 @@ import {
   ArrowLeft,
   RefreshCw,
   ExternalLink,
+  Star,
+  Send,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import QRCode from 'react-qr-code';
@@ -61,6 +63,15 @@ export default function WifiSession() {
   const [showQR, setShowQR] = useState(false);
   const [showPortalInfo, setShowPortalInfo] = useState(false);
 
+  // Review state
+  const [hasReviewed, setHasReviewed] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
@@ -80,11 +91,50 @@ export default function WifiSession() {
       const endTime = new Date(res.booking.endTime).getTime();
       const now = Date.now();
       setTimeRemaining(Math.max(0, Math.floor((endTime - now) / 1000)));
+
+      // Check if already reviewed
+      try {
+        const reviewRes = await apiFetch<{ hasReview: boolean }>(`/api/reviews/booking/${id}`, {
+          token: token!,
+        });
+        setHasReviewed(reviewRes.hasReview);
+      } catch {
+        // Ignore review check errors
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to load booking';
       setError(message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const submitReview = async () => {
+    if (!booking || reviewRating === 0) return;
+    
+    setReviewSubmitting(true);
+    setReviewError('');
+    try {
+      await apiFetch('/api/reviews', {
+        method: 'POST',
+        token: token!,
+        body: {
+          bookingId: booking._id,
+          overallRating: reviewRating,
+          speedRating: reviewRating,
+          reliabilityRating: reviewRating,
+          valueRating: reviewRating,
+          comment: reviewComment,
+        },
+      });
+      setReviewSuccess(true);
+      setHasReviewed(true);
+    } catch (err: unknown) {
+      console.error('Review submission failed:', err);
+      const message = err instanceof Error ? err.message : 'Failed to submit review. Please try again.';
+      setReviewError(message);
+    } finally {
+      setReviewSubmitting(false);
     }
   };
 
@@ -446,6 +496,118 @@ export default function WifiSession() {
                   Book Again
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Review Section - available for any paid booking */}
+          {booking.paymentStatus === 'paid' && !hasReviewed && !reviewSuccess && (
+            <div className="px-6 pb-6">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                  <Star className="text-yellow-500" size={20} />
+                  Rate Your Experience
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  How was your WiFi experience at {spot.name}?
+                </p>
+
+                {/* Error Message */}
+                {reviewError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                    {reviewError}
+                  </div>
+                )}
+
+                {/* Star Rating */}
+                <div className="flex items-center gap-1 mb-4">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setReviewRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      className="p-1 transition-transform hover:scale-110"
+                    >
+                      <Star
+                        size={32}
+                        className={`transition-colors ${
+                          star <= (hoverRating || reviewRating)
+                            ? 'fill-yellow-400 text-yellow-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                  <span className="ml-3 text-sm text-gray-600">
+                    {reviewRating > 0 && (
+                      <>
+                        {reviewRating === 1 && 'Poor'}
+                        {reviewRating === 2 && 'Fair'}
+                        {reviewRating === 3 && 'Good'}
+                        {reviewRating === 4 && 'Very Good'}
+                        {reviewRating === 5 && 'Excellent'}
+                      </>
+                    )}
+                  </span>
+                </div>
+
+                {/* Comment */}
+                <textarea
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  placeholder="Share your experience (optional)..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  rows={3}
+                  maxLength={500}
+                />
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-xs text-gray-400">{reviewComment.length}/500</span>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  onClick={submitReview}
+                  disabled={reviewRating === 0 || reviewSubmitting}
+                  className={`mt-4 w-full py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all ${
+                    reviewRating > 0 && !reviewSubmitting
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  {reviewSubmitting ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  ) : (
+                    <>
+                      <Send size={18} />
+                      Submit Review
+                    </>
+                  )}
+                </button>
+              </motion.div>
+            </div>
+          )}
+
+          {/* Review Success Message */}
+          {reviewSuccess && (
+            <div className="px-6 pb-6">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3"
+              >
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                  <Check className="text-green-600" size={20} />
+                </div>
+                <div>
+                  <p className="font-medium text-green-800">Thanks for your review!</p>
+                  <p className="text-sm text-green-600">Your feedback helps others find great WiFi spots.</p>
+                </div>
+              </motion.div>
             </div>
           )}
 
