@@ -301,11 +301,12 @@ function BookingRow({
   const navigate = useNavigate();
   const isActive = booking.status === 'active' || booking.status === 'confirmed';
   const isPaid = booking.paymentStatus === 'paid';
+  const isExpired = isPaid && new Date(booking.endTime) < new Date();
 
   return (
     <div 
-      className={`p-4 hover:bg-gray-50 ${isPaid && isActive ? 'cursor-pointer' : ''}`}
-      onClick={() => isPaid && isActive && navigate(`/session/${booking._id}`)}
+      className={`p-4 hover:bg-gray-50 ${isPaid ? 'cursor-pointer' : ''}`}
+      onClick={() => isPaid && navigate(`/session/${booking._id}`)}
     >
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex-1 min-w-0">
@@ -337,6 +338,18 @@ function BookingRow({
             </span>
             <ChevronRight className="text-gray-400" size={20} />
           </div>
+        )}
+        
+        {isPaid && isExpired && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/session/${booking._id}`);
+            }}
+            className="px-3 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+          >
+            Leave Review
+          </button>
         )}
       </div>
     </div>

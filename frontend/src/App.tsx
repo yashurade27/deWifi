@@ -9,6 +9,7 @@ import BookWifi from './pages/BookWifi';
 import WifiSession from './pages/WifiSession';
 import UserDashboard from './pages/UserDashboard';
 import CaptivePortal from './pages/CaptivePortal';
+import SpotDetails from './pages/SpotDetails';
 import { AuthProvider } from './context/AuthContext';
 import './index.css';
 
@@ -21,6 +22,7 @@ export function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/explore" element={<Explore />} />
+        <Route path="/spots/:id" element={<SpotDetails />} />
         <Route path="/dashboard" element={<UserDashboard />} />
         <Route path="/owner/dashboard" element={<OwnerDashboard />} />
         <Route path="/owner/spots/new" element={<WifiSetup />} />
