@@ -5,7 +5,6 @@ import { apiFetch } from '@/lib/api';
 import { 
   Wifi, 
   Plus, 
-  Settings, 
   TrendingUp, 
   Users, 
   Star, 
@@ -15,9 +14,14 @@ import {
   Trash2,
   Eye,
   EyeOff,
-  Clock,
   MapPin,
-  IndianRupee
+  IndianRupee,
+  Copy,
+  Check,
+  Terminal,
+  Shield,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
@@ -173,6 +177,9 @@ export default function OwnerDashboard() {
           </div>
         )}
 
+        {/* Gateway Setup Guide */}
+        {spots.length > 0 && <GatewaySetup spots={spots} />}
+
         {/* WiFi Spots Grid */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
           <div className="p-4 border-b border-gray-200">
@@ -230,6 +237,14 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
 
 function SpotRow({ spot, onToggle, onDelete }: { spot: WifiSpot; onToggle: () => void; onDelete: () => void }) {
   const navigate = useNavigate();
+  const [copiedId, setCopiedId] = useState(false);
+
+  const copySpotId = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await navigator.clipboard.writeText(spot._id);
+    setCopiedId(true);
+    setTimeout(() => setCopiedId(false), 2000);
+  };
   
   return (
     <div className="p-4 hover:bg-gray-50 transition-colors">
@@ -264,6 +279,14 @@ function SpotRow({ spot, onToggle, onDelete }: { spot: WifiSpot; onToggle: () =>
               <Users size={14} />
               {spot.currentUsers}/{spot.maxUsers} users
             </span>
+            <button
+              onClick={copySpotId}
+              className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors text-xs font-mono"
+              title="Copy Spot ID for Gateway"
+            >
+              {copiedId ? <Check size={12} /> : <Copy size={12} />}
+              {copiedId ? 'Copied!' : `ID: ${spot._id.slice(-8)}`}
+            </button>
           </div>
         </div>
 
@@ -314,6 +337,170 @@ function SpotRow({ spot, onToggle, onDelete }: { spot: WifiSpot; onToggle: () =>
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function GatewaySetup({ spots }: { spots: WifiSpot[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const [copiedSpotId, setCopiedSpotId] = useState('');
+  const [copiedCmd, setCopiedCmd] = useState('');
+
+  const copyText = async (text: string, type: 'spot' | 'cmd', spotId?: string) => {
+    await navigator.clipboard.writeText(text);
+    if (type === 'spot') {
+      setCopiedSpotId(spotId || '');
+      setTimeout(() => setCopiedSpotId(''), 2000);
+    } else {
+      setCopiedCmd(text);
+      setTimeout(() => setCopiedCmd(''), 2000);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-linear-to-br from-indigo-50 to-blue-50 rounded-xl shadow-sm border border-indigo-200 mb-8 overflow-hidden"
+    >
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full p-4 flex items-center justify-between hover:bg-white/30 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-indigo-100 rounded-lg">
+            <Shield className="text-indigo-600" size={20} />
+          </div>
+          <div className="text-left">
+            <h2 className="text-lg font-semibold text-gray-900">Captive Portal Gateway</h2>
+            <p className="text-sm text-gray-600">
+              Set up the local gateway to control WiFi access on your hotspot
+            </p>
+          </div>
+        </div>
+        {expanded ? <ChevronUp size={20} className="text-gray-500" /> : <ChevronDown size={20} className="text-gray-500" />}
+      </button>
+
+      {expanded && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          className="px-4 pb-6"
+        >
+          {/* Quick Start Steps */}
+          <div className="bg-white rounded-xl p-6 mb-4">
+            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Terminal size={18} className="text-indigo-600" />
+              Quick Start Guide
+            </h3>
+
+            <div className="space-y-4">
+              <Step number={1} title="Enable Windows Mobile Hotspot">
+                <p className="text-sm text-gray-600">
+                  Go to <strong>Settings → Network & Internet → Mobile Hotspot</strong> and toggle it ON.
+                  Set security to <strong>Open (no password)</strong> for captive portal mode.
+                </p>
+              </Step>
+
+              <Step number={2} title="Install Gateway Dependencies">
+                <CodeBlock
+                  code="cd gateway && npm install"
+                  copied={copiedCmd === 'cd gateway && npm install'}
+                  onCopy={() => copyText('cd gateway && npm install', 'cmd')}
+                />
+              </Step>
+
+              <Step number={3} title="Start the Gateway (Run as Admin)">
+                <p className="text-sm text-gray-600 mb-2">
+                  Pick your spot and run the gateway:
+                </p>
+                {spots.map((spot) => (
+                  <div key={spot._id} className="mb-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Wifi size={14} className="text-blue-500" />
+                      <span className="text-sm font-medium text-gray-700">{spot.name}</span>
+                    </div>
+                    <CodeBlock
+                      code={`node gateway.js --spot ${spot._id}`}
+                      copied={copiedCmd === `node gateway.js --spot ${spot._id}`}
+                      onCopy={() => copyText(`node gateway.js --spot ${spot._id}`, 'cmd')}
+                    />
+                  </div>
+                ))}
+              </Step>
+
+              <Step number={4} title="(Optional) Start DNS Redirect">
+                <p className="text-sm text-gray-600 mb-2">
+                  Makes the portal appear automatically when users connect:
+                </p>
+                <CodeBlock
+                  code="node dns-redirect.js"
+                  copied={copiedCmd === 'node dns-redirect.js'}
+                  onCopy={() => copyText('node dns-redirect.js', 'cmd')}
+                />
+              </Step>
+
+              <Step number={5} title="Users Connect!">
+                <p className="text-sm text-gray-600">
+                  Users connect to your hotspot → portal appears → they enter their Access Token
+                  (received after booking & paying) → internet access granted until booking expires.
+                </p>
+              </Step>
+            </div>
+          </div>
+
+          {/* Spot IDs Quick Copy */}
+          <div className="bg-white rounded-xl p-4">
+            <h4 className="font-medium text-gray-900 mb-3">Your Spot IDs</h4>
+            <div className="space-y-2">
+              {spots.map((spot) => (
+                <div key={spot._id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Wifi size={14} className={spot.isActive ? 'text-green-500' : 'text-gray-400'} />
+                    <span className="text-sm font-medium text-gray-700 truncate">{spot.name}</span>
+                  </div>
+                  <button
+                    onClick={() => copyText(spot._id, 'spot', spot._id)}
+                    className="flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-md hover:bg-indigo-100 transition-colors text-xs font-mono whitespace-nowrap"
+                  >
+                    {copiedSpotId === spot._id ? <Check size={12} /> : <Copy size={12} />}
+                    {copiedSpotId === spot._id ? 'Copied!' : spot._id}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </motion.div>
+  );
+}
+
+function Step({ number, title, children }: { number: number; title: string; children: React.ReactNode }) {
+  return (
+    <div className="flex gap-3">
+      <div className="shrink-0 w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold">
+        {number}
+      </div>
+      <div className="flex-1">
+        <h4 className="font-medium text-gray-900 text-sm mb-1">{title}</h4>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function CodeBlock({ code, copied, onCopy }: { code: string; copied: boolean; onCopy: () => void }) {
+  return (
+    <div className="flex items-center gap-2 bg-gray-900 rounded-lg px-3 py-2">
+      <code className="flex-1 text-sm text-green-400 font-mono">{code}</code>
+      <button
+        onClick={onCopy}
+        className="p-1 text-gray-400 hover:text-white transition-colors shrink-0"
+        title="Copy command"
+      >
+        {copied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+      </button>
     </div>
   );
 }

@@ -61,7 +61,6 @@ export default function WifiSession() {
   const [copied, setCopied] = useState<'ssid' | 'password' | 'token' | 'otp' | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [showQR, setShowQR] = useState(false);
-  const [showPortalInfo, setShowPortalInfo] = useState(false);
 
   // Review state
   const [hasReviewed, setHasReviewed] = useState(false);
@@ -269,109 +268,33 @@ export default function WifiSession() {
             </div>
           </div>
 
-          {/* WiFi Credentials */}
+          {/* Connection Instructions */}
           {isActive && (
             <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">WiFi Credentials</h2>
-                <button
-                  onClick={() => setShowQR(!showQR)}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200"
-                >
-                  <QrCode size={16} />
-                  {showQR ? 'Hide QR' : 'Show QR'}
-                </button>
-              </div>
+              {/* Captive Portal Access — this is the PRIMARY connection method */}
+              {(booking.accessToken || booking.accessTokenOTP) ? (
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <Shield size={20} className="text-blue-600" />
+                    How to Connect
+                  </h2>
 
-              {/* QR Code */}
-              {showQR && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="flex justify-center mb-6 p-4 bg-white border-2 border-dashed border-gray-200 rounded-xl"
-                >
-                  <div className="text-center">
-                    <QRCode value={generateWifiQR()} size={180} />
-                    <p className="text-sm text-gray-500 mt-3">Scan with your phone's camera to connect</p>
+                  {/* Step-by-step instructions */}
+                  <div className="mb-5 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <h4 className="text-xs font-semibold text-amber-800 mb-2">Follow these steps:</h4>
+                    <ol className="text-sm text-amber-700 space-y-2 list-decimal list-inside">
+                      <li>
+                        Go to your phone's <strong>WiFi Settings</strong> and connect to the
+                        owner's <strong>Mobile Hotspot</strong> network
+                        <span className="block text-xs text-amber-600 ml-5 mt-0.5">
+                          (This is NOT the home WiFi — it's the hotspot shared by the owner's laptop)
+                        </span>
+                      </li>
+                      <li>A captive portal page will open automatically, or tap the button below</li>
+                      <li>Enter your <strong>Access Token</strong> or <strong>OTP</strong> on the portal page</li>
+                      <li>Once authenticated, you'll have internet access!</li>
+                    </ol>
                   </div>
-                </motion.div>
-              )}
-
-              {/* SSID */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-500 mb-1">Network Name (SSID)</label>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 px-4 py-3 bg-gray-50 rounded-lg font-mono text-lg">
-                    {spot.ssid}
-                  </div>
-                  <button
-                    onClick={() => copyToClipboard(spot.ssid, 'ssid')}
-                    className={`p-3 rounded-lg transition-colors ${
-                      copied === 'ssid' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    {copied === 'ssid' ? <Check size={20} /> : <Copy size={20} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Password */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-500 mb-1">Password</label>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 px-4 py-3 bg-gray-50 rounded-lg font-mono text-lg">
-                    {spot.wifiPassword}
-                  </div>
-                  <button
-                    onClick={() => copyToClipboard(spot.wifiPassword, 'password')}
-                    className={`p-3 rounded-lg transition-colors ${
-                      copied === 'password' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    {copied === 'password' ? <Check size={20} /> : <Copy size={20} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Security Type */}
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Shield size={16} />
-                Security: {spot.securityType}
-              </div>
-
-              {/* Captive Portal Access Token */}
-              {(booking.accessToken || booking.accessTokenOTP) && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                      <Shield size={18} className="text-blue-600" />
-                      Captive Portal Authentication
-                    </h3>
-                    <button
-                      onClick={() => setShowPortalInfo(!showPortalInfo)}
-                      className="text-sm text-blue-600 hover:text-blue-700"
-                    >
-                      {showPortalInfo ? 'Hide Info' : 'What is this?'}
-                    </button>
-                  </div>
-
-                  {showPortalInfo && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800"
-                    >
-                      <p className="mb-2">
-                        <strong>This WiFi uses a Captive Portal for security:</strong>
-                      </p>
-                      <ul className="list-disc list-inside space-y-1 text-blue-700">
-                        <li>Connect to the WiFi network (open/no password)</li>
-                        <li>A login page will appear automatically</li>
-                        <li>Enter your Access Token or OTP to authenticate</li>
-                        <li>Only devices with valid tokens can access the internet</li>
-                      </ul>
-                    </motion.div>
-                  )}
 
                   {/* Access Token */}
                   {booking.accessToken && (
@@ -437,6 +360,66 @@ export default function WifiSession() {
                       Open Captive Portal
                     </button>
                   )}
+                </div>
+              ) : (
+                /* Fallback: show direct WiFi credentials only if NO captive portal token */
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900">WiFi Credentials</h2>
+                    <button
+                      onClick={() => setShowQR(!showQR)}
+                      className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200"
+                    >
+                      <QrCode size={16} />
+                      {showQR ? 'Hide QR' : 'Show QR'}
+                    </button>
+                  </div>
+
+                  {showQR && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="flex justify-center mb-6 p-4 bg-white border-2 border-dashed border-gray-200 rounded-xl"
+                    >
+                      <div className="text-center">
+                        <QRCode value={generateWifiQR()} size={180} />
+                        <p className="text-sm text-gray-500 mt-3">Scan with your phone's camera to connect</p>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Network Name (SSID)</label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 px-4 py-3 bg-gray-50 rounded-lg font-mono text-lg">{spot.ssid}</div>
+                      <button
+                        onClick={() => copyToClipboard(spot.ssid, 'ssid')}
+                        className={`p-3 rounded-lg transition-colors ${
+                          copied === 'ssid' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {copied === 'ssid' ? <Check size={20} /> : <Copy size={20} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Password</label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 px-4 py-3 bg-gray-50 rounded-lg font-mono text-lg">{spot.wifiPassword}</div>
+                      <button
+                        onClick={() => copyToClipboard(spot.wifiPassword, 'password')}
+                        className={`p-3 rounded-lg transition-colors ${
+                          copied === 'password' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {copied === 'password' ? <Check size={20} /> : <Copy size={20} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Shield size={16} />
+                    Security: {spot.securityType}
+                  </div>
                 </div>
               )}
             </div>

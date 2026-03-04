@@ -1,4 +1,7 @@
-export const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
+// When VITE_API_URL is not set, use an empty string so all /api calls are
+// relative to the current host — Vite dev server proxies them to localhost:3000.
+// This lets a single ngrok tunnel serve both the UI and the API.
+export const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
 interface ApiOptions {
   method?: string;
@@ -11,6 +14,9 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    // Required to bypass ngrok's free-tier browser-warning interstitial
+    // Without this, ngrok returns an HTML warning page instead of JSON
+    "ngrok-skip-browser-warning": "true",
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 

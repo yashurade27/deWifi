@@ -85,6 +85,38 @@ export default function BookWifi() {
   const [accessTokenOTP, setAccessTokenOTP] = useState('');
   const [copied, setCopied] = useState<'token' | 'otp' | null>(null);
 
+  // ── Restore payment state that was persisted before a network-switch reload ──
+  // Key is per-spot so multiple bookings don't clash.
+  const STORAGE_KEY = `dewifi_payment_${spotId}`;
+
+  useEffect(() => {
+    if (!spotId) return;
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return;
+      const data = JSON.parse(saved) as {
+        bookingId: string;
+        accessToken: string;
+        accessTokenOTP: string;
+        duration: number;
+        savedAt: number;
+      };
+      // Only restore if saved within the last 6 hours
+      if (Date.now() - data.savedAt > 6 * 60 * 60 * 1000) {
+        localStorage.removeItem(STORAGE_KEY);
+        return;
+      }
+      setSuccess(true);
+      setBookingId(data.bookingId);
+      setAccessToken(data.accessToken);
+      setAccessTokenOTP(data.accessTokenOTP);
+      setDuration(data.duration);
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spotId]);
+
   // Live health check
   const [healthData, setHealthData] = useState<HealthData | null>(null);
   const [healthLoading, setHealthLoading] = useState(false);
@@ -195,10 +227,25 @@ export default function BookWifi() {
               token: token!,
             });
 
+            const newBookingId = verifyRes.booking.id;
+            const newToken = verifyRes.booking.accessToken || '';
+            const newOTP = verifyRes.booking.accessTokenOTP || '';
+
+            // Persist immediately so a network-switch page reload doesn't lose creds
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                bookingId: newBookingId,
+                accessToken: newToken,
+                accessTokenOTP: newOTP,
+                duration,
+                savedAt: Date.now(),
+              }));
+            } catch { /* storage full — ignore */ }
+
             setSuccess(true);
-            setBookingId(verifyRes.booking.id);
-            if (verifyRes.booking.accessToken) setAccessToken(verifyRes.booking.accessToken);
-            if (verifyRes.booking.accessTokenOTP) setAccessTokenOTP(verifyRes.booking.accessTokenOTP);
+            setBookingId(newBookingId);
+            if (newToken) setAccessToken(newToken);
+            if (newOTP) setAccessTokenOTP(newOTP);
           } catch (err: unknown) {
             const message = err instanceof Error ? err.message : 'Payment verification failed';
             setError(message);
@@ -272,7 +319,7 @@ export default function BookWifi() {
   // Success State
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100">
+      <div className="min-h-screen bg-linear-to-br from-green-50 to-emerald-100">
         <Navbar />
         <div className="max-w-lg mx-auto px-4 py-16">
           <motion.div
@@ -367,27 +414,58 @@ export default function BookWifi() {
 
             {/* Step-by-step instructions */}
             <div className="mb-5 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-              <h4 className="text-xs font-semibold text-yellow-800 mb-2">How to connect:</h4>
-              <ol className="text-xs text-yellow-700 space-y-1 list-decimal list-inside">
-                <li>Connect your device to the <strong>{spot.name}</strong> WiFi network</li>
-                <li>A captive portal page will open automatically (or click below)</li>
-                <li>Enter your Access Token or OTP to authenticate</li>
-                <li>Enjoy your internet access!</li>
+              <h4 className="text-xs font-semibold text-yellow-800 mb-3">How to connect:</h4>
+              <ol className="text-xs text-yellow-700 space-y-3 list-none">
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 w-5 h-5 bg-yellow-400 text-white rounded-full flex items-center justify-center font-bold text-[11px]">1</span>
+                  <span>
+                    Go to your phone's <strong>WiFi Settings</strong> and connect to the owner's{' '}
+                    <strong>Mobile Hotspot</strong> network.
+                    <span className="block text-[10px] text-yellow-600 mt-0.5">
+                      (The hotspot shared from the owner's laptop — NOT your home WiFi)
+                    </span>
+                  </span>
+                </li>
+                <li className="flex items-start gap-2 p-2 bg-yellow-100 border border-yellow-300 rounded-lg">
+                  <span className="shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-[11px]">2</span>
+                  <span className="font-semibold text-yellow-900">
+                    ⚠️ You MUST be connected to the hotspot before clicking "Open Captive Portal" below.
+                    Opening the portal while on another network will not activate your internet access.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 w-5 h-5 bg-yellow-400 text-white rounded-full flex items-center justify-center font-bold text-[11px]">3</span>
+                  <span>
+                    A captive portal page will open automatically, or tap the button below.
+                    Your credentials will be pre-filled.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="shrink-0 w-5 h-5 bg-yellow-400 text-white rounded-full flex items-center justify-center font-bold text-[11px]">4</span>
+                  <span>Tap <strong>Connect to WiFi</strong> and enjoy your session!</span>
+                </li>
               </ol>
             </div>
 
             {/* Primary CTA - Open Captive Portal */}
             <button
-              onClick={() => navigate(`/portal?spot=${spot._id}&token=${accessToken}`)}
+              onClick={() => {
+                // Keep creds in storage — portal page needs them.
+                // Clear only after the session is confirmed active.
+                navigate(`/portal?spot=${spot._id}&token=${accessToken}`);
+              }}
               className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 mb-3"
             >
               <ExternalLink size={20} />
-              Open Captive Portal
+              Open Captive Portal (connect to hotspot first!)
             </button>
 
             {/* Secondary - View Session */}
             <button
-              onClick={() => navigate(`/session/${bookingId}`)}
+              onClick={() => {
+                localStorage.removeItem(STORAGE_KEY);
+                navigate(`/session/${bookingId}`);
+              }}
               className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
             >
               <Wifi size={20} />
@@ -733,7 +811,7 @@ export default function BookWifi() {
               <button
                 onClick={handleBooking}
                 disabled={booking ||
-                  (healthData?.freshness === 'verified' ? !healthData.isOnline : !spot.monitoring.isOnline) ||
+                  (healthData?.freshness === 'verified' && !healthData.isOnline) ||
                   spot.currentUsers >= spot.maxUsers}
                 className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >

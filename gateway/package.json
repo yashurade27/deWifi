@@ -1,0 +1,15 @@
+{
+  "name": "dewifi-gateway",
+  "version": "1.0.0",
+  "description": "Local gateway server for deWifi captive portal - runs on owner's laptop",
+  "main": "gateway.js",
+  "scripts": {
+    "start": "node gateway.js",
+    "setup": "node setup-hotspot.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "http-proxy": "^1.18.1",
+    "node-fetch": "^2.7.0"
+  }
+}

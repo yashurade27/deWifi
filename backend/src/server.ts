@@ -15,6 +15,10 @@ const app = express();
 const allowedOrigins = [
   CLIENT_URL,
   /^http:\/\/localhost:\d+$/,
+  /^http:\/\/192\.168\.\d+\.\d+(:\d+)?$/,    // Private LAN (hotspot & WiFi)
+  /^http:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/,      // Private LAN (10.x.x.x)
+  /^http:\/\/172\.(1[6-9]|2\d|3[01])\.\d+\.\d+(:\d+)?$/,  // Private LAN (172.16-31)
+  /^https?:\/\/.*\.ngrok(-free)?\.(app|dev|io)$/,  // ngrok tunnels (.app / .dev / .io)
 ];
 app.use(
   cors({
