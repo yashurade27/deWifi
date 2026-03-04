@@ -10,6 +10,7 @@ import WifiSession from './pages/WifiSession';
 import UserDashboard from './pages/UserDashboard';
 import CaptivePortal from './pages/CaptivePortal';
 import SpotDetails from './pages/SpotDetails';
+import HowItWorksPage from './pages/HowItWorksPage';
 import { AuthProvider } from './context/AuthContext';
 import './index.css';
 
@@ -22,6 +23,7 @@ export function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/explore" element={<Explore />} />
+        <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/spots/:id" element={<SpotDetails />} />
         <Route path="/dashboard" element={<UserDashboard />} />
         <Route path="/owner/dashboard" element={<OwnerDashboard />} />
