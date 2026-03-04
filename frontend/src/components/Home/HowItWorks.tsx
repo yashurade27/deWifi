@@ -86,9 +86,9 @@ export const HowItWorks = ({ standalone = false }: { standalone?: boolean }) => 
     const STEPS = activeTab === 'user' ? USER_STEPS : OWNER_STEPS;
 
     return (
-        <section className={`py-24 bg-black text-white relative overflow-hidden ${standalone ? 'min-h-screen pt-32' : ''}`}>
+        <section className={`py-24 bg-white dark:bg-black text-gray-900 dark:text-white relative overflow-hidden ${standalone ? 'min-h-screen pt-32' : ''}`}>
             {/* Subtle grid background */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] pointer-events-none" />
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] pointer-events-none" />
 
             <div className="container max-w-7xl mx-auto px-6 md:px-8 relative z-10">
                 {/* Header */}
@@ -101,7 +101,7 @@ export const HowItWorks = ({ standalone = false }: { standalone?: boolean }) => 
                 >
                     <span className="text-[#66FF00] font-bold tracking-wider uppercase text-xs mb-4 block">Process</span>
                     <h2 className="text-4xl md:text-5xl lg:text-6xl font-black mb-5 tracking-tight">How it works</h2>
-                    <p className="text-lg text-gray-400 leading-relaxed">
+                    <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
                         {isAuthenticated && user
                             ? `Step-by-step guide for ${user.role === 'owner' ? 'WiFi owners' : 'WiFi users'}`
                             : 'Join the decentralized network in three simple steps. Whether you\'re a user or a host, getting started is seamless.'
@@ -117,13 +117,13 @@ export const HowItWorks = ({ standalone = false }: { standalone?: boolean }) => 
                         transition={{ duration: 0.6, delay: 0.2 }}
                         className="flex justify-center mb-16"
                     >
-                        <div className="inline-flex bg-gray-900/50 backdrop-blur-sm rounded-full p-1.5 border border-gray-800">
+                        <div className="inline-flex bg-gray-100 dark:bg-gray-900/50 backdrop-blur-sm rounded-full p-1.5 border border-gray-200 dark:border-gray-800">
                             <button
                                 onClick={() => setActiveTab('user')}
                                 className={`px-8 py-3 rounded-full font-semibold text-sm transition-all duration-300 flex items-center gap-2 ${
                                     activeTab === 'user'
                                         ? 'bg-[#0055FF] text-white shadow-lg shadow-blue-500/30'
-                                        : 'text-gray-400 hover:text-white'
+                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                 }`}
                             >
                                 <User className="w-4 h-4" />
@@ -134,7 +134,7 @@ export const HowItWorks = ({ standalone = false }: { standalone?: boolean }) => 
                                 className={`px-8 py-3 rounded-full font-semibold text-sm transition-all duration-300 flex items-center gap-2 ${
                                     activeTab === 'owner'
                                         ? 'bg-[#66FF00] text-black shadow-lg shadow-green-500/30'
-                                        : 'text-gray-400 hover:text-white'
+                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                                 }`}
                             >
                                 <Building2 className="w-4 h-4" />
@@ -153,15 +153,15 @@ export const HowItWorks = ({ standalone = false }: { standalone?: boolean }) => 
                     className="grid md:grid-cols-3 gap-8 relative"
                 >
                     {/* Connecting line (desktop) */}
-                    <div className="hidden md:block absolute top-[52px] left-[22%] right-[22%] h-px bg-gray-800">
+                    <div className="hidden md:block absolute top-[52px] left-[22%] right-[22%] h-px bg-gray-200 dark:bg-gray-800">
                         <motion.div
                             initial={{ scaleX: 0 }}
                             animate={{ scaleX: 1 }}
                             transition={{ duration: 1.4, delay: 0.3, ease: "easeInOut" }}
                             className={`h-full origin-left ${
                                 activeTab === 'user'
-                                    ? 'bg-gradient-to-r from-[#0055FF] via-[#66FF00] to-white'
-                                    : 'bg-gradient-to-r from-[#0055FF] via-[#66FF00] to-white'
+                                    ? 'bg-gradient-to-r from-[#0055FF] via-[#66FF00] to-gray-900 dark:to-white'
+                                    : 'bg-gradient-to-r from-[#0055FF] via-[#66FF00] to-gray-900 dark:to-white'
                             }`}
                         />
                     </div>
@@ -194,14 +194,14 @@ export const HowItWorks = ({ standalone = false }: { standalone?: boolean }) => 
                                         />
                                     </div>
                                     {/* Step number badge */}
-                                    <div className={`absolute -top-3 -right-3 w-8 h-8 ${step.numberBg} ${isGreen || isWhite ? 'text-black' : 'text-white'} rounded-full flex items-center justify-center text-sm font-black border-2 border-black shadow-lg`}>
+                                    <div className={`absolute -top-3 -right-3 w-8 h-8 ${step.numberBg} ${isGreen || isWhite ? 'text-black' : 'text-white'} rounded-full flex items-center justify-center text-sm font-black border-2 border-gray-200 dark:border-black shadow-lg`}>
                                         {step.id}
                                     </div>
                                 </div>
 
                                 {/* Text */}
-                                <h3 className="text-xl font-bold mb-3 text-white">{step.title}</h3>
-                                <p className="text-base text-gray-400 leading-relaxed max-w-xs mx-auto">
+                                <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">{step.title}</h3>
+                                <p className="text-base text-gray-600 dark:text-gray-400 leading-relaxed max-w-xs mx-auto">
                                     {step.description}
                                 </p>
                             </motion.div>

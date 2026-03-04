@@ -36,7 +36,7 @@ export const Testimonials = () => {
     const isInView = useInView(ref, { once: true, margin: "-100px" });
 
     return (
-        <section className="py-24 bg-gray-50 border-t border-gray-100">
+        <section className="py-24 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800">
             <div className="container max-w-7xl mx-auto px-6 md:px-8">
                 <motion.div
                     ref={ref}
@@ -45,8 +45,8 @@ export const Testimonials = () => {
                     transition={{ duration: 0.6 }}
                     className="text-center mb-12"
                 >
-                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-black mb-5 tracking-tight">Trusted by the community</h2>
-                    <p className="text-gray-600 max-w-2xl mx-auto text-lg leading-relaxed">
+                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-black mb-5 tracking-tight text-gray-900 dark:text-white">Trusted by the community</h2>
+                    <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto text-lg leading-relaxed">
                         See what our hosts and users are saying about the decentralized network.
                     </p>
                 </motion.div>
@@ -60,21 +60,21 @@ export const Testimonials = () => {
                             transition={{ duration: 0.5, delay: i * 0.15 }}
                             whileHover={{ y: -8 }}
                         >
-                            <Card className="h-full border-none shadow-lg shadow-gray-200/50 bg-white">
+                            <Card className="h-full border-none shadow-lg shadow-gray-200/50 dark:shadow-gray-950/50 bg-white dark:bg-gray-800">
                                 <CardContent className="p-8 flex flex-col h-full">
-                                    <Quote className="w-8 h-8 text-blue-100 mb-4" />
-                                    <p className="text-gray-600 mb-6 italic text-base leading-relaxed flex-grow">
+                                    <Quote className="w-8 h-8 text-blue-100 dark:text-blue-900 mb-4" />
+                                    <p className="text-gray-600 dark:text-gray-300 mb-6 italic text-base leading-relaxed flex-grow">
                                         "{review.content}"
                                     </p>
                                     
                                     <div className="flex items-center gap-4 mt-auto">
-                                        <Avatar className="h-12 w-12 border-2 border-blue-100">
+                                        <Avatar className="h-12 w-12 border-2 border-blue-100 dark:border-blue-900">
                                             <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${review.name}`} />
-                                            <AvatarFallback className="bg-blue-50 text-blue-600 font-bold">{review.avatar}</AvatarFallback>
+                                            <AvatarFallback className="bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 font-bold">{review.avatar}</AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <h4 className="font-bold text-black">{review.name}</h4>
-                                            <p className="text-sm text-gray-500">{review.role}</p>
+                                            <h4 className="font-bold text-black dark:text-white">{review.name}</h4>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">{review.role}</p>
                                         </div>
                                         <div className="ml-auto flex gap-0.5">
                                             {[...Array(5)].map((_, i) => (

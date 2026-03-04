@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "@fontsource-variable/inter";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Inter Variable", sans-serif;
   
@@ -151,11 +153,17 @@
   }
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
 html {
   scroll-behavior: smooth;
+  transition: background-color 0.3s ease;
+}
+
+html.dark body {
+  @apply bg-gray-900 text-gray-100;
 }
 
 ::selection {

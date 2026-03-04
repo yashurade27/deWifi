@@ -5,6 +5,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import { useRef, useMemo } from 'react';
 import * as THREE from 'three';
+import { useTheme } from '@/context/ThemeContext';
 
 // Network particles/nodes component
 const NetworkNodes = () => {
@@ -51,7 +52,7 @@ const NetworkNodes = () => {
 };
 
 // Main network sphere component
-const NetworkSphere = () => {
+const NetworkSphere = ({ isDark }: { isDark: boolean }) => {
     const meshRef = useRef<THREE.Mesh>(null!);
     
     useFrame((state) => {
@@ -68,17 +69,17 @@ const NetworkSphere = () => {
                 color="#0055FF"
                 metalness={0.9}
                 roughness={0.1}
-                emissive="#001a4d"
-                emissiveIntensity={0.5}
+                emissive={isDark ? '#002266' : '#001a4d'}
+                emissiveIntensity={isDark ? 0.9 : 0.5}
                 wireframe={false}
             />
             {/* Inner glow sphere */}
             <mesh scale={0.98}>
                 <sphereGeometry args={[2, 64, 64]} />
                 <meshBasicMaterial
-                    color="#0066FF"
+                    color={isDark ? '#0088FF' : '#0066FF'}
                     transparent
-                    opacity={0.15}
+                    opacity={isDark ? 0.25 : 0.15}
                     side={THREE.BackSide}
                 />
             </mesh>
@@ -87,42 +88,52 @@ const NetworkSphere = () => {
 };
 
 // 3D Globe visualization using React Three Fiber
-const NetworkGlobe3D = () => {
+const NetworkGlobe3D = ({ isDark }: { isDark: boolean }) => {
     return (
         <div className="relative w-full h-[500px] lg:h-[600px] flex items-center justify-center">
-            <Canvas camera={{ position: [0, 0, 6], fov: 45 }} gl={{ antialias: true, alpha: true }}>
-                <color attach="background" args={['#ffffff']} />
-                <fog attach="fog" args={['#ffffff', 5, 15]} />
+            {/* Ambient glow behind the globe in dark mode */}
+            {isDark && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-[420px] h-[420px] rounded-full bg-[radial-gradient(circle,rgba(0,85,255,0.2)_0%,rgba(0,85,255,0.05)_50%,transparent_70%)] blur-xl" />
+                </div>
+            )}
+
+            <Canvas
+                camera={{ position: [0, 0, 6], fov: 45 }}
+                gl={{ antialias: true, alpha: true }}
+                style={{ background: isDark ? '#030712' : 'transparent' }}
+            >
+                <fog attach="fog" args={[isDark ? '#030712' : '#ffffff', 8, 18]} />
                 
-                {/* Lighting setup */}
-                <ambientLight intensity={0.4} />
-                <directionalLight position={[10, 10, 5]} intensity={1} color="#ffffff" />
-                <pointLight position={[5, 5, 5]} intensity={0.8} color="#0055FF" />
-                <pointLight position={[-5, -5, -5]} intensity={0.5} color="#66FF00" />
-                <spotLight position={[0, 10, 0]} angle={0.3} penumbra={1} intensity={0.5} color="#0055FF" />
+                {/* Lighting setup — brighter glow in dark, softer in light */}
+                <ambientLight intensity={isDark ? 0.25 : 0.5} />
+                <directionalLight position={[10, 10, 5]} intensity={isDark ? 0.7 : 1} color="#ffffff" />
+                <pointLight position={[5, 5, 5]} intensity={isDark ? 1.2 : 0.8} color="#0055FF" />
+                <pointLight position={[-5, -5, -5]} intensity={isDark ? 0.8 : 0.5} color="#66FF00" />
+                <spotLight position={[0, 10, 0]} angle={0.3} penumbra={1} intensity={isDark ? 0.8 : 0.5} color="#0055FF" />
                 
-                {/* Background stars */}
-                <Stars radius={100} depth={50} count={2000} factor={2} saturation={0} fade speed={0.5} />
+                {/* Stars — visible in dark mode only */}
+                {isDark && <Stars radius={100} depth={50} count={3000} factor={2.5} saturation={0} fade speed={0.5} />}
                 
                 {/* Main network sphere */}
-                <NetworkSphere />
+                <NetworkSphere isDark={isDark} />
                 
                 {/* Network nodes */}
                 <NetworkNodes />
                 
-                {/* Orbital rings */}
+                {/* Orbital rings — more vivid in dark mode */}
                 <group>
                     <mesh rotation={[Math.PI / 3, 0, Math.PI / 4]}>
                         <torusGeometry args={[3.2, 0.015, 16, 100]} />
-                        <meshBasicMaterial color="#66FF00" transparent opacity={0.25} />
+                        <meshBasicMaterial color="#66FF00" transparent opacity={isDark ? 0.4 : 0.25} />
                     </mesh>
                     <mesh rotation={[-Math.PI / 4, Math.PI / 3, 0]}>
                         <torusGeometry args={[2.9, 0.012, 16, 100]} />
-                        <meshBasicMaterial color="#0088FF" transparent opacity={0.2} />
+                        <meshBasicMaterial color="#0088FF" transparent opacity={isDark ? 0.35 : 0.2} />
                     </mesh>
                     <mesh rotation={[0, Math.PI / 2, Math.PI / 6]}>
                         <torusGeometry args={[3.5, 0.01, 16, 100]} />
-                        <meshBasicMaterial color="#ffffff" transparent opacity={0.15} />
+                        <meshBasicMaterial color="#ffffff" transparent opacity={isDark ? 0.25 : 0.15} />
                     </mesh>
                 </group>
 
@@ -141,14 +152,14 @@ const NetworkGlobe3D = () => {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1, duration: 0.6 }}
-                className="absolute top-[12%] right-[8%] bg-white/95 backdrop-blur-md border border-gray-100 shadow-2xl rounded-2xl px-4 py-3 flex items-center gap-3 z-10"
+                className="absolute top-[12%] right-[8%] bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-gray-100 dark:border-gray-800 shadow-2xl rounded-2xl px-4 py-3 flex items-center gap-3 z-10"
             >
                 <div className="w-10 h-10 bg-[#0055FF] rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
                     <Wifi className="w-4 h-4 text-white" strokeWidth={2.5} />
                 </div>
                 <div>
-                    <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Avg Speed</p>
-                    <p className="text-base font-black text-black leading-none">350 Mbps</p>
+                    <p className="text-[9px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Avg Speed</p>
+                    <p className="text-base font-black text-black dark:text-white leading-none">350 Mbps</p>
                 </div>
             </motion.div>
 
@@ -173,7 +184,7 @@ const NetworkGlobe3D = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 1.4, duration: 0.6 }}
-                className="absolute top-[52%] right-[25%] bg-[#050511] text-white shadow-2xl rounded-2xl px-4 py-3 flex items-center gap-3 border border-white/10 z-10"
+                className="absolute top-[52%] right-[25%] bg-gray-900 dark:bg-[#050511] text-white shadow-2xl rounded-2xl px-4 py-3 flex items-center gap-3 border border-gray-800 dark:border-white/10 z-10"
             >
                 <div className="w-10 h-10 bg-[#66FF00]/20 rounded-xl flex items-center justify-center">
                     <Zap className="w-4 h-4 text-[#66FF00]" />
@@ -201,10 +212,13 @@ const itemVariants = {
 };
 
 export const Hero = () => {
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+
     return (
-        <section className="relative w-full min-h-[calc(100vh-4rem)] flex items-center justify-center bg-white overflow-hidden">
+        <section className="relative w-full min-h-[calc(100vh-4rem)] flex items-center justify-center bg-white dark:bg-gray-950 overflow-hidden">
             {/* Subtle background gradient */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(0,85,255,0.04)_0%,transparent_60%)] pointer-events-none" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(0,85,255,0.04)_0%,transparent_60%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(0,85,255,0.15)_0%,transparent_60%)] pointer-events-none" />
 
             <div className="container max-w-7xl mx-auto px-6 md:px-8 relative z-10 py-16 lg:py-0">
                 <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -227,15 +241,15 @@ export const Hero = () => {
 
                         <motion.h1
                             variants={itemVariants}
-                            className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-black leading-[1.05] mb-6"
+                            className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-black dark:text-white leading-[1.05] mb-6"
                         >
                             Decentralized<br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0055FF] to-[#003399]">WiFi Network</span>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0055FF] to-[#003399] dark:from-[#0088FF] dark:to-[#00DDFF]">WiFi Network</span>
                         </motion.h1>
 
                         <motion.p
                             variants={itemVariants}
-                            className="max-w-[540px] text-lg text-gray-600 font-medium leading-relaxed mb-8"
+                            className="max-w-[540px] text-lg text-gray-600 dark:text-gray-400 font-medium leading-relaxed mb-8"
                         >
                             Turn your router into a passive income stream.
                             The world's first marketplace for peer-to-peer internet bandwidth sharing.
@@ -247,7 +261,7 @@ export const Hero = () => {
                             </Button>
                             <Button
                                 variant="outline"
-                                className="border-2 border-gray-200 text-gray-700 hover:border-[#0055FF] hover:text-[#0055FF] hover:bg-blue-50 rounded-full px-7 py-6 text-base font-bold transition-all duration-300 w-full sm:w-auto"
+                                className="border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#0055FF] hover:text-[#0055FF] hover:bg-blue-50 dark:hover:bg-blue-950 rounded-full px-7 py-6 text-base font-bold transition-all duration-300 w-full sm:w-auto"
                             >
                                 Find Spots
                             </Button>
@@ -256,7 +270,7 @@ export const Hero = () => {
                         {/* Trust stats */}
                         <motion.div
                             variants={itemVariants}
-                            className="grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-gray-100 w-full max-w-md"
+                            className="grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-gray-100 dark:border-gray-800 w-full max-w-md"
                         >
                             {[
                                 { value: '2.4k+', label: 'Active Nodes' },
@@ -264,8 +278,8 @@ export const Hero = () => {
                                 { value: '99.9%', label: 'Uptime' },
                             ].map((stat) => (
                                 <div key={stat.label}>
-                                    <p className="text-xl font-black text-black mb-0.5">{stat.value}</p>
-                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{stat.label}</p>
+                                    <p className="text-xl font-black text-black dark:text-white mb-0.5">{stat.value}</p>
+                                    <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">{stat.label}</p>
                                 </div>
                             ))}
                         </motion.div>
@@ -278,7 +292,7 @@ export const Hero = () => {
                         transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
                         className="hidden lg:flex relative items-center justify-center min-h-[600px]"
                     >
-                        <NetworkGlobe3D />
+                        <NetworkGlobe3D isDark={isDark} />
                     </motion.div>
                 </div>
             </div>

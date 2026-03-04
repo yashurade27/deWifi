@@ -26,7 +26,7 @@ const FEATURES = [
 
 export const Features = () => {
     return (
-        <section className="py-24 bg-black text-white">
+        <section className="py-24 bg-gray-50 dark:bg-black text-gray-900 dark:text-white">
             <div className="container max-w-7xl mx-auto px-6 md:px-8">
                 <div className="grid md:grid-cols-2 gap-16 items-center">
                     <div>
@@ -35,13 +35,13 @@ export const Features = () => {
                             The future of <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">internet access.</span>
                         </h2>
-                        <p className="text-gray-400 text-lg leading-relaxed mb-8">
+                        <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed mb-8">
                             We are dismantling the monopoly of big telecom. 
                             By empowering the community, we build a faster, cheaper, and more resilient network for everyone.
                         </p>
                         <div className="flex gap-4">
                             <div className="h-1 w-20 bg-[#0055FF] rounded-full"></div>
-                            <div className="h-1 w-20 bg-gray-800 rounded-full"></div>
+                            <div className="h-1 w-20 bg-gray-300 dark:bg-gray-800 rounded-full"></div>
                         </div>
                     </div>
 
@@ -52,13 +52,13 @@ export const Features = () => {
                                  <motion.div
                                      key={i}
                                      whileHover={{ y: -5 }}
-                                     className="bg-gray-900/50 p-6 rounded-3xl border border-gray-800 hover:border-blue-500/50 transition-colors duration-300"
+                                     className="bg-white dark:bg-gray-900/50 p-6 rounded-3xl border border-gray-200 dark:border-gray-800 hover:border-blue-500/50 transition-colors duration-300"
                                  >
                                      <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-4 text-[#0055FF]">
                                          <Icon className="w-6 h-6" />
                                      </div>
                                      <h3 className="text-lg font-bold mb-2">{feature.title}</h3>
-                                     <p className="text-gray-400 text-base leading-relaxed">
+                                     <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
                                          {feature.description}
                                      </p>
                                  </motion.div>

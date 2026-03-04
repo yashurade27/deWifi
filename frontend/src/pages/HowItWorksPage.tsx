@@ -4,7 +4,7 @@ import { HowItWorks } from '@/components/Home/HowItWorks';
 
 const HowItWorksPage = () => {
     return (
-        <div className="min-h-screen bg-black">
+        <div className="min-h-screen bg-white dark:bg-black">
             <Navbar />
             <HowItWorks standalone={true} />
             <Footer />

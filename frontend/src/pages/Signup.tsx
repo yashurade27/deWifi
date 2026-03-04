@@ -90,7 +90,7 @@ export default function Signup() {
     return (
         <div className="min-h-screen flex font-sans">
             {/* ── Left Panel ─────────────────────────────────────── */}
-            <div className="hidden lg:flex lg:w-[48%] relative flex-col bg-[#050511] overflow-hidden">
+            <div className="hidden lg:flex lg:w-[48%] relative flex-col bg-[#050511] dark:bg-gray-950 overflow-hidden">
                 {/* Gradient blobs */}
                 <div className="absolute top-[-100px] left-[-100px] w-[500px] h-[500px] rounded-full bg-[#0055FF]/20 blur-[130px] pointer-events-none" />
                 <div className="absolute bottom-[-60px] right-[-60px] w-[380px] h-[380px] rounded-full bg-[#66FF00]/10 blur-[110px] pointer-events-none" />
