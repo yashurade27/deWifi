@@ -22,6 +22,9 @@ import {
   Activity,
   AlertTriangle,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  GripVertical,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { WifiSpot } from '@/data/dummySpots';
@@ -301,6 +304,9 @@ export default function Explore() {
 
   const [selectedSpot, setSelectedSpot] = useState<ApiSpot | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(320);
+  const [isResizing, setIsResizing] = useState(false);
   const [search, setSearch] = useState('');
   const [cityFilter, setCityFilter] = useState('All');
   const [tagFilter, setTagFilter] = useState<ApiSpot['tag'] | 'All'>('All');
@@ -308,6 +314,7 @@ export default function Explore() {
   const [onlyActive, setOnlyActive] = useState(false);
 
   const mapRef = useRef<L.Map | null>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   // Build city list from live data
   const allCities = ['All', ...Array.from(new Set(spots.map((s) => s.city)))];
@@ -332,6 +339,40 @@ export default function Explore() {
     if (window.innerWidth < 768) setSidebarOpen(false); // close sidebar on mobile
   };
 
+  // Resize handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+      const newWidth = e.clientX;
+      if (newWidth >= 280 && newWidth <= 600) {
+        setSidebarWidth(newWidth);
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing]);
+
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
       <Navbar />
@@ -341,12 +382,14 @@ export default function Explore() {
         <AnimatePresence initial={false}>
           {sidebarOpen && (
             <motion.aside
+              ref={sidebarRef}
               key="sidebar"
               initial={{ x: -340, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -340, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="absolute md:relative z-[600] top-0 left-0 h-full w-80 bg-white border-r border-gray-200 flex flex-col shadow-xl md:shadow-none"
+              style={{ width: `${sidebarWidth}px` }}
+              className="absolute md:relative z-[600] top-0 left-0 h-full bg-white border-r border-gray-200 flex flex-col shadow-xl md:shadow-none"
             >
               {/* Loading / error banner */}
               {loading && (
@@ -385,11 +428,20 @@ export default function Explore() {
               </div>
 
               {/* Filters */}
-              <div className="px-4 py-3 border-b border-gray-100 space-y-3">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  <SlidersHorizontal size={12} />
-                  Filters
-                </div>
+              <div className="border-b border-gray-100">
+                <button
+                  onClick={() => setFiltersOpen(!filtersOpen)}
+                  className="w-full px-4 py-3 flex items-center justify-between text-xs font-semibold text-gray-700 uppercase tracking-wider hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <SlidersHorizontal size={12} />
+                    Filters
+                  </div>
+                  {filtersOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </button>
+                
+                {filtersOpen && (
+                  <div className="px-4 pb-3 space-y-3">
 
                 {/* City */}
                 <div>
@@ -462,15 +514,19 @@ export default function Explore() {
                       }`}
                     />
                   </div>
-                  <span className="text-xs text-gray-600 font-medium">Active spots only</span>
-                </label>
+                    <span className="text-xs text-gray-600 font-medium">Active spots only</span>
+                  </label>
+                </div>
+                )}
               </div>
 
               {/* Spot list */}
-              <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2.5">
-                <p className="text-xs text-gray-400 font-medium px-1">
-                  {filtered.length} spot{filtered.length !== 1 ? 's' : ''} found
-                </p>
+              <div className="flex-1 overflow-y-auto px-3 pt-4 pb-3 space-y-2.5">
+                <div className="sticky top-0 bg-white z-10 pb-2 mb-1">
+                  <p className="text-xs text-gray-600 font-semibold px-1 py-1.5 bg-gray-50 rounded-md border border-gray-100">
+                    {filtered.length} spot{filtered.length !== 1 ? 's' : ''} found
+                  </p>
+                </div>
                 <AnimatePresence mode="popLayout">
                   {filtered.length === 0 ? (
                     <motion.div
@@ -493,6 +549,18 @@ export default function Explore() {
                   )}
                 </AnimatePresence>
               </div>
+
+              {/* Resize Handle */}
+              <div
+                onMouseDown={handleMouseDown}
+                className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-blue-400 transition-colors group z-[650]"
+              >
+                <div className="absolute top-1/2 -translate-y-1/2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="bg-white border border-gray-300 rounded-md p-0.5 shadow-sm">
+                    <GripVertical size={12} className="text-gray-400" />
+                  </div>
+                </div>
+              </div>
             </motion.aside>
           )}
         </AnimatePresence>
@@ -501,7 +569,7 @@ export default function Explore() {
         <button
           onClick={() => setSidebarOpen((v) => !v)}
           className="absolute z-[601] top-4 left-4 md:top-1/2 md:-translate-y-1/2 md:left-auto"
-          style={sidebarOpen ? { left: '324px' } : { left: '16px' }}
+          style={sidebarOpen ? { left: `${sidebarWidth + 4}px` } : { left: '16px' }}
         >
           <motion.div
             className="w-7 h-7 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-600 hover:text-[#0055FF] hover:border-[#0055FF] transition-colors"
