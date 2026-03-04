@@ -23,7 +23,7 @@ async function viewUsers() {
 
     console.log(`👥 Found ${users.length} users:\n`);
     console.log('─'.repeat(100));
-    
+
     users.forEach((user, index) => {
       console.log(`\n${index + 1}. User ID: ${user._id}`);
       console.log(`   📧 Email: ${user.email}`);
@@ -31,7 +31,7 @@ async function viewUsers() {
       console.log(`   🎭 Role: ${user.role || 'user'}`);
       console.log(`   📅 Created: ${user.createdAt ? new Date(user.createdAt).toLocaleString() : 'N/A'}`);
     });
-    
+
     console.log('\n' + '─'.repeat(100));
     console.log(`\n📊 Total: ${users.length} users`);
 
