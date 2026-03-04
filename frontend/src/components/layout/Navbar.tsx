@@ -18,12 +18,30 @@ export const Navbar = () => {
     const [dropdownOpen, setDropdownOpen] = React.useState(false);
     const { user, signout } = useAuth();
     const navigate = useNavigate();
+    const dropdownRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 24);
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    // Close dropdown when clicking outside
+    React.useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setDropdownOpen(false);
+            }
+        };
+
+        if (dropdownOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [dropdownOpen]);
 
     const handleSignout = async () => {
         await signout();
@@ -78,7 +96,7 @@ export const Navbar = () => {
                 {/* CTA */}
                 {user ? (
                     <div className="hidden md:flex items-center gap-4">
-                        <div className="relative">
+                        <div className="relative" ref={dropdownRef}>
                             <button
                                 onClick={() => setDropdownOpen(!dropdownOpen)}
                                 className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-gray-100 transition-colors"
@@ -97,11 +115,11 @@ export const Navbar = () => {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: -8, scale: 0.95 }}
                                         transition={{ duration: 0.15 }}
-                                        className="absolute right-0 mt-2 w-48 bg-white rounded-xl border border-gray-200 shadow-lg z-50"
+                                        className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-gray-200 shadow-lg z-50 overflow-hidden"
                                     >
-                                        <div className="p-3 border-b border-gray-100">
-                                            <p className="text-sm font-semibold text-gray-900">{user.name}</p>
-                                            <p className="text-xs text-gray-500">{user.email}</p>
+                                        <div className="p-4 border-b border-gray-100">
+                                            <p className="text-sm font-semibold text-gray-900 truncate" title={user.name}>{user.name}</p>
+                                            <p className="text-xs text-gray-500 break-words" title={user.email}>{user.email}</p>
                                             <span className="inline-block mt-2 px-2 py-1 text-xs font-bold rounded-full bg-blue-50 text-[#0055FF] capitalize">{user.role}</span>
                                         </div>
                                         <div className="py-2">
@@ -220,8 +238,8 @@ export const Navbar = () => {
                             {user ? (
                                 <>
                                     <div className="px-4 py-3 border-b border-gray-100">
-                                        <p className="text-sm font-semibold text-gray-900">{user.name}</p>
-                                        <p className="text-xs text-gray-500">{user.email}</p>
+                                        <p className="text-sm font-semibold text-gray-900 truncate" title={user.name}>{user.name}</p>
+                                        <p className="text-xs text-gray-500 break-words" title={user.email}>{user.email}</p>
                                         <span className="inline-block mt-2 px-2 py-1 text-xs font-bold rounded-full bg-blue-50 text-[#0055FF] capitalize">{user.role}</span>
                                     </div>
                                     <Link to="/profile" className="px-4 py-3 text-base font-semibold text-gray-700 hover:text-[#0055FF] flex items-center gap-2" onClick={() => setIsOpen(false)}>
