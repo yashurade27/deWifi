@@ -31,7 +31,7 @@ export const StatsSection = () => {
     const isInView = useInView(ref, { once: true, margin: '-80px' });
 
     return (
-        <section className="w-full py-24 bg-white">
+        <section className="w-full py-24 bg-white dark:bg-gray-950">
             <div className="container max-w-7xl mx-auto px-6 md:px-8">
                 {/* Header */}
                 <motion.div
@@ -45,12 +45,12 @@ export const StatsSection = () => {
                         Provider Stats
                     </span>
                     <div className="grid lg:grid-cols-2 gap-8 items-end">
-                        <h2 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-black leading-tight">
+                        <h2 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-black dark:text-white leading-tight">
                             Our impact
                         </h2>
                         <div>
-                            <h3 className="text-xl font-bold mb-3 text-black">Data-led, with results to show.</h3>
-                            <p className="text-base text-gray-600 leading-relaxed">
+                            <h3 className="text-xl font-bold mb-3 text-black dark:text-white">Data-led, with results to show.</h3>
+                            <p className="text-base text-gray-600 dark:text-gray-400 leading-relaxed">
                                 For years, the network has boosted connectivity for leading enterprises
                                 and everyday users — and the numbers prove it.
                             </p>
@@ -73,21 +73,21 @@ export const StatsSection = () => {
                                 className={`p-8 rounded-[2rem] flex flex-col justify-between min-h-[380px] cursor-default ${
                                     isBlue
                                         ? 'bg-[#0055FF] text-white shadow-xl shadow-blue-500/20'
-                                        : 'bg-[#F3F4F6] text-black'
+                                        : 'bg-[#F3F4F6] dark:bg-gray-900 text-black dark:text-white'
                                 }`}
                             >
-                                <span className={`text-8xl font-light block leading-none ${isBlue ? 'text-white' : 'text-black'}`}>
+                                <span className={`text-8xl font-light block leading-none ${isBlue ? 'text-white' : 'text-black dark:text-white'}`}>
                                     {stat.value.replace('%', '')}
                                     <span className="text-4xl font-bold align-top">%</span>
                                 </span>
                                 <div>
                                     <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${
-                                        isBlue ? 'bg-white/20 backdrop-blur-sm' : 'bg-gray-200'
+                                        isBlue ? 'bg-white/20 backdrop-blur-sm' : 'bg-gray-200 dark:bg-gray-800'
                                     }`}>
-                                        <Icon className={`h-5 w-5 ${isBlue ? 'text-white' : 'text-black'}`} />
+                                        <Icon className={`h-5 w-5 ${isBlue ? 'text-white' : 'text-black dark:text-white'}`} />
                                     </div>
                                     <h4 className="text-xl font-bold mb-2">{stat.title}</h4>
-                                    <p className={`text-sm leading-relaxed ${isBlue ? 'text-blue-100' : 'text-gray-500'}`}>
+                                    <p className={`text-sm leading-relaxed ${isBlue ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}`}>
                                         {stat.description}
                                     </p>
                                 </div>

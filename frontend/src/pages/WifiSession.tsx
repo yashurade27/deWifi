@@ -214,7 +214,7 @@ export default function WifiSession() {
   const isExpired = timeRemaining === 0 && booking.paymentStatus === 'paid';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-950 dark:to-gray-900">
       <Navbar />
 
       <main className="max-w-2xl mx-auto px-4 py-8">

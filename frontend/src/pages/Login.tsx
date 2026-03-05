@@ -48,7 +48,7 @@ export default function Login() {
     return (
         <div className="min-h-screen flex font-sans">
             {/* ── Left Panel ─────────────────────────────────────── */}
-            <div className="hidden lg:flex lg:w-[52%] relative flex-col bg-[#050511] overflow-hidden">
+            <div className="hidden lg:flex lg:w-[52%] relative flex-col bg-[#050511] dark:bg-gray-950 overflow-hidden">
                 {/* Gradient blobs */}
                 <div className="absolute top-[-120px] left-[-120px] w-[480px] h-[480px] rounded-full bg-[#0055FF]/20 blur-[120px] pointer-events-none" />
                 <div className="absolute bottom-[-80px] right-[-80px] w-[360px] h-[360px] rounded-full bg-[#66FF00]/10 blur-[100px] pointer-events-none" />
@@ -131,7 +131,7 @@ export default function Login() {
             </div>
 
             {/* ── Right Panel (Form) ──────────────────────────────── */}
-            <div className="flex-1 flex items-center justify-center bg-white px-6 py-12">
+            <div className="flex-1 flex items-center justify-center bg-white dark:bg-gray-900 px-6 py-12">
                 <motion.div
                     initial={{ opacity: 0, x: 30 }}
                     animate={{ opacity: 1, x: 0 }}
