@@ -8,6 +8,7 @@ export interface AuthUser {
   email: string;
   phone: string;
   role: "user" | "owner";
+  profilePhoto?: string;
 }
 
 interface AuthState {
@@ -38,6 +39,7 @@ interface AuthContextValue extends AuthState {
   signup: (payload: SignupPayload) => Promise<void>;
   signin: (payload: SigninPayload) => Promise<void>;
   signout: () => Promise<void>;
+  updateUser: (user: AuthUser) => void;
   isAuthenticated: boolean;
 }
 
@@ -98,9 +100,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [state.token]);
 
+  const updateUser = useCallback((user: AuthUser) => {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    setState(prev => ({ ...prev, user }));
+  }, []);
+
   return (
     <AuthContext.Provider
-      value={{ ...state, signup, signin, signout, isAuthenticated: !!state.token }}
+      value={{ ...state, signup, signin, signout, updateUser, isAuthenticated: !!state.token }}
     >
       {children}
     </AuthContext.Provider>

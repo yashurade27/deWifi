@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User";
 import { JWT_SECRET } from "../config";
+import { protect, AuthRequest } from "../middleware/auth";
 
 const router = Router();
 const JWT_EXPIRES_IN = "7d";
@@ -38,6 +39,7 @@ router.post("/signup", async (req: Request, res: Response) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        profilePhoto: user.profilePhoto || "",
       },
     });
   } catch (err) {
@@ -73,6 +75,7 @@ router.post("/signin", async (req: Request, res: Response) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        profilePhoto: user.profilePhoto || "",
       },
     });
   } catch (err) {
@@ -86,6 +89,106 @@ router.post("/signin", async (req: Request, res: Response) => {
 // This endpoint exists as a courtesy confirmation.
 router.post("/signout", (_req: Request, res: Response) => {
   res.status(200).json({ message: "Signed out successfully." });
+});
+
+// ─── PUT /api/auth/profile ──────────────────────────────────────────────────
+// Update user profile (name, email, phone, profilePhoto)
+router.put("/profile", protect, async (req: AuthRequest, res: Response) => {
+  try {
+    const { name, email, phone, profilePhoto } = req.body;
+    const userId = req.userId;
+
+    if (!userId) {
+      res.status(401).json({ message: "Not authenticated." });
+      return;
+    }
+
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ message: "User not found." });
+      return;
+    }
+
+    // Check if email is being changed and if it's already taken
+    if (email && email !== user.email) {
+      const existing = await User.findOne({ email });
+      if (existing) {
+        res.status(409).json({ message: "This email is already in use." });
+        return;
+      }
+      user.email = email;
+    }
+
+    // Update fields
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
+    if (profilePhoto !== undefined) user.profilePhoto = profilePhoto;
+
+    await user.save();
+
+    res.status(200).json({
+      message: "Profile updated successfully.",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        profilePhoto: user.profilePhoto || "",
+      },
+    });
+  } catch (err) {
+    console.error("[profile update]", err);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+// ─── PUT /api/auth/change-password ──────────────────────────────────────────
+// Change user password
+router.put("/change-password", protect, async (req: AuthRequest, res: Response) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.userId;
+
+    if (!userId) {
+      res.status(401).json({ message: "Not authenticated." });
+      return;
+    }
+
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({ message: "Current and new password are required." });
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      res.status(400).json({ message: "New password must be at least 8 characters." });
+      return;
+    }
+
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ message: "User not found." });
+      return;
+    }
+
+    // Verify current password
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      res.status(401).json({ message: "Current password is incorrect." });
+      return;
+    }
+
+    // Update password (will be hashed by pre-save hook)
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({ message: "Password changed successfully." });
+  } catch (err) {
+    console.error("[change password]", err);
+    res.status(500).json({ message: "Internal server error." });
+  }
 });
 
 export default router;

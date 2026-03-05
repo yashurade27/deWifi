@@ -97,8 +97,6 @@ export const Navbar = () => {
 
                 {/* CTA */}
                 {user ? (
-                    <div className="hidden md:flex items-center gap-4">
-                        <div className="relative" ref={dropdownRef}>
                     <div className="hidden md:flex items-center gap-3">
                         {/* Theme Toggle */}
                         <button
@@ -113,14 +111,30 @@ export const Navbar = () => {
                             )}
                         </button>
                         
-                        <div className="relative">
+                        <div className="relative" ref={dropdownRef}>
                             <button
                                 onClick={() => setDropdownOpen(!dropdownOpen)}
                                 className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                             >
-                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0055FF] to-[#66FF00] flex items-center justify-center text-xs font-bold text-white">
-                                    {getInitials(user.name)}
-                                </div>
+                                {user.profilePhoto ? (
+                                    <img
+                                        src={user.profilePhoto}
+                                        alt={user.name}
+                                        className="w-9 h-9 rounded-full object-cover border-2 border-[#0055FF] dark:border-[#66FF00]"
+                                        onError={(e) => {
+                                            // Fallback to initials if image fails to load
+                                            e.currentTarget.style.display = 'none';
+                                            const fallback = document.createElement('div');
+                                            fallback.className = 'w-9 h-9 rounded-full bg-gradient-to-br from-[#0055FF] to-[#66FF00] flex items-center justify-center text-xs font-bold text-white';
+                                            fallback.textContent = getInitials(user.name);
+                                            e.currentTarget.parentElement!.insertBefore(fallback, e.currentTarget);
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#0055FF] to-[#66FF00] flex items-center justify-center text-xs font-bold text-white">
+                                        {getInitials(user.name)}
+                                    </div>
+                                )}
                                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 hidden lg:block">{user.name}</span>
                             </button>
 
@@ -132,18 +146,32 @@ export const Navbar = () => {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: -8, scale: 0.95 }}
                                         transition={{ duration: 0.15 }}
-                                        className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-gray-200 shadow-lg z-50 overflow-hidden"
+                                        className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg z-50"
                                     >
-                                        <div className="p-4 border-b border-gray-100">
-                                            <p className="text-sm font-semibold text-gray-900 truncate" title={user.name}>{user.name}</p>
-                                            <p className="text-xs text-gray-500 break-words" title={user.email}>{user.email}</p>
-                                            <span className="inline-block mt-2 px-2 py-1 text-xs font-bold rounded-full bg-blue-50 text-[#0055FF] capitalize">{user.role}</span>
-                                        className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg z-50"
-                                    >
-                                        <div className="p-3 border-b border-gray-100 dark:border-gray-700">
-                                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{user.name}</p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
-                                            <span className="inline-block mt-2 px-2 py-1 text-xs font-bold rounded-full bg-blue-50 dark:bg-blue-900/30 text-[#0055FF] dark:text-[#66FF00] capitalize">{user.role}</span>
+                                        <div className="p-3 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
+                                            {user.profilePhoto ? (
+                                                <img
+                                                    src={user.profilePhoto}
+                                                    alt={user.name}
+                                                    className="w-10 h-10 rounded-full object-cover border-2 border-[#0055FF] dark:border-[#66FF00]"
+                                                    onError={(e) => {
+                                                        e.currentTarget.style.display = 'none';
+                                                        const fallback = document.createElement('div');
+                                                        fallback.className = 'w-10 h-10 rounded-full bg-gradient-to-br from-[#0055FF] to-[#66FF00] flex items-center justify-center text-xs font-bold text-white';
+                                                        fallback.textContent = getInitials(user.name);
+                                                        e.currentTarget.parentElement!.insertBefore(fallback, e.currentTarget);
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0055FF] to-[#66FF00] flex items-center justify-center text-xs font-bold text-white">
+                                                    {getInitials(user.name)}
+                                                </div>
+                                            )}
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{user.name}</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                                                <span className="inline-block mt-1 px-2 py-0.5 text-xs font-bold rounded-full bg-blue-50 dark:bg-blue-900/30 text-[#0055FF] dark:text-[#66FF00] capitalize">{user.role}</span>
+                                            </div>
                                         </div>
                                         <div className="py-2">
                                             {user.role === 'owner' ? (
@@ -295,14 +323,30 @@ export const Navbar = () => {
                             <hr className="my-2 border-gray-100 dark:border-gray-800" />
                             {user ? (
                                 <>
-                                    <div className="px-4 py-3 border-b border-gray-100">
-                                        <p className="text-sm font-semibold text-gray-900 truncate" title={user.name}>{user.name}</p>
-                                        <p className="text-xs text-gray-500 break-words" title={user.email}>{user.email}</p>
-                                        <span className="inline-block mt-2 px-2 py-1 text-xs font-bold rounded-full bg-blue-50 text-[#0055FF] capitalize">{user.role}</span>
-                                    <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">{user.name}</p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
-                                        <span className="inline-block mt-2 px-2 py-1 text-xs font-bold rounded-full bg-blue-50 dark:bg-blue-900/30 text-[#0055FF] dark:text-[#66FF00] capitalize">{user.role}</span>
+                                    <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
+                                        {user.profilePhoto ? (
+                                            <img
+                                                src={user.profilePhoto}
+                                                alt={user.name}
+                                                className="w-12 h-12 rounded-full object-cover border-2 border-[#0055FF] dark:border-[#66FF00]"
+                                                onError={(e) => {
+                                                    e.currentTarget.style.display = 'none';
+                                                    const fallback = document.createElement('div');
+                                                    fallback.className = 'w-12 h-12 rounded-full bg-gradient-to-br from-[#0055FF] to-[#66FF00] flex items-center justify-center text-sm font-bold text-white';
+                                                    fallback.textContent = getInitials(user.name);
+                                                    e.currentTarget.parentElement!.insertBefore(fallback, e.currentTarget);
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#0055FF] to-[#66FF00] flex items-center justify-center text-sm font-bold text-white">
+                                                {getInitials(user.name)}
+                                            </div>
+                                        )}
+                                        <div className="flex-1">
+                                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{user.name}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                                            <span className="inline-block mt-1 px-2 py-1 text-xs font-bold rounded-full bg-blue-50 dark:bg-blue-900/30 text-[#0055FF] dark:text-[#66FF00] capitalize">{user.role}</span>
+                                        </div>
                                     </div>
                                     <Link to="/profile" className="px-4 py-3 text-base font-semibold text-gray-700 dark:text-gray-300 hover:text-[#0055FF] dark:hover:text-[#66FF00] flex items-center gap-2" onClick={() => setIsOpen(false)}>
                                         <Settings className="w-4 h-4" />
