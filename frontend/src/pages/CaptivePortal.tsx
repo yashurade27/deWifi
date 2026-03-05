@@ -16,6 +16,10 @@ import {
   Monitor,
   RefreshCw,
   ExternalLink,
+  Check,
+  AlertTriangle,
+  XCircle,
+  ShieldCheck,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -626,14 +630,14 @@ export default function CaptivePortal(): React.ReactElement {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-blue-900 via-blue-800 to-indigo-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 text-center"
+          className="text-center"
         >
-          <Loader2 className="w-12 h-12 text-white animate-spin mx-auto mb-4" />
-          <p className="text-white text-lg">Detecting WiFi network...</p>
+          <div className="w-16 h-16 border-4 border-[#0055FF]/20 border-t-[#0055FF] rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600 text-sm font-medium">Connecting to WiFi spot...</p>
         </motion.div>
       </div>
     );
@@ -645,45 +649,32 @@ export default function CaptivePortal(): React.ReactElement {
   if (needsGatewayRedirect && !authenticated) {
     const gwUrl = getLocalGatewayUrl(accessToken || tokenParam || undefined);
     return (
-      <div className="min-h-screen bg-linear-to-br from-blue-900 via-blue-800 to-indigo-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Background effects */}
+        <div className="absolute top-[-120px] left-[-120px] w-[480px] h-[480px] rounded-full bg-[#0055FF]/5 blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-[-80px] right-[-80px] w-[360px] h-[360px] rounded-full bg-[#66FF00]/5 blur-[100px] pointer-events-none" />
+        
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md"
+          className="w-full max-w-md relative z-10"
         >
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/20 backdrop-blur mb-4">
-              <Shield className="w-10 h-10 text-white" />
+          <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-2xl">
+            <div className="w-14 h-14 bg-[#0055FF]/10 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+              <Wifi className="w-7 h-7 text-[#0055FF]" />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">deWifi Portal</h1>
-          </div>
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-6 border border-white/20">
-            <div className="text-center mb-5">
-              <WifiOff className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
-              <h2 className="text-xl font-semibold text-white mb-2">Open the Local Portal</h2>
-              <p className="text-blue-200 text-sm">
-                Your browser is blocking the authentication request because this
-                page loads over HTTPS but the hotspot gateway uses HTTP.
-              </p>
-            </div>
-            <div className="bg-white/10 rounded-xl p-4 mb-5 text-sm text-blue-200">
-              <p className="font-medium text-white mb-1">📶 To connect to this WiFi:</p>
-              <ol className="list-decimal list-inside space-y-1">
-                <li>Make sure you are connected to the hotspot</li>
-                <li>Tap the button below to open the local portal</li>
-                <li>Enter your access token there to authenticate</li>
-              </ol>
-            </div>
+            <h2 className="text-2xl font-bold text-gray-900 text-center mb-3">
+              Redirect Required
+            </h2>
+            <p className="text-gray-600 text-center mb-6 text-sm leading-relaxed">
+              For security reasons, please open the captive portal directly in your browser.
+            </p>
             <a
               href={gwUrl}
-              className="flex items-center justify-center gap-2 w-full py-4 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold transition-all text-center"
+              className="block w-full bg-gradient-to-r from-[#0055FF] to-[#0066FF] hover:from-[#0044CC] hover:to-[#0055DD] text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 text-center shadow-[0_4px_20px_rgba(0,85,255,0.4)]"
             >
-              <ExternalLink className="w-5 h-5" />
-              Open Auth Portal
+              Open Portal
             </a>
-            <p className="text-center text-blue-300/60 text-xs mt-4">
-              Opens: <span className="font-mono">{gwUrl}</span>
-            </p>
           </div>
         </motion.div>
       </div>
@@ -691,335 +682,260 @@ export default function CaptivePortal(): React.ReactElement {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-900 via-blue-800 to-indigo-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background gradient effects */}
+      <div className="absolute top-[-120px] left-[-120px] w-[480px] h-[480px] rounded-full bg-[#0055FF]/5 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-80px] right-[-80px] w-[360px] h-[360px] rounded-full bg-[#66FF00]/5 blur-[100px] pointer-events-none" />
+      
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md relative z-10"
       >
-        {/* Header */}
-        <div className="text-center mb-8">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', bounce: 0.5 }}
-            className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/20 backdrop-blur mb-4"
-          >
-            {authenticated ? (
-              <Wifi className="w-10 h-10 text-green-400" />
-            ) : (
-              <Shield className="w-10 h-10 text-white" />
-            )}
-          </motion.div>
-          <h1 className="text-3xl font-bold text-white mb-2">
-            {authenticated ? 'Connected!' : 'deWifi Portal'}
-          </h1>
-          {spot && (
-            <p className="text-blue-200 text-sm">
-              {spot.name} • {spot.address}
-            </p>
-          )}
+        {/* Logo Header */}
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2.5 mb-4">
+            <div className="w-14 h-14 bg-[#0055FF] rounded-2xl flex items-center justify-center shadow-[0_6px_24px_rgba(0,85,255,0.5)]">
+              <Wifi className="w-7 h-7 text-white" strokeWidth={2.5} />
+            </div>
+            <span className="text-[1.8rem] font-black tracking-tight text-gray-900 leading-none">
+              de<span className="text-[#0055FF]">Wifi</span>
+            </span>
+          </div>
         </div>
 
         {/* Main Card */}
-        <motion.div
-          layout
-          className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden border border-white/20"
-        >
-          <AnimatePresence mode="wait">
-            {authenticated ? (
-              /* ─── Authenticated View ─── */
-              <motion.div
-                key="authenticated"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="p-6"
-              >
-                <div className="text-center mb-6">
-                  <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                  <h2 className="text-xl font-semibold text-white">
-                    You're Connected!
-                  </h2>
-                  <p className="text-blue-200 text-sm mt-2">
-                    Enjoy your WiFi session
-                  </p>
+        <div className="bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-hidden">
+          {/* Spot Info Header */}
+          {spot && (
+            <div className="bg-gradient-to-br from-blue-50 to-transparent p-6 border-b border-gray-200">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-[#0055FF]/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Wifi className="w-6 h-6 text-[#0055FF]" />
                 </div>
+                <div className="flex-1">
+                  <h2 className="text-lg font-bold text-gray-900 mb-1">{spot.name}</h2>
+                  <p className="text-gray-600 text-sm">{spot.address}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          {authenticated ? (
+            /* Authenticated State */
+            <div className="p-6 space-y-6">
+              {/* Success Icon */}
+              <div className="text-center">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", duration: 0.6 }}
+                  className="w-16 h-16 bg-gradient-to-br from-green-100 to-green-50 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                >
+                  <Check className="w-8 h-8 text-green-600" strokeWidth={3} />
+                </motion.div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">You're Connected!</h3>
+                <p className="text-gray-600 text-sm">Enjoy high-speed internet</p>
+              </div>
 
-                {/* Gateway registration warning — shown when the firewall hasn't been updated */}
-                {gatewayRegistered === false && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-4 p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-xl"
-                  >
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="text-yellow-200 text-sm font-medium">
-                          Internet not activated yet
-                        </p>
-                        <p className="text-yellow-300/80 text-xs mt-1">
-                          The gateway couldn't be reached to unlock your internet access.
-                          Make sure you are connected to this WiFi hotspot, then tap the button below.
-                        </p>
-                        <button
-                          onClick={retryGatewayRegistration}
-                          disabled={retryingGateway}
-                          className="mt-3 flex items-center gap-2 px-4 py-2 bg-yellow-500/30 hover:bg-yellow-500/50 text-yellow-200 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-                        >
-                          {retryingGateway ? (
-                            <><Loader2 className="w-4 h-4 animate-spin" /> Activating...</>
-                          ) : (
-                            <><RefreshCw className="w-4 h-4" /> Activate Internet Access</>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {gatewayRegistered === true && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-4 p-3 bg-green-500/20 border border-green-500/30 rounded-xl flex items-center gap-2"
-                  >
-                    <CheckCircle className="w-4 h-4 text-green-400 shrink-0" />
-                    <p className="text-green-200 text-xs">Internet access activated — enjoy browsing!</p>
-                  </motion.div>
-                )}
-
-                {/* Time Remaining */}
-                <div className="bg-white/10 rounded-xl p-4 mb-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-blue-200">
-                      <Clock className="w-5 h-5" />
-                      <span>Time Remaining</span>
-                    </div>
-                    <span className={`font-mono text-lg font-bold ${
-                      timeRemaining < 300 ? 'text-red-400' : 'text-white'
-                    }`}>
-                      {formatTime(timeRemaining)}
-                    </span>
+              {/* Countdown Timer */}
+              {expiresAt && (
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-gray-600 text-sm font-medium">Time Remaining</span>
+                    <Clock className="w-4 h-4 text-[#0055FF]" />
                   </div>
-                  
-                  {/* Progress bar */}
-                  <div className="mt-3 h-2 bg-white/20 rounded-full overflow-hidden">
+                  <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#0055FF] to-[#66FF00]">
+                    {formatTime(timeRemaining)}
+                  </div>
+                  <div className="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <motion.div
-                      className={`h-full ${
-                        timeRemaining < 300 ? 'bg-red-400' : 'bg-green-400'
-                      }`}
+                      className="h-full bg-gradient-to-r from-[#0055FF] to-[#66FF00]"
                       initial={{ width: '100%' }}
                       animate={{ 
-                        width: `${Math.min(100, (timeRemaining / 3600) * 100)}%` 
+                        width: expiresAt ? `${Math.max(0, (timeRemaining / ((expiresAt.getTime() - Date.now() + timeRemaining * 1000) / 1000)) * 100)}%` : '100%'
                       }}
-                      transition={{ duration: 0.5 }}
+                      transition={{ duration: 1, ease: "linear" }}
                     />
                   </div>
                 </div>
+              )}
 
-                {/* Device Info */}
-                {deviceInfo && (
-                  <div className="bg-white/10 rounded-xl p-4 mb-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-blue-200">
-                        {getDeviceIcon(deviceInfo.type)}
-                        <span>Connected Devices</span>
+              {/* Device Info */}
+              {deviceInfo && (
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 text-gray-700">
+                      {getDeviceIcon(deviceInfo.type)}
+                      <div>
+                        <p className="text-gray-900 text-sm font-semibold">Your Device</p>
+                        <p className="text-gray-600 text-xs">{deviceInfo.active} of {deviceInfo.max} devices active</p>
                       </div>
-                      <span className="text-white font-semibold">
-                        {deviceInfo.active} / {deviceInfo.max}
-                      </span>
                     </div>
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Disconnect Button */}
-                <button
-                  onClick={handleDisconnect}
-                  className="w-full py-3 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
-                >
-                  <WifiOff className="w-5 h-5" />
-                  Disconnect
-                </button>
-              </motion.div>
-            ) : (
-              /* ─── Login View ─── */
-              <motion.div
-                key="login"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="p-6"
+              {/* Gateway Registration Warning */}
+              {gatewayRegistered === false && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                  <div className="flex gap-3">
+                    <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-yellow-900 text-sm font-semibold mb-2">
+                        Internet access pending
+                      </p>
+                      <p className="text-yellow-700 text-xs mb-3">
+                        The gateway needs to activate your connection.
+                      </p>
+                      <button
+                        onClick={retryGatewayRegistration}
+                        disabled={retryingGateway}
+                        className="text-xs font-bold text-yellow-700 hover:text-yellow-800 transition-colors disabled:opacity-50"
+                      >
+                        {retryingGateway ? 'Activating...' : 'Retry Activation'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Disconnect Button */}
+              <button
+                onClick={handleDisconnect}
+                className="w-full bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-900 font-semibold py-3 px-4 rounded-xl transition-all duration-200"
               >
-                {!spotId ? (
-                  <div className="text-center py-8">
-                    <WifiOff className="w-16 h-16 text-red-400 mx-auto mb-4" />
-                    <h2 className="text-xl font-semibold text-white mb-2">
-                      No WiFi Spot Detected
-                    </h2>
-                    <p className="text-blue-200 text-sm">
-                      Please connect to a valid deWifi hotspot to continue.
+                Disconnect
+              </button>
+            </div>
+          ) : (
+            /* Login Form */
+            <div className="p-6">
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="mb-5 bg-red-50 border border-red-200 rounded-xl p-4"
+                >
+                  <div className="flex gap-3">
+                    <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-red-900 text-sm font-semibold">Authentication Failed</p>
+                      <p className="text-red-700 text-xs mt-1">{error}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              <form onSubmit={handleAuthenticate} className="space-y-5">
+                {/* Toggle: Access Token / OTP */}
+                <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => setUseOTP(false)}
+                    className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all duration-200 ${
+                      !useOTP
+                        ? 'bg-[#0055FF] text-white shadow-[0_4px_16px_rgba(0,85,255,0.3)]'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Access Token
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUseOTP(true)}
+                    className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all duration-200 ${
+                      useOTP
+                        ? 'bg-[#0055FF] text-white shadow-[0_4px_16px_rgba(0,85,255,0.3)]'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    OTP Code
+                  </button>
+                </div>
+
+                {/* Input Field */}
+                {useOTP ? (
+                  <div>
+                    <label className="block text-gray-900 text-sm font-semibold mb-2">
+                      Enter OTP
+                    </label>
+                    <input
+                      type="text"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      placeholder="123456"
+                      maxLength={6}
+                      className="w-full bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#0055FF] focus:border-transparent transition-all text-center text-2xl font-bold tracking-widest"
+                      required
+                    />
+                    <p className="text-gray-500 text-xs mt-2">
+                      Enter the 6-digit OTP from your booking confirmation
                     </p>
                   </div>
                 ) : (
-                  <>
-                    <div className="text-center mb-6">
-                      <Lock className="w-12 h-12 text-blue-300 mx-auto mb-3" />
-                      <h2 className="text-xl font-semibold text-white">
-                        Authentication Required
-                      </h2>
-                      <p className="text-blue-200 text-sm mt-2">
-                        Enter your booking access token to connect
-                      </p>
-                    </div>
-
-                    {/* Error Display */}
-                    <AnimatePresence>
-                      {error && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className={`mb-4 p-4 rounded-xl flex items-start gap-3 ${
-                            errorCode === 'DEVICE_LIMIT_REACHED'
-                              ? 'bg-orange-500/20 border border-orange-500/30'
-                              : 'bg-red-500/20 border border-red-500/30'
-                          }`}
-                        >
-                          <AlertCircle className={`w-5 h-5 shrink-0 mt-0.5 ${
-                            errorCode === 'DEVICE_LIMIT_REACHED'
-                              ? 'text-orange-400'
-                              : 'text-red-400'
-                          }`} />
-                          <div>
-                            <p className={`text-sm ${
-                              errorCode === 'DEVICE_LIMIT_REACHED'
-                                ? 'text-orange-200'
-                                : 'text-red-200'
-                            }`}>
-                              {error}
-                            </p>
-                            {errorCode === 'DEVICE_LIMIT_REACHED' && (
-                              <p className="text-xs text-orange-300 mt-1">
-                                Disconnect another device to connect this one.
-                              </p>
-                            )}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Auth Form */}
-                    <form onSubmit={handleAuthenticate} className="space-y-4">
-                      {/* Toggle Token/OTP */}
-                      <div className="flex bg-white/10 rounded-lg p-1">
-                        <button
-                          type="button"
-                          onClick={() => setUseOTP(false)}
-                          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-                            !useOTP
-                              ? 'bg-blue-500 text-white'
-                              : 'text-blue-200 hover:text-white'
-                          }`}
-                        >
-                          Access Token
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setUseOTP(true)}
-                          className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
-                            useOTP
-                              ? 'bg-blue-500 text-white'
-                              : 'text-blue-200 hover:text-white'
-                          }`}
-                        >
-                          OTP Code
-                        </button>
-                      </div>
-
-                      {/* Token Input */}
-                      {!useOTP ? (
-                        <div>
-                          <label className="block text-blue-200 text-sm mb-2">
-                            Access Token
-                          </label>
-                          <input
-                            type="text"
-                            value={accessToken}
-                            onChange={(e) => setAccessToken(e.target.value.toUpperCase())}
-                            placeholder="Enter your 16-character token"
-                            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent font-mono text-lg tracking-wider text-center uppercase"
-                            maxLength={16}
-                            autoComplete="off"
-                            autoFocus
-                          />
-                          <p className="text-xs text-blue-300 mt-2">
-                            Find this in your booking confirmation
-                          </p>
-                        </div>
-                      ) : (
-                        <div>
-                          <label className="block text-blue-200 text-sm mb-2">
-                            OTP Code
-                          </label>
-                          <input
-                            type="text"
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                            placeholder="Enter 6-digit OTP"
-                            className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent font-mono text-2xl tracking-[0.5em] text-center"
-                            maxLength={6}
-                            inputMode="numeric"
-                            autoComplete="one-time-code"
-                            autoFocus
-                          />
-                        </div>
-                      )}
-
-                      {/* Submit Button */}
-                      <button
-                        type="submit"
-                        disabled={authenticating || (useOTP ? otp.length !== 6 : accessToken.length < 8)}
-                        className="w-full py-4 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
-                      >
-                        {authenticating ? (
-                          <>
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            Authenticating...
-                          </>
-                        ) : (
-                          <>
-                            <Wifi className="w-5 h-5" />
-                            Connect to WiFi
-                          </>
-                        )}
-                      </button>
-                    </form>
-
-                    {/* Help Text */}
-                    <div className="mt-6 pt-4 border-t border-white/10">
-                      <p className="text-center text-blue-300 text-xs">
-                        Don't have a booking?{' '}
-                        <a
-                          href={`/book/${spotId}`}
-                          className="text-blue-400 hover:text-blue-300 underline"
-                        >
-                          Book now
-                        </a>
-                      </p>
-                    </div>
-                  </>
+                  <div>
+                    <label className="block text-gray-900 text-sm font-semibold mb-2">
+                      Access Token
+                    </label>
+                    <input
+                      type="text"
+                      value={accessToken}
+                      onChange={(e) => setAccessToken(e.target.value.toUpperCase())}
+                      placeholder="A3B5C7D9E1F2G4H6"
+                      maxLength={16}
+                      className="w-full bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#0055FF] focus:border-transparent transition-all font-mono tracking-wider"
+                      required
+                    />
+                    <p className="text-gray-500 text-xs mt-2">
+                      Found in your booking confirmation email
+                    </p>
+                  </div>
                 )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
 
-        {/* Footer */}
-        <p className="text-center text-blue-300/60 text-xs mt-6">
-          Secured by deWifi • Real-time access control
-        </p>
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={authenticating}
+                  className="w-full bg-gradient-to-r from-[#0055FF] to-[#0066FF] hover:from-[#0044CC] hover:to-[#0055DD] text-white font-bold py-3.5 px-4 rounded-xl transition-all duration-200 shadow-[0_4px_20px_rgba(0,85,255,0.4)] hover:shadow-[0_6px_24px_rgba(0,85,255,0.5)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {authenticating ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Connecting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Wifi className="w-5 h-5" />
+                      <span>Connect to WiFi</span>
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* Help Text */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <div className="flex items-start gap-3 text-gray-600 text-xs">
+                  <ShieldCheck className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">
+                    Your connection is secured with end-to-end encryption. Access token is valid for the duration of your booking.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Link */}
+        <div className="text-center mt-6">
+          <a
+            href="https://dewifi.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-500 hover:text-gray-700 text-xs font-medium transition-colors"
+          >
+            Powered by deWifi
+          </a>
+        </div>
       </motion.div>
     </div>
   );
