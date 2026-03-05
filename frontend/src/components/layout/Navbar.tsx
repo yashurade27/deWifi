@@ -20,12 +20,30 @@ export const Navbar = () => {
     const { user, signout } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
+    const dropdownRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 24);
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
+    // Close dropdown when clicking outside
+    React.useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setDropdownOpen(false);
+            }
+        };
+
+        if (dropdownOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [dropdownOpen]);
 
     const handleSignout = async () => {
         await signout();
@@ -79,6 +97,8 @@ export const Navbar = () => {
 
                 {/* CTA */}
                 {user ? (
+                    <div className="hidden md:flex items-center gap-4">
+                        <div className="relative" ref={dropdownRef}>
                     <div className="hidden md:flex items-center gap-3">
                         {/* Theme Toggle */}
                         <button
@@ -112,6 +132,12 @@ export const Navbar = () => {
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
                                         exit={{ opacity: 0, y: -8, scale: 0.95 }}
                                         transition={{ duration: 0.15 }}
+                                        className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-gray-200 shadow-lg z-50 overflow-hidden"
+                                    >
+                                        <div className="p-4 border-b border-gray-100">
+                                            <p className="text-sm font-semibold text-gray-900 truncate" title={user.name}>{user.name}</p>
+                                            <p className="text-xs text-gray-500 break-words" title={user.email}>{user.email}</p>
+                                            <span className="inline-block mt-2 px-2 py-1 text-xs font-bold rounded-full bg-blue-50 text-[#0055FF] capitalize">{user.role}</span>
                                         className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg z-50"
                                     >
                                         <div className="p-3 border-b border-gray-100 dark:border-gray-700">
@@ -269,6 +295,10 @@ export const Navbar = () => {
                             <hr className="my-2 border-gray-100 dark:border-gray-800" />
                             {user ? (
                                 <>
+                                    <div className="px-4 py-3 border-b border-gray-100">
+                                        <p className="text-sm font-semibold text-gray-900 truncate" title={user.name}>{user.name}</p>
+                                        <p className="text-xs text-gray-500 break-words" title={user.email}>{user.email}</p>
+                                        <span className="inline-block mt-2 px-2 py-1 text-xs font-bold rounded-full bg-blue-50 text-[#0055FF] capitalize">{user.role}</span>
                                     <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
                                         <p className="text-sm font-semibold text-gray-900 dark:text-white">{user.name}</p>
                                         <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>

@@ -104,7 +104,7 @@ export default function Signup() {
                     }}
                 />
 
-                <div className="relative z-10 flex flex-col h-full px-14 py-12">
+                <div className="relative z-10 flex flex-col h-full px-14 py-8">
                     {/* Logo */}
                     <Link to="/" className="flex items-center gap-2.5 group w-fit">
                         <div className="w-9 h-9 bg-[#0055FF] rounded-xl flex items-center justify-center shadow-[0_2px_16px_rgba(0,85,255,0.5)]">
@@ -116,7 +116,7 @@ export default function Signup() {
                     </Link>
 
                     {/* Dynamic copy */}
-                    <div className="mt-auto mb-auto">
+                    <div className="mt-8 mb-6">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={role}
@@ -141,7 +141,7 @@ export default function Signup() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.2, duration: 0.6 }}
-                            className="mt-10 space-y-3"
+                            className="mt-6 space-y-2"
                         >
                             {PERKS.map((perk) => (
                                 <li key={perk} className="flex items-center gap-3 text-gray-400 text-sm font-medium">
@@ -160,7 +160,7 @@ export default function Signup() {
             </div>
 
             {/* ── Right Panel (Form) ──────────────────────────────── */}
-            <div className="flex-1 flex items-center justify-center bg-white px-6 py-12 overflow-y-auto">
+            <div className="flex-1 flex items-center justify-center bg-white px-6 py-6 overflow-y-auto">
                 <motion.div
                     initial={{ opacity: 0, x: 30 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -168,7 +168,7 @@ export default function Signup() {
                     className="w-full max-w-[440px]"
                 >
                     {/* Mobile logo */}
-                    <div className="lg:hidden flex items-center gap-2.5 mb-10">
+                    <div className="lg:hidden flex items-center gap-2.5 mb-6">
                         <div className="w-8 h-8 bg-[#0055FF] rounded-lg flex items-center justify-center shadow-[0_2px_12px_rgba(0,85,255,0.35)]">
                             <Wifi className="w-4 h-4 text-white" strokeWidth={2.5} />
                         </div>
@@ -178,13 +178,13 @@ export default function Signup() {
                     </div>
 
                     {/* Heading */}
-                    <div className="mb-7">
+                    <div className="mb-5">
                         <h2 className="text-3xl font-black text-black tracking-tight mb-1.5">Create your account</h2>
                         <p className="text-gray-500 text-sm">Join thousands of users on deWifi — it's free.</p>
                     </div>
 
                     {/* Role selector */}
-                    <div className="mb-7">
+                    <div className="mb-5">
                         <p className="text-sm font-semibold text-gray-700 mb-3">I want to…</p>
                         <div className="grid grid-cols-2 gap-3">
                             {ROLE_OPTIONS.map((opt) => {
@@ -223,7 +223,7 @@ export default function Signup() {
                     </div>
 
                     {/* Trust badge */}
-                    <div className="flex items-center gap-3 mb-7 p-3.5 rounded-2xl bg-blue-50 border border-blue-100">
+                    <div className="flex items-center gap-3 mb-5 p-3 rounded-2xl bg-blue-50 border border-blue-100">
                         <ShieldCheck className="w-5 h-5 text-[#0055FF] shrink-0" />
                         <p className="text-xs text-blue-700 font-medium">
                             Your data is encrypted and never shared with third parties
@@ -237,9 +237,9 @@ export default function Signup() {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-3">
                         {/* Name */}
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                             <Label htmlFor="name" className="text-sm font-semibold text-gray-700">Full name</Label>
                             <Input
                                 id="name"
@@ -253,7 +253,7 @@ export default function Signup() {
                         </div>
 
                         {/* Email */}
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                             <Label htmlFor="email" className="text-sm font-semibold text-gray-700">Email address</Label>
                             <Input
                                 id="email"
@@ -267,7 +267,7 @@ export default function Signup() {
                         </div>
 
                         {/* Phone */}
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                             <Label htmlFor="phone" className="text-sm font-semibold text-gray-700">Phone number</Label>
                             <div className="relative">
                                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-500 select-none">+91</span>
@@ -284,7 +284,7 @@ export default function Signup() {
                         </div>
 
                         {/* Password */}
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                             <Label htmlFor="password" className="text-sm font-semibold text-gray-700">Password</Label>
                             <div className="relative">
                                 <Input
@@ -309,7 +309,7 @@ export default function Signup() {
                         </div>
 
                         {/* Confirm Password */}
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                             <Label htmlFor="confirm" className="text-sm font-semibold text-gray-700">Confirm password</Label>
                             <div className="relative">
                                 <Input
@@ -371,7 +371,7 @@ export default function Signup() {
                     </form>
 
                     {/* Sign in link */}
-                    <p className="text-center text-sm text-gray-500 mt-7">
+                    <p className="text-center text-sm text-gray-500 mt-4">
                         Already have an account?{' '}
                         <Link
                             to="/login"
