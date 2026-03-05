@@ -87,7 +87,7 @@ export default function BookWifi() {
 
   // ── Restore payment state that was persisted before a network-switch reload ──
   // Key is per-spot so multiple bookings don't clash.
-  const STORAGE_KEY = `dewifi_payment_${spotId}`;
+  const STORAGE_KEY = `airlink_payment_${spotId}`;
 
   useEffect(() => {
     if (!spotId) return;
@@ -208,7 +208,7 @@ export default function BookWifi() {
         key: keyRes.key,
         amount: bookingData.amount,
         currency: bookingData.currency,
-        name: 'deWifi',
+        name: 'AirLink',
         description: `WiFi Access - ${spot.name}`,
         order_id: bookingData.razorpayOrderId,
         handler: async (response: any) => {

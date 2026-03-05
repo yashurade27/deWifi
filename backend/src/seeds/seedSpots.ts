@@ -1,5 +1,5 @@
-/**
- * Seed script — inserts dummy WiFi spots + their owner users into MongoDB.
+﻿/**
+ * Seed script â€” inserts dummy WiFi spots + their owner users into MongoDB.
  * Run with:  npx ts-node --transpile-only src/seeds/seedSpots.ts
  */
 import mongoose from "mongoose";
@@ -12,29 +12,29 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 import User from "../models/User";
 import WifiSpot from "../models/WifiSpot";
 
-// ─── Owner definitions ────────────────────────────────────────────────────────
+// â”€â”€â”€ Owner definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const owners = [
-  { name: "Yash Urade",           email: "yash@dewifi.dev",     phone: "9000000001", avatar: "YU" },
-  { name: "Samiksha Musale",      email: "samiksha@dewifi.dev", phone: "9000000002", avatar: "SM" },
-  { name: "Vaidehi Narkhede",     email: "vaidehi@dewifi.dev",  phone: "9000000003", avatar: "VN" },
-  { name: "Spandan Mali",         email: "spandan@dewifi.dev",  phone: "9000000004", avatar: "SP" },
-  { name: "Rohit Deshpande",      email: "rohit@dewifi.dev",    phone: "9000000005", avatar: "RD" },
-  { name: "Priya Joshi",          email: "priya@dewifi.dev",    phone: "9000000006", avatar: "PJ" },
-  { name: "Arjun Mehta",          email: "arjun@dewifi.dev",    phone: "9000000007", avatar: "AM" },
-  { name: "Neha Shah",            email: "neha@dewifi.dev",     phone: "9000000008", avatar: "NS" },
-  { name: "Kunal Kapoor",         email: "kunal@dewifi.dev",    phone: "9000000009", avatar: "KK" },
-  { name: "Aditya Rao",           email: "aditya@dewifi.dev",   phone: "9000000010", avatar: "AR" },
-  { name: "Deepa Krishnamurthy",  email: "deepa@dewifi.dev",    phone: "9000000011", avatar: "DK" },
-  { name: "Sravani Reddy",        email: "sravani@dewifi.dev",  phone: "9000000012", avatar: "SR" },
-  { name: "Rajan Khanna",         email: "rajan@dewifi.dev",    phone: "9000000013", avatar: "RK" },
+  { name: "Yash Urade",           email: "yash@airlink.dev",     phone: "9000000001", avatar: "YU" },
+  { name: "Samiksha Musale",      email: "samiksha@airlink.dev", phone: "9000000002", avatar: "SM" },
+  { name: "Vaidehi Narkhede",     email: "vaidehi@airlink.dev",  phone: "9000000003", avatar: "VN" },
+  { name: "Spandan Mali",         email: "spandan@airlink.dev",  phone: "9000000004", avatar: "SP" },
+  { name: "Rohit Deshpande",      email: "rohit@airlink.dev",    phone: "9000000005", avatar: "RD" },
+  { name: "Priya Joshi",          email: "priya@airlink.dev",    phone: "9000000006", avatar: "PJ" },
+  { name: "Arjun Mehta",          email: "arjun@airlink.dev",    phone: "9000000007", avatar: "AM" },
+  { name: "Neha Shah",            email: "neha@airlink.dev",     phone: "9000000008", avatar: "NS" },
+  { name: "Kunal Kapoor",         email: "kunal@airlink.dev",    phone: "9000000009", avatar: "KK" },
+  { name: "Aditya Rao",           email: "aditya@airlink.dev",   phone: "9000000010", avatar: "AR" },
+  { name: "Deepa Krishnamurthy",  email: "deepa@airlink.dev",    phone: "9000000011", avatar: "DK" },
+  { name: "Sravani Reddy",        email: "sravani@airlink.dev",  phone: "9000000012", avatar: "SR" },
+  { name: "Rajan Khanna",         email: "rajan@airlink.dev",    phone: "9000000013", avatar: "RK" },
 ];
 
 async function seed() {
   await mongoose.connect(process.env.MONGO_URI!);
-  console.log("✅ Connected to MongoDB");
+  console.log("âœ… Connected to MongoDB");
 
-  // ── Upsert owners ─────────────────────────────────────────────────────────
-  const hashedPw = await bcrypt.hash("Dewifi@123", 12);
+  // â”€â”€ Upsert owners â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const hashedPw = await bcrypt.hash("Airlink@123", 12);
   const ownerMap: Record<string, mongoose.Types.ObjectId> = {};
 
   for (const o of owners) {
@@ -52,10 +52,10 @@ async function seed() {
       { upsert: true, new: true }
     );
     ownerMap[o.avatar] = user._id as mongoose.Types.ObjectId;
-    console.log(`  👤 Owner upserted: ${o.name}`);
+    console.log(`  ðŸ‘¤ Owner upserted: ${o.name}`);
   }
 
-  // ── Spot definitions ────────────────────────────────────────────────────
+  // â”€â”€ Spot definitions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const spots = [
     // Pune
     {
@@ -72,7 +72,7 @@ async function seed() {
     },
     {
       ownerAvatar: "SM", name: "Samiksha's Cafe Corner",
-      description: "Cozy corner café with unlimited high-speed WiFi, great coffee and a productive vibe.",
+      description: "Cozy corner cafÃ© with unlimited high-speed WiFi, great coffee and a productive vibe.",
       lat: 18.5286, lng: 73.8476,
       address: "FC Road, Deccan Gymkhana, Pune", city: "Pune", state: "Maharashtra",
       pricePerHour: 50, speedMbps: 100, maxUsers: 8,
@@ -119,8 +119,8 @@ async function seed() {
       ssid: "ITLounge_WiFi", tag: "Office",
     },
     {
-      ownerAvatar: "PJ", name: "Viman Nagar Bookworm Café",
-      description: "Reading café with fast WiFi, green tea and the smell of fresh books.",
+      ownerAvatar: "PJ", name: "Viman Nagar Bookworm CafÃ©",
+      description: "Reading cafÃ© with fast WiFi, green tea and the smell of fresh books.",
       lat: 18.5679, lng: 73.9143,
       address: "North Main Road, Viman Nagar, Pune", city: "Pune", state: "Maharashtra",
       pricePerHour: 40, speedMbps: 80, maxUsers: 6,
@@ -182,7 +182,7 @@ async function seed() {
     },
     {
       ownerAvatar: "DK", name: "Indiranagar Library WiFi",
-      description: "Quiet reading library with complimentary WiFi for members. ₹80/hr non-member access.",
+      description: "Quiet reading library with complimentary WiFi for members. â‚¹80/hr non-member access.",
       lat: 12.9784, lng: 77.6408,
       address: "100 Feet Road, Indiranagar, Bengaluru", city: "Bengaluru", state: "Karnataka",
       pricePerHour: 80, speedMbps: 100, maxUsers: 10,
@@ -207,8 +207,8 @@ async function seed() {
     },
     // Delhi
     {
-      ownerAvatar: "RK", name: "Connaught Place Café WiFi",
-      description: "Heritage café at CP with strong WiFi. Great place to work between meetings in central Delhi.",
+      ownerAvatar: "RK", name: "Connaught Place CafÃ© WiFi",
+      description: "Heritage cafÃ© at CP with strong WiFi. Great place to work between meetings in central Delhi.",
       lat: 28.6328, lng: 77.2194,
       address: "Block A, Connaught Place, New Delhi", city: "New Delhi", state: "Delhi",
       pricePerHour: 55, speedMbps: 120, maxUsers: 10,
@@ -220,7 +220,7 @@ async function seed() {
     },
   ] as const;
 
-  // ── Upsert spots (match by name) ────────────────────────────────────────
+  // â”€â”€ Upsert spots (match by name) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   for (const s of spots) {
     const { ownerAvatar, ...rest } = s;
     await WifiSpot.findOneAndUpdate(
@@ -235,10 +235,10 @@ async function seed() {
       },
       { upsert: true, new: true }
     );
-    console.log(`  📶 Spot upserted: ${rest.name}`);
+    console.log(`  ðŸ“¶ Spot upserted: ${rest.name}`);
   }
 
-  console.log("\n🎉 Seed complete!");
+  console.log("\nðŸŽ‰ Seed complete!");
   await mongoose.disconnect();
 }
 
@@ -246,3 +246,4 @@ seed().catch((err) => {
   console.error("Seed failed:", err);
   process.exit(1);
 });
+

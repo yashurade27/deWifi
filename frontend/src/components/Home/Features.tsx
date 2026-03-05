@@ -30,7 +30,7 @@ export const Features = () => {
             <div className="container max-w-7xl mx-auto px-6 md:px-8">
                 <div className="grid md:grid-cols-2 gap-16 items-center">
                     <div>
-                        <span className="text-[#0055FF] font-bold tracking-wider uppercase text-xs mb-4 block">Why deWifi</span>
+                        <span className="text-[#0055FF] font-bold tracking-wider uppercase text-xs mb-4 block">Why AirLink</span>
                         <h2 className="text-4xl md:text-5xl lg:text-6xl font-black mb-5 leading-tight">
                             The future of <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">internet access.</span>

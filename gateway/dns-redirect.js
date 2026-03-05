@@ -1,13 +1,13 @@
-/**
- * ╔══════════════════════════════════════════════════════════════════════╗
- * ║         deWifi DNS Redirect Server                                  ║
- * ║                                                                    ║
- * ║  A simple DNS server that redirects ALL DNS queries to the         ║
- * ║  gateway IP. This makes the captive portal appear automatically    ║
- * ║  when users open ANY website on their browser.                      ║
- * ║                                                                    ║
- * ║  MUST BE RUN AS ADMINISTRATOR (binds to port 53)                   ║
- * ╚══════════════════════════════════════════════════════════════════════╝
+﻿/**
+ * â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+ * â•‘         AirLink DNS Redirect Server                                  â•‘
+ * â•‘                                                                    â•‘
+ * â•‘  A simple DNS server that redirects ALL DNS queries to the         â•‘
+ * â•‘  gateway IP. This makes the captive portal appear automatically    â•‘
+ * â•‘  when users open ANY website on their browser.                      â•‘
+ * â•‘                                                                    â•‘
+ * â•‘  MUST BE RUN AS ADMINISTRATOR (binds to port 53)                   â•‘
+ * â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
  *
  * HOW IT WORKS:
  *   1. Runs a UDP DNS server on port 53
@@ -108,7 +108,7 @@ function buildRedirectResponse(query, gatewayIP) {
     response[answerOffset + 4] = 0x00;
     response[answerOffset + 5] = 0x01;
 
-    // TTL (5 seconds — short so it doesn't cache)
+    // TTL (5 seconds â€” short so it doesn't cache)
     response[answerOffset + 6] = 0x00;
     response[answerOffset + 7] = 0x00;
     response[answerOffset + 8] = 0x00;
@@ -155,7 +155,7 @@ function forwardDNS(query) {
     });
 }
 
-// ─── DNS Server ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ DNS Server â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const server = dgram.createSocket("udp4");
 
@@ -194,7 +194,7 @@ server.on("message", async (msg, rinfo) => {
             // Redirect to gateway IP
             const redirect = buildRedirectResponse(msg, GATEWAY_IP);
             server.send(redirect, rinfo.port, rinfo.address);
-            console.log(`  🔄 ${clientIP} → ${domain} → ${GATEWAY_IP} (portal)`);
+            console.log(`  ðŸ”„ ${clientIP} â†’ ${domain} â†’ ${GATEWAY_IP} (portal)`);
         }
     }
 });
@@ -202,24 +202,25 @@ server.on("message", async (msg, rinfo) => {
 server.on("error", (err) => {
     console.error("DNS server error:", err);
     if (err.code === "EACCES") {
-        console.error("\n❌ Permission denied! Port 53 requires Administrator privileges.");
-        console.error("   Right-click PowerShell → 'Run as Administrator' → try again");
+        console.error("\nâŒ Permission denied! Port 53 requires Administrator privileges.");
+        console.error("   Right-click PowerShell â†’ 'Run as Administrator' â†’ try again");
     }
     server.close();
 });
 
 server.bind(DNS_PORT, "0.0.0.0", () => {
-    console.log("╔══════════════════════════════════════════════════════════════╗");
-    console.log("║           deWifi DNS Redirect Server                        ║");
-    console.log("╚══════════════════════════════════════════════════════════════╝");
+    console.log("â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—");
+    console.log("â•‘           AirLink DNS Redirect Server                        â•‘");
+    console.log("â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
     console.log("");
-    console.log(`  🌐 DNS server running on port ${DNS_PORT}`);
-    console.log(`  📍 Redirecting to: ${GATEWAY_IP}`);
-    console.log(`  🔀 Real DNS: ${REAL_DNS}`);
+    console.log(`  ðŸŒ DNS server running on port ${DNS_PORT}`);
+    console.log(`  ðŸ“ Redirecting to: ${GATEWAY_IP}`);
+    console.log(`  ðŸ”€ Real DNS: ${REAL_DNS}`);
     console.log("");
     console.log("  All DNS queries from unauthenticated devices will resolve to");
     console.log(`  the gateway IP (${GATEWAY_IP}), triggering the captive portal.`);
     console.log("");
-    console.log("  ⌨️  Press Ctrl+C to stop");
-    console.log("═══════════════════════════════════════════════════════════════");
+    console.log("  âŒ¨ï¸  Press Ctrl+C to stop");
+    console.log("â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
 });
+

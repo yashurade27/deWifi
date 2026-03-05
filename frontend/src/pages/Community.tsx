@@ -69,7 +69,7 @@ const Community = () => {
                         <h1 className="text-5xl md:text-6xl lg:text-7xl font-black text-gray-900 dark:text-white mb-6 tracking-tight">
                             Welcome to the{' '}
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0055FF] to-[#66FF00]">
-                                deWifi Community
+                                AirLink Community
                             </span>
                         </h1>
                         <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 leading-relaxed">

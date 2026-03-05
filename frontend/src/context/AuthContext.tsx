@@ -46,8 +46,8 @@ interface AuthContextValue extends AuthState {
 // ─── Context ──────────────────────────────────────────────────────────────────
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const TOKEN_KEY = "dewifi_token";
-const USER_KEY = "dewifi_user";
+const TOKEN_KEY = "airlink_token";
+const USER_KEY = "airlink_user";
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }: { children: ReactNode }) {

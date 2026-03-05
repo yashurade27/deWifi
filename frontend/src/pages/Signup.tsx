@@ -180,7 +180,7 @@ export default function Signup() {
                     {/* Heading */}
                     <div className="mb-5">
                         <h2 className="text-3xl font-black text-black tracking-tight mb-1.5">Create your account</h2>
-                        <p className="text-gray-500 text-sm">Join thousands of users on deWifi — it's free.</p>
+                        <p className="text-gray-500 text-sm">Join thousands of users on AirLink — it's free.</p>
                     </div>
 
                     {/* Role selector */}
@@ -352,7 +352,7 @@ export default function Signup() {
                                 className="w-4 h-4 mt-0.5 rounded border-gray-300 accent-[#0055FF] cursor-pointer shrink-0"
                             />
                             <label htmlFor="terms" className="text-sm text-gray-600 leading-relaxed cursor-pointer select-none">
-                                I agree to deWifi's{' '}
+                                I agree to AirLink's{' '}
                                 <Link to="/terms" className="text-[#0055FF] font-semibold hover:underline">Terms of Service</Link>
                                 {' '}and{' '}
                                 <Link to="/privacy" className="text-[#0055FF] font-semibold hover:underline">Privacy Policy</Link>

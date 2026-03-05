@@ -94,16 +94,16 @@ const NetworkGlobe3D = ({ isDark }: { isDark: boolean }) => {
             {/* Ambient glow behind the globe in dark mode */}
             {isDark && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-[420px] h-[420px] rounded-full bg-[radial-gradient(circle,rgba(0,85,255,0.2)_0%,rgba(0,85,255,0.05)_50%,transparent_70%)] blur-xl" />
+                    <div className="w-[420px] h-[420px] rounded-full bg-[radial-gradient(circle,rgba(0,85,255,0.25)_0%,rgba(0,85,255,0.08)_50%,transparent_70%)] blur-xl" />
                 </div>
             )}
 
             <Canvas
                 camera={{ position: [0, 0, 6], fov: 45 }}
                 gl={{ antialias: true, alpha: true }}
-                style={{ background: isDark ? '#030712' : 'transparent' }}
+                style={{ background: 'transparent' }}
             >
-                <fog attach="fog" args={[isDark ? '#030712' : '#ffffff', 8, 18]} />
+                <fog attach="fog" args={[isDark ? '#000000' : '#ffffff', 8, 18]} />
                 
                 {/* Lighting setup — brighter glow in dark, softer in light */}
                 <ambientLight intensity={isDark ? 0.25 : 0.5} />
@@ -216,7 +216,7 @@ export const Hero = () => {
     const isDark = theme === 'dark';
 
     return (
-        <section className="relative w-full min-h-[calc(100vh-4rem)] flex items-center justify-center bg-white dark:bg-gray-950 overflow-hidden">
+        <section className="relative w-full min-h-[calc(100vh-4rem)] flex items-center justify-center bg-white dark:bg-black overflow-hidden">
             {/* Subtle background gradient */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(0,85,255,0.04)_0%,transparent_60%)] dark:bg-[radial-gradient(circle_at_top_right,rgba(0,85,255,0.15)_0%,transparent_60%)] pointer-events-none" />
 

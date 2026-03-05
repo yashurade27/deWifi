@@ -78,7 +78,7 @@ export const Navbar = () => {
                         <Wifi className="w-4 h-4 text-white" strokeWidth={2.5} />
                     </div>
                     <span className="text-[1.2rem] font-black tracking-tight text-black dark:text-white leading-none">
-                        de<span className="text-[#0055FF]">Wifi</span>
+                        Air<span className="text-[#0055FF]">Link</span>
                     </span>
                 </Link>
 

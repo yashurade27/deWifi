@@ -1,10 +1,10 @@
-# Razorpay Integration Guide for deWifi
+﻿# Razorpay Integration Guide for AirLink
 
-## 🎉 Integration Complete!
+## ðŸŽ‰ Integration Complete!
 
-Razorpay test API has been successfully integrated into your deWifi application. This guide will help you set up and test the payment functionality.
+Razorpay test API has been successfully integrated into your AirLink application. This guide will help you set up and test the payment functionality.
 
-## 📋 What Was Done
+## ðŸ“‹ What Was Done
 
 ### Backend Changes
 
@@ -41,13 +41,13 @@ Razorpay test API has been successfully integrated into your deWifi application.
    - Implemented payment handler with proper verification
    - Added error handling and user feedback
 
-## 🔐 Setup Instructions
+## ðŸ” Setup Instructions
 
 ### Step 1: Get Razorpay Test Credentials
 
 1. Go to [Razorpay Dashboard](https://dashboard.razorpay.com/signin)
 2. Create an account or log in
-3. Navigate to **Settings** → **API Keys**
+3. Navigate to **Settings** â†’ **API Keys**
 4. Click on **Generate Test Key**
 5. Copy both **Key ID** and **Key Secret**
 
@@ -81,7 +81,7 @@ RAZORPAY_KEY_SECRET=YYYYYYYYYYYYYYYY
    npm run dev
    ```
 
-## 🧪 Testing the Integration
+## ðŸ§ª Testing the Integration
 
 ### Test Mode Features
 
@@ -125,7 +125,7 @@ Use these test cards for different scenarios:
    - Review price breakdown
 
 3. **Initiate Payment:**
-   - Click "Pay ₹XXX" button
+   - Click "Pay â‚¹XXX" button
    - Razorpay checkout modal will open
 
 4. **Complete Payment:**
@@ -138,7 +138,7 @@ Use these test cards for different scenarios:
    - WiFi credentials will be revealed
    - Navigate to session page to view details
 
-## 🔍 Verification Process
+## ðŸ” Verification Process
 
 The payment flow includes multiple security checks:
 
@@ -159,7 +159,7 @@ The payment flow includes multiple security checks:
    - WiFi credentials revealed only after successful verification
    - User count incremented on the spot
 
-## 🔄 Refund Testing
+## ðŸ”„ Refund Testing
 
 To test refunds:
 
@@ -170,7 +170,7 @@ To test refunds:
 5. Refund will be initiated automatically
 6. Check Razorpay dashboard to see the refund
 
-## 📊 Monitoring Payments
+## ðŸ“Š Monitoring Payments
 
 ### Razorpay Dashboard
 
@@ -187,7 +187,7 @@ Access your [Razorpay Dashboard](https://dashboard.razorpay.com) to:
 - Switch to live mode only after thorough testing
 - Live mode requires business verification
 
-## 🚀 Going Live
+## ðŸš€ Going Live
 
 When ready to accept real payments:
 
@@ -196,7 +196,7 @@ When ready to accept real payments:
    - Get your account verified
 
 2. **Generate Live Keys:**
-   - Go to Settings → API Keys
+   - Go to Settings â†’ API Keys
    - Click "Generate Live Key"
    - Copy the live credentials
 
@@ -212,7 +212,7 @@ When ready to accept real payments:
    - Verify all flows work correctly
    - Only then deploy to production
 
-## 🛠️ Troubleshooting
+## ðŸ› ï¸ Troubleshooting
 
 ### Common Issues
 
@@ -249,7 +249,7 @@ console.log("Creating order:", { amount, receipt, notes });
 console.log("Razorpay response:", order);
 ```
 
-## 📝 API Endpoints
+## ðŸ“ API Endpoints
 
 ### GET `/api/bookings/razorpay-key`
 
@@ -271,7 +271,7 @@ console.log("Razorpay response:", order);
 - Cancels booking
 - Initiates refund if payment was made
 
-## 🔒 Security Best Practices
+## ðŸ”’ Security Best Practices
 
 1. **Never expose key secret:**
    - Keep in `.env` file only
@@ -291,14 +291,14 @@ console.log("Razorpay response:", order);
    - Handle delayed payment confirmations
    - Track payment failures
 
-## 📚 Additional Resources
+## ðŸ“š Additional Resources
 
 - [Razorpay Documentation](https://razorpay.com/docs/)
 - [Payment Gateway Integration Guide](https://razorpay.com/docs/payments/payment-gateway/)
 - [Test Cards List](https://razorpay.com/docs/payments/payments/test-card-upi-details/)
 - [Webhook Setup](https://razorpay.com/docs/webhooks/)
 
-## 🎯 Next Steps
+## ðŸŽ¯ Next Steps
 
 1. **Set up Razorpay test account**
 2. **Configure credentials in `.env`**
@@ -307,7 +307,7 @@ console.log("Razorpay response:", order);
 5. **Monitor test transactions**
 6. **Prepare for production deployment**
 
-## ✅ Success Checklist
+## âœ… Success Checklist
 
 - [ ] Razorpay account created
 - [ ] Test credentials configured
@@ -322,4 +322,5 @@ console.log("Razorpay response:", order);
 
 **Need Help?** Contact Razorpay support or check their comprehensive documentation.
 
-**Happy Testing! 🚀**
+**Happy Testing! ðŸš€**
+

@@ -242,15 +242,15 @@ function SpotCard({
       onClick={onClick}
       className={`cursor-pointer rounded-xl border p-3.5 transition-all duration-200 ${
         selected
-          ? 'border-[#0055FF] bg-blue-50 shadow-[0_0_0_2px_rgba(0,85,255,0.2)]'
-          : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm'
+          ? 'border-[#0055FF] dark:border-blue-400 bg-blue-50 dark:bg-blue-950/30 shadow-[0_0_0_2px_rgba(0,85,255,0.2)]'
+          : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-sm'
       }`}
     >
       {/* Header row */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-gray-900 truncate">{spot.name}</p>
-          <p className="text-xs text-gray-500 truncate mt-0.5">
+          <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{spot.name}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
             {spot.address}
           </p>
         </div>
@@ -263,11 +263,11 @@ function SpotCard({
       </div>
 
       {/* Stats row */}
-      <div className="mt-2.5 flex items-center gap-3 text-xs text-gray-600">
+      <div className="mt-2.5 flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
         <span className="flex items-center gap-1">
           <Star size={11} className="text-yellow-400 fill-yellow-400" />
-          <span className="font-semibold text-gray-800">{spot.rating}</span>
-          <span className="text-gray-400">({spot.reviewCount})</span>
+          <span className="font-semibold text-gray-800 dark:text-gray-200">{spot.rating}</span>
+          <span className="text-gray-400 dark:text-gray-500">({spot.reviewCount})</span>
         </span>
         <span className="flex items-center gap-1">
           <Zap size={11} className="text-blue-500" />
@@ -281,15 +281,15 @@ function SpotCard({
 
       {/* Footer row */}
       <div className="mt-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-1 text-xs text-gray-500">
+        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
           <Clock size={11} />
           {spot.availableFrom} – {spot.availableTo}
         </div>
         <div className="flex items-center gap-1.5">
           <LiveStatusBadge spot={spot} />
-          <span className="text-sm font-black text-[#0055FF]">
+          <span className="text-sm font-black text-[#0055FF] dark:text-blue-400">
             ₹{spot.pricePerHour}
-            <span className="text-xs font-medium text-gray-400">/hr</span>
+            <span className="text-xs font-medium text-gray-400 dark:text-gray-500">/hr</span>
           </span>
         </div>
       </div>
@@ -389,11 +389,11 @@ export default function Explore() {
               exit={{ x: -340, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               style={{ width: `${sidebarWidth}px` }}
-              className="absolute md:relative z-[600] top-0 left-0 h-full bg-white border-r border-gray-200 flex flex-col shadow-xl md:shadow-none"
+              className="absolute md:relative z-[600] top-0 left-0 h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col shadow-xl md:shadow-none"
             >
               {/* Loading / error banner */}
               {loading && (
-                <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2 text-xs text-gray-500">
+                <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                   <span className="w-3 h-3 rounded-full border-2 border-uplink-blue border-t-transparent animate-spin" />
                   Loading spots…
                 </div>
@@ -406,20 +406,20 @@ export default function Explore() {
               )}
 
               {/* Search */}
-              <div className="p-4 border-b border-gray-100">
+              <div className="p-4 border-b border-gray-100 dark:border-gray-800">
                 <div className="relative">
-                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                   <input
                     type="text"
                     placeholder="Search spots, city…"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#0055FF]/30 focus:border-[#0055FF] transition"
+                    className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0055FF]/30 focus:border-[#0055FF] dark:focus:border-blue-400 transition"
                   />
                   {search && (
                     <button
                       onClick={() => setSearch('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                     >
                       <X size={14} />
                     </button>
@@ -428,10 +428,10 @@ export default function Explore() {
               </div>
 
               {/* Filters */}
-              <div className="border-b border-gray-100">
+              <div className="border-b border-gray-100 dark:border-gray-800">
                 <button
                   onClick={() => setFiltersOpen(!filtersOpen)}
-                  className="w-full px-4 py-3 flex items-center justify-between text-xs font-semibold text-gray-700 uppercase tracking-wider hover:bg-gray-50 transition-colors"
+                  className="w-full px-4 py-3 flex items-center justify-between text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   <div className="flex items-center gap-1.5">
                     <SlidersHorizontal size={12} />
@@ -445,7 +445,7 @@ export default function Explore() {
 
                 {/* City */}
                 <div>
-                  <p className="text-xs text-gray-500 mb-1.5">City</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">City</p>
                   <div className="flex flex-wrap gap-1.5">
                     {allCities.map((city) => (
                       <button
@@ -454,7 +454,7 @@ export default function Explore() {
                         className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-all ${
                           cityFilter === city
                             ? 'bg-[#0055FF] text-white border-[#0055FF]'
-                            : 'bg-white text-gray-600 border-gray-200 hover:border-[#0055FF] hover:text-[#0055FF]'
+                            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-[#0055FF] dark:hover:border-blue-400 hover:text-[#0055FF] dark:hover:text-blue-400'
                         }`}
                       >
                         {city}
@@ -465,7 +465,7 @@ export default function Explore() {
 
                 {/* Tag */}
                 <div>
-                  <p className="text-xs text-gray-500 mb-1.5">Type</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">Type</p>
                   <div className="flex flex-wrap gap-1.5">
                     {ALL_TAGS.map((tag) => (
                       <button
@@ -474,7 +474,7 @@ export default function Explore() {
                         className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-all ${
                           tagFilter === tag
                             ? 'bg-[#0055FF] text-white border-[#0055FF]'
-                            : 'bg-white text-gray-600 border-gray-200 hover:border-[#0055FF] hover:text-[#0055FF]'
+                            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-[#0055FF] dark:hover:border-blue-400 hover:text-[#0055FF] dark:hover:text-blue-400'
                         }`}
                       >
                         {tag}
@@ -485,9 +485,9 @@ export default function Explore() {
 
                 {/* Price slider */}
                 <div>
-                  <p className="text-xs text-gray-500 mb-1.5">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">
                     Max price:{' '}
-                    <span className="font-semibold text-gray-800">₹{maxPrice}/hr</span>
+                    <span className="font-semibold text-gray-800 dark:text-gray-200">₹{maxPrice}/hr</span>
                   </p>
                   <input
                     type="range"
@@ -514,7 +514,7 @@ export default function Explore() {
                       }`}
                     />
                   </div>
-                    <span className="text-xs text-gray-600 font-medium">Active spots only</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">Active spots only</span>
                   </label>
                 </div>
                 )}
@@ -522,8 +522,8 @@ export default function Explore() {
 
               {/* Spot list */}
               <div className="flex-1 overflow-y-auto px-3 pt-4 pb-3 space-y-2.5">
-                <div className="sticky top-0 bg-white z-10 pb-2 mb-1">
-                  <p className="text-xs text-gray-600 font-semibold px-1 py-1.5 bg-gray-50 rounded-md border border-gray-100">
+                <div className="sticky top-0 bg-white dark:bg-gray-900 z-10 pb-2 mb-1">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 font-semibold px-1 py-1.5 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700">
                     {filtered.length} spot{filtered.length !== 1 ? 's' : ''} found
                   </p>
                 </div>
@@ -572,7 +572,7 @@ export default function Explore() {
           style={sidebarOpen ? { left: `${sidebarWidth + 4}px` } : { left: '16px' }}
         >
           <motion.div
-            className="w-7 h-7 rounded-full bg-white border border-gray-200 shadow-md flex items-center justify-center text-gray-600 hover:text-[#0055FF] hover:border-[#0055FF] transition-colors"
+            className="w-7 h-7 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-md flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-[#0055FF] dark:hover:text-blue-400 hover:border-[#0055FF] dark:hover:border-blue-400 transition-colors"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
           >
@@ -718,36 +718,36 @@ export default function Explore() {
           </MapContainer>
 
           {/* ── Legend ─────────────────────────────────── */}
-          <div className="absolute bottom-6 right-4 z-[500] bg-white/95 backdrop-blur rounded-xl border border-gray-200 shadow-lg px-3 py-2.5 text-xs space-y-1">
-            <p className="font-semibold text-gray-700 mb-1.5">Legend</p>
+          <div className="absolute bottom-6 right-4 z-[500] bg-white/95 dark:bg-gray-900/95 backdrop-blur rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg px-3 py-2.5 text-xs space-y-1">
+            <p className="font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Legend</p>
             {(Object.entries(TAG_COLORS) as [WifiSpot['tag'], string][]).map(([tag, color]) => (
               <div key={tag} className="flex items-center gap-2">
                 <span
                   className="w-3 h-3 rounded-full border-2 border-white shadow"
                   style={{ backgroundColor: color }}
                 />
-                <span className="text-gray-600">{tag}</span>
+                <span className="text-gray-600 dark:text-gray-400">{tag}</span>
               </div>
             ))}
-            <div className="flex items-center gap-2 pt-1 border-t border-gray-100">
+            <div className="flex items-center gap-2 pt-1 border-t border-gray-100 dark:border-gray-800">
               <span className="w-3 h-3 rounded-full border-2 border-white shadow bg-gray-400" />
-              <span className="text-gray-500">Offline</span>
+              <span className="text-gray-500 dark:text-gray-400">Offline</span>
             </div>
           </div>
 
           {/* ── Stats bar ─────────────────────────────── */}
           <div className="absolute top-4 right-4 z-[500] flex items-center gap-2">
-            <div className="bg-white/95 backdrop-blur rounded-full border border-gray-200 shadow-md px-3.5 py-2 flex items-center gap-2 text-xs">
+            <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur rounded-full border border-gray-200 dark:border-gray-700 shadow-md px-3.5 py-2 flex items-center gap-2 text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-semibold text-gray-700">
+              <span className="font-semibold text-gray-700 dark:text-gray-300">
                 {spots.filter((s) => s.isActive).length}
               </span>
-              <span className="text-gray-500">active spots</span>
+              <span className="text-gray-500 dark:text-gray-400">active spots</span>
             </div>
-            <div className="bg-white/95 backdrop-blur rounded-full border border-gray-200 shadow-md px-3.5 py-2 flex items-center gap-2 text-xs">
+            <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur rounded-full border border-gray-200 dark:border-gray-700 shadow-md px-3.5 py-2 flex items-center gap-2 text-xs">
               <Wifi size={12} className="text-uplink-blue" />
-              <span className="font-semibold text-gray-700">{spots.length}</span>
-              <span className="text-gray-500">total</span>
+              <span className="font-semibold text-gray-700 dark:text-gray-300">{spots.length}</span>
+              <span className="text-gray-500 dark:text-gray-400">total</span>
             </div>
           </div>
         </div>
