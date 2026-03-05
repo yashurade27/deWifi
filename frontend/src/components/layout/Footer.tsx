@@ -4,7 +4,7 @@ import { Wifi } from 'lucide-react';
 
 export const Footer = () => {
     return (
-        <footer className="w-full bg-[#00112e] text-white pt-20 pb-10">
+        <footer className="w-full bg-[#00112e] dark:bg-gray-950 text-white pt-20 pb-10">
             <div className="container px-4 md:px-6">
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
                     {/* Brand */}

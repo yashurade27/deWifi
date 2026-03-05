@@ -374,7 +374,7 @@ export default function Explore() {
   }, [isResizing]);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
+    <div className="flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-gray-950">
       <Navbar />
 
       <div className="flex flex-1 overflow-hidden relative">

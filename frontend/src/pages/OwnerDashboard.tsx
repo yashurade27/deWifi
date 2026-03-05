@@ -117,7 +117,7 @@ export default function OwnerDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <Navbar />
         <div className="flex items-center justify-center h-96">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -127,15 +127,15 @@ export default function OwnerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">WiFi Owner Dashboard</h1>
-            <p className="text-gray-600">Manage your WiFi spots and track earnings</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">WiFi Owner Dashboard</h1>
+            <p className="text-gray-600 dark:text-gray-400">Manage your WiFi spots and track earnings</p>
           </div>
           <Link
             to="/owner/spots/new"
@@ -181,16 +181,16 @@ export default function OwnerDashboard() {
         {spots.length > 0 && <GatewaySetup spots={spots} />}
 
         {/* WiFi Spots Grid */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Your WiFi Spots</h2>
+        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Your WiFi Spots</h2>
           </div>
           
           {spots.length === 0 ? (
             <div className="p-12 text-center">
-              <Wifi className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No WiFi spots yet</h3>
-              <p className="text-gray-500 mb-4">Start monetizing your internet by adding your first WiFi spot.</p>
+              <Wifi className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-600 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No WiFi spots yet</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">Start monetizing your internet by adding your first WiFi spot.</p>
               <Link
                 to="/owner/spots/new"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -200,7 +200,7 @@ export default function OwnerDashboard() {
               </Link>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-gray-200 dark:divide-gray-800">
               {spots.map((spot) => (
                 <SpotRow
                   key={spot._id}
@@ -222,13 +222,13 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl p-4 shadow-sm border border-gray-200"
+      className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-800"
     >
       <div className="flex items-center gap-3">
-        <div className="p-2 bg-gray-50 rounded-lg">{icon}</div>
+        <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">{icon}</div>
         <div>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          <p className="text-sm text-gray-500">{label}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
         </div>
       </div>
     </motion.div>
@@ -247,12 +247,12 @@ function SpotRow({ spot, onToggle, onDelete }: { spot: WifiSpot; onToggle: () =>
   };
   
   return (
-    <div className="p-4 hover:bg-gray-50 transition-colors">
+    <div className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         {/* Spot Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold text-gray-900 truncate">{spot.name}</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-white truncate">{spot.name}</h3>
             <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
               spot.monitoring.isOnline 
                 ? 'bg-green-100 text-green-700' 
@@ -266,7 +266,7 @@ function SpotRow({ spot, onToggle, onDelete }: { spot: WifiSpot; onToggle: () =>
               </span>
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
             <span className="flex items-center gap-1">
               <MapPin size={14} />
               {spot.address}
@@ -297,14 +297,14 @@ function SpotRow({ spot, onToggle, onDelete }: { spot: WifiSpot; onToggle: () =>
               <Star size={14} className="text-yellow-500" />
               <span className="font-medium">{spot.rating}</span>
             </div>
-            <span className="text-xs text-gray-500">{spot.reviewCount} reviews</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">{spot.reviewCount} reviews</span>
           </div>
           <div className="text-center">
             <div className="flex items-center gap-1">
               <Activity size={14} className="text-green-500" />
               <span className="font-medium">{spot.monitoring.uptimePercent}%</span>
             </div>
-            <span className="text-xs text-gray-500">uptime</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">uptime</span>
           </div>
         </div>
 
@@ -361,24 +361,24 @@ function GatewaySetup({ spots }: { spots: WifiSpot[] }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-linear-to-br from-indigo-50 to-blue-50 rounded-xl shadow-sm border border-indigo-200 mb-8 overflow-hidden"
+      className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/50 dark:to-blue-950/50 rounded-xl shadow-sm border border-indigo-200 dark:border-indigo-900 mb-8 overflow-hidden"
     >
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full p-4 flex items-center justify-between hover:bg-white/30 transition-colors"
+        className="w-full p-4 flex items-center justify-between hover:bg-white/30 dark:hover:bg-white/5 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-indigo-100 rounded-lg">
-            <Shield className="text-indigo-600" size={20} />
+          <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
+            <Shield className="text-indigo-600 dark:text-indigo-400" size={20} />
           </div>
           <div className="text-left">
-            <h2 className="text-lg font-semibold text-gray-900">Captive Portal Gateway</h2>
-            <p className="text-sm text-gray-600">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Captive Portal Gateway</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Set up the local gateway to control WiFi access on your hotspot
             </p>
           </div>
         </div>
-        {expanded ? <ChevronUp size={20} className="text-gray-500" /> : <ChevronDown size={20} className="text-gray-500" />}
+        {expanded ? <ChevronUp size={20} className="text-gray-500 dark:text-gray-400" /> : <ChevronDown size={20} className="text-gray-500 dark:text-gray-400" />}
       </button>
 
       {expanded && (
@@ -388,15 +388,15 @@ function GatewaySetup({ spots }: { spots: WifiSpot[] }) {
           className="px-4 pb-6"
         >
           {/* Quick Start Steps */}
-          <div className="bg-white rounded-xl p-6 mb-4">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Terminal size={18} className="text-indigo-600" />
+          <div className="bg-white dark:bg-gray-900 rounded-xl p-6 mb-4">
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Terminal size={18} className="text-indigo-600 dark:text-indigo-400" />
               Quick Start Guide
             </h3>
 
             <div className="space-y-4">
               <Step number={1} title="Enable Windows Mobile Hotspot">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Go to <strong>Settings → Network & Internet → Mobile Hotspot</strong> and toggle it ON.
                   Set security to <strong>Open (no password)</strong> for captive portal mode.
                 </p>
@@ -411,7 +411,7 @@ function GatewaySetup({ spots }: { spots: WifiSpot[] }) {
               </Step>
 
               <Step number={3} title="Start the Gateway (Run as Admin)">
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                   Pick your spot and run the gateway:
                 </p>
                 {spots.map((spot) => (
@@ -430,7 +430,7 @@ function GatewaySetup({ spots }: { spots: WifiSpot[] }) {
               </Step>
 
               <Step number={4} title="(Optional) Start DNS Redirect">
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                   Makes the portal appear automatically when users connect:
                 </p>
                 <CodeBlock
@@ -441,7 +441,7 @@ function GatewaySetup({ spots }: { spots: WifiSpot[] }) {
               </Step>
 
               <Step number={5} title="Users Connect!">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Users connect to your hotspot → portal appears → they enter their Access Token
                   (received after booking & paying) → internet access granted until booking expires.
                 </p>
@@ -450,14 +450,14 @@ function GatewaySetup({ spots }: { spots: WifiSpot[] }) {
           </div>
 
           {/* Spot IDs Quick Copy */}
-          <div className="bg-white rounded-xl p-4">
-            <h4 className="font-medium text-gray-900 mb-3">Your Spot IDs</h4>
+          <div className="bg-white dark:bg-gray-900 rounded-xl p-4">
+            <h4 className="font-medium text-gray-900 dark:text-white mb-3">Your Spot IDs</h4>
             <div className="space-y-2">
               {spots.map((spot) => (
-                <div key={spot._id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                <div key={spot._id} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div className="flex items-center gap-2 min-w-0">
                     <Wifi size={14} className={spot.isActive ? 'text-green-500' : 'text-gray-400'} />
-                    <span className="text-sm font-medium text-gray-700 truncate">{spot.name}</span>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">{spot.name}</span>
                   </div>
                   <button
                     onClick={() => copyText(spot._id, 'spot', spot._id)}
@@ -479,11 +479,11 @@ function GatewaySetup({ spots }: { spots: WifiSpot[] }) {
 function Step({ number, title, children }: { number: number; title: string; children: React.ReactNode }) {
   return (
     <div className="flex gap-3">
-      <div className="shrink-0 w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold">
+      <div className="shrink-0 w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-sm font-bold">
         {number}
       </div>
       <div className="flex-1">
-        <h4 className="font-medium text-gray-900 text-sm mb-1">{title}</h4>
+        <h4 className="font-medium text-gray-900 dark:text-white text-sm mb-1">{title}</h4>
         {children}
       </div>
     </div>
