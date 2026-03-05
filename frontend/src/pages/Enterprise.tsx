@@ -569,8 +569,8 @@ export default function Enterprise() {
                 <Mail size={20} className="text-[#0055FF] dark:text-blue-400" />
               </div>
               <h4 className="font-semibold text-gray-900 dark:text-white mb-1">Email Us</h4>
-              <a href="mailto:enterprise@dewifi.com" className="text-sm text-gray-600 dark:text-gray-400 hover:text-[#0055FF] dark:hover:text-blue-400">
-                enterprise@dewifi.com
+              <a href="mailto:enterprise@airlink.com" className="text-sm text-gray-600 dark:text-gray-400 hover:text-[#0055FF] dark:hover:text-blue-400">
+                enterprise@airlink.com
               </a>
             </div>
             <div className="flex flex-col items-center">

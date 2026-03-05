@@ -1,4 +1,4 @@
-# deWifi Local Gateway Server
+﻿# AirLink Local Gateway Server
 
 This is the **local gateway server** that runs on the WiFi **owner's laptop** to control internet access through a captive portal system.
 
@@ -6,28 +6,28 @@ This is the **local gateway server** that runs on the WiFi **owner's laptop** to
 
 ```
 Your Home WiFi (Internet Source)
-        │
-        ▼
-  ┌─────────────────┐
-  │  Your Laptop     │
-  │  ├─ Mobile Hotspot (Open/No password)
-  │  ├─ Gateway Server (port 8080)
-  │  └─ DNS Redirect (port 53, optional)
-  └─────────────────┘
-        │
-  ┌─────┴─────┐
-  │  User's    │
-  │  Device    │
-  │  connects  │
-  │  to hotspot│
-  └─────┬──────┘
-        │
-        ▼
+        â”‚
+        â–¼
+  â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+  â”‚  Your Laptop     â”‚
+  â”‚  â”œâ”€ Mobile Hotspot (Open/No password)
+  â”‚  â”œâ”€ Gateway Server (port 8080)
+  â”‚  â””â”€ DNS Redirect (port 53, optional)
+  â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+        â”‚
+  â”Œâ”€â”€â”€â”€â”€â”´â”€â”€â”€â”€â”€â”
+  â”‚  User's    â”‚
+  â”‚  Device    â”‚
+  â”‚  connects  â”‚
+  â”‚  to hotspotâ”‚
+  â””â”€â”€â”€â”€â”€â”¬â”€â”€â”€â”€â”€â”€â”˜
+        â”‚
+        â–¼
   Captive Portal Appears
-  → User enters Access Token
-  → Gateway validates with backend
-  → Firewall allows internet access
-  → Access revoked when booking expires
+  â†’ User enters Access Token
+  â†’ Gateway validates with backend
+  â†’ Firewall allows internet access
+  â†’ Access revoked when booking expires
 ```
 
 ## Prerequisites
@@ -49,7 +49,7 @@ npm install
 
 ### 2. Enable Mobile Hotspot
 
-- Open **Settings → Network & Internet → Mobile Hotspot**
+- Open **Settings â†’ Network & Internet â†’ Mobile Hotspot**
 - Toggle **ON**
 - For captive portal mode, optionally set network to **Open** (no password)
 - Note the network name
@@ -67,8 +67,8 @@ node gateway.js --spot <YOUR_SPOT_ID>
 | ------------- | ----------------------- | ------------------------------------------ |
 | `--spot`      | (required)              | Your WiFi Spot ID from the Owner Dashboard |
 | `--port`      | `8080`                  | Port for the gateway HTTP server           |
-| `--backend`   | `http://localhost:3000` | URL of the deWifi backend API              |
-| `--portal`    | `http://localhost:5173` | URL of the deWifi frontend app             |
+| `--backend`   | `http://localhost:3000` | URL of the AirLink backend API              |
+| `--portal`    | `http://localhost:5173` | URL of the AirLink frontend app             |
 | `--interface` | (auto-detect)           | Name of the hotspot network interface      |
 
 ### 4. (Optional) Start DNS Redirect
@@ -113,7 +113,7 @@ This interactive wizard walks you through the entire setup process.
 ### "Permission denied" / Firewall rules not working
 
 - Run PowerShell as **Administrator**
-- Right-click PowerShell → "Run as administrator"
+- Right-click PowerShell â†’ "Run as administrator"
 
 ### Captive portal not appearing automatically
 
@@ -124,7 +124,7 @@ This interactive wizard walks you through the entire setup process.
 
 - Check Windows Services: "Windows Mobile Hotspot Service"
 - Ensure WiFi adapter supports hosted networks
-- Try: `netsh wlan show drivers` → check "Hosted network supported: Yes"
+- Try: `netsh wlan show drivers` â†’ check "Hosted network supported: Yes"
 
 ### Can't reach backend API
 
@@ -137,8 +137,9 @@ The gateway automatically cleans up all firewall rules on shutdown (Ctrl+C).
 If it crashes, run:
 
 ```powershell
-# Remove all deWifi firewall rules manually
-netsh advfirewall firewall show rule name=all | Select-String "deWifi"
+# Remove all AirLink firewall rules manually
+netsh advfirewall firewall show rule name=all | Select-String "AirLink"
 # Delete them
-netsh advfirewall firewall delete rule name="deWifi_Block_192_168_137_X"
+netsh advfirewall firewall delete rule name="AirLink_Block_192_168_137_X"
 ```
+

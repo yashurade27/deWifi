@@ -1,7 +1,7 @@
 {
-  "name": "dewifi-gateway",
+  "name": "airlink-gateway",
   "version": "1.0.0",
-  "description": "Local gateway server for deWifi captive portal - runs on owner's laptop",
+  "description": "Local gateway server for AirLink captive portal - runs on owner's laptop",
   "main": "gateway.js",
   "scripts": {
     "start": "node gateway.js",

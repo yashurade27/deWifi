@@ -4,7 +4,7 @@
  */
 
 const mongoose = require('mongoose');
-const ATLAS_URI = 'mongodb+srv://spandan_mali:spandan_mali@cluster0.zub3qxs.mongodb.net/dewifi?retryWrites=true&w=majority&appName=Cluster0';
+const ATLAS_URI = 'mongodb+srv://spandan_mali:spandan_mali@cluster0.zub3qxs.mongodb.net/airlink?retryWrites=true&w=majority&appName=Cluster0';
 
 async function viewUsers() {
   try {

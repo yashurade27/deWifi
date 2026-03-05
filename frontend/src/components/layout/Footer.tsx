@@ -14,7 +14,7 @@ export const Footer = () => {
                                 <Wifi className="w-4 h-4 text-white" strokeWidth={2.5} />
                             </div>
                             <span className="text-lg font-black tracking-tight text-white leading-none">
-                                de<span className="text-[#4d88ff]">Wifi</span>
+                                Air<span className="text-[#4d88ff]">Link</span>
                             </span>
                         </Link>
                         <p className="text-sm text-blue-300/70 mb-6 leading-relaxed">
@@ -55,7 +55,7 @@ export const Footer = () => {
                 </div>
 
                 <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p className="text-xs text-blue-300/50">&copy; 2026 deWifi Inc. All rights reserved.</p>
+                    <p className="text-xs text-blue-300/50">&copy; 2026 AirLink Inc. All rights reserved.</p>
                     <div className="flex gap-6">
                         <Link to="/terms" className="text-xs text-blue-300/50 hover:text-white transition-colors">Terms</Link>
                         <Link to="/privacy" className="text-xs text-blue-300/50 hover:text-white transition-colors">Privacy</Link>

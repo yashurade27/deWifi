@@ -5,8 +5,8 @@
 
 const mongoose = require('mongoose');
 
-const LOCAL_URI = 'mongodb://localhost:27017/dewifi';
-const ATLAS_URI = 'mongodb+srv://spandan_mali:spandan_mali@cluster0.zub3qxs.mongodb.net/dewifi?retryWrites=true&w=majority&appName=Cluster0';
+const LOCAL_URI = 'mongodb://localhost:27017/airlink';
+const ATLAS_URI = 'mongodb+srv://spandan_mali:spandan_mali@cluster0.zub3qxs.mongodb.net/airlink?retryWrites=true&w=majority&appName=Cluster0';
 
 async function migrateData() {
     console.log('🚀 Starting migration...\n');

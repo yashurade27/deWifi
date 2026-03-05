@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { API_BASE } from '@/lib/api';
 import {
@@ -66,7 +66,7 @@ const PAGE_IS_HTTPS = window.location.protocol === 'https:';
 /** Candidate gateway base URLs in preference order. */
 function getGatewayBases(): string[] {
   // When this page is on HTTPS, HTTP fetch calls to the gateway are blocked
-  // by Mixed Content policy — return empty so callers skip gateway entirely.
+  // by Mixed Content policy â€” return empty so callers skip gateway entirely.
   if (PAGE_IS_HTTPS) return [];
 
   const bases: string[] = [];
@@ -93,7 +93,7 @@ function getLocalGatewayUrl(token?: string): string {
 /**
  * Try to authenticate directly through the LOCAL gateway server.
  * The gateway has internet access and will validate the token with the
- * backend on our behalf — this works even when the client's DNS is hijacked
+ * backend on our behalf â€” this works even when the client's DNS is hijacked
  * by the captive portal (i.e. the client can't reach the backend directly).
  *
  * Returns the gateway's auth result, or null if no gateway was reachable.
@@ -116,8 +116,8 @@ async function tryGatewayAuth(
         signal: AbortSignal.timeout(4000),
       });
       const data = await res.json();
-      // Gateway found — return its result (success or failure) immediately
-      console.log(`[CaptivePortal] Gateway responded at ${base}:`, data.success ? '✅' : '❌');
+      // Gateway found â€” return its result (success or failure) immediately
+      console.log(`[CaptivePortal] Gateway responded at ${base}:`, data.success ? 'âœ…' : 'âŒ');
       return data as AuthResult;
     } catch {
       // This gateway address not reachable, try next
@@ -149,7 +149,7 @@ async function notifyGateway(sessionToken: string): Promise<boolean> {
       // Try next
     }
   }
-  console.warn('[CaptivePortal] Could not notify any gateway — firewall rules may not be updated');
+  console.warn('[CaptivePortal] Could not notify any gateway â€” firewall rules may not be updated');
   return false;
 }
 
@@ -196,7 +196,7 @@ export default function CaptivePortal(): React.ReactElement {
   }, [spotId]);
 
   // Auto-authenticate when token is passed via URL.
-  // We fire once loading finishes — spot may be a placeholder but the gateway
+  // We fire once loading finishes â€” spot may be a placeholder but the gateway
   // auth path works without the backend being reachable directly.
   useEffect(() => {
     if (!tokenParam || loading || authenticated || authenticating) return;
@@ -206,19 +206,19 @@ export default function CaptivePortal(): React.ReactElement {
       setError('');
       setErrorCode('');
       try {
-        // ── Step 1: Try gateway-direct auth first ─────────────────────────────
+        // â”€â”€ Step 1: Try gateway-direct auth first â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // When the phone is on the hotspot, DNS is hijacked so the public
         // backend URL is unreachable. The gateway has internet access and will
         // validate our token with the backend on our behalf.
         const gatewayResult = await tryGatewayAuth(spotId, tokenParam);
 
         if (gatewayResult !== null) {
-          // Gateway was reachable — use its answer
+          // Gateway was reachable â€” use its answer
           if (gatewayResult.success && gatewayResult.expiresAt) {
             const sToken = gatewayResult.sessionToken || 'gateway-managed';
             setSessionToken(sToken);
             setAuthenticated(true);
-            localStorage.removeItem(`dewifi_payment_${spotId}`);
+            localStorage.removeItem(`airlink_payment_${spotId}`);
             setExpiresAt(new Date(gatewayResult.expiresAt));
             setGatewayRegistered(true);
             if (sToken !== 'gateway-managed') {
@@ -239,7 +239,7 @@ export default function CaptivePortal(): React.ReactElement {
           }
         }
 
-        // ── Step 2: Gateway not reachable → call backend directly ─────────────
+        // â”€â”€ Step 2: Gateway not reachable â†’ call backend directly â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         // This works when the user is NOT on the hotspot (e.g. they paid on
         // home WiFi and are previewing the portal before connecting).
         const res = await fetch(`${API_BASE}/api/captive/authenticate`, {
@@ -252,7 +252,7 @@ export default function CaptivePortal(): React.ReactElement {
         if (data.success && data.sessionToken) {
           setSessionToken(data.sessionToken);
           setAuthenticated(true);
-          localStorage.removeItem(`dewifi_payment_${spotId}`);
+          localStorage.removeItem(`airlink_payment_${spotId}`);
           setExpiresAt(new Date(data.expiresAt!));
           if (data.deviceInfo) {
             setDeviceInfo({
@@ -263,7 +263,7 @@ export default function CaptivePortal(): React.ReactElement {
           }
           localStorage.setItem(`captive_session_${spotId}`, data.sessionToken);
 
-          // Notify the gateway (may fail if not on hotspot yet — user will see retry button)
+          // Notify the gateway (may fail if not on hotspot yet â€” user will see retry button)
           const registered = await notifyGateway(data.sessionToken);
           setGatewayRegistered(registered);
         } else {
@@ -307,7 +307,7 @@ export default function CaptivePortal(): React.ReactElement {
     if (!authenticated || !sessionToken) return;
 
     const heartbeat = setInterval(async () => {
-      // ── Try gateway heartbeat first (works when device has no internet) ──────
+      // â”€â”€ Try gateway heartbeat first (works when device has no internet) â”€â”€â”€â”€â”€â”€
       let validated = false;
       for (const base of getGatewayBases()) {
         try {
@@ -358,12 +358,12 @@ export default function CaptivePortal(): React.ReactElement {
    */
   const detectCaptivePortal = async () => {
     if (!spotId) {
-      setError('No WiFi spot specified. Please connect to a valid deWifi hotspot.');
+      setError('No WiFi spot specified. Please connect to a valid AirLink hotspot.');
       setLoading(false);
       return;
     }
 
-    // ── 1. Try local gateway (phone has no internet on hotspot) ──────────────
+    // â”€â”€ 1. Try local gateway (phone has no internet on hotspot) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     for (const base of getGatewayBases()) {
       try {
         const res = await fetch(`${base}/api/gateway/spot-info`, {
@@ -374,36 +374,36 @@ export default function CaptivePortal(): React.ReactElement {
           setSpot(data.spot);
           if (data.authenticated) {
             setAuthenticated(true);
-            localStorage.removeItem(`dewifi_payment_${spotId}`);
+            localStorage.removeItem(`airlink_payment_${spotId}`);
             if (data.expiresAt) setExpiresAt(new Date(data.expiresAt));
           }
           setLoading(false);
-          return; // Done — gateway responded, no error shown
+          return; // Done â€” gateway responded, no error shown
         }
       } catch {
         // This gateway address not reachable, try next
       }
     }
 
-    // ── 2. Try direct backend (user already has internet) ─────────────────────
+    // â”€â”€ 2. Try direct backend (user already has internet) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try {
       const res = await fetch(`${API_BASE}/api/captive/detect/${spotId}`);
       const data = await res.json();
 
       if (data.authenticated) {
         setAuthenticated(true);
-        localStorage.removeItem(`dewifi_payment_${spotId}`);
+        localStorage.removeItem(`airlink_payment_${spotId}`);
         setSpot(data.spot);
         if (data.expiresAt) setExpiresAt(new Date(data.expiresAt));
       } else if (data.spot) {
         setSpot(data.spot);
       } else {
-        setSpot({ id: spotId, name: 'deWifi Hotspot', address: '' });
+        setSpot({ id: spotId, name: 'AirLink Hotspot', address: '' });
         setError('WiFi spot not found. Please check your connection.');
       }
     } catch {
-      // ── 3. Offline fallback — placeholder so the auth form can render ────────
-      setSpot({ id: spotId, name: 'deWifi Hotspot', address: 'Connect to authenticate' });
+      // â”€â”€ 3. Offline fallback â€” placeholder so the auth form can render â”€â”€â”€â”€â”€â”€â”€â”€
+      setSpot({ id: spotId, name: 'AirLink Hotspot', address: 'Connect to authenticate' });
       // If the page is on HTTPS and the backend is unreachable, the only way
       // to authenticate is through the local HTTP gateway.  Signal this so the
       // UI can show a direct link to http://192.168.137.1:8080.
@@ -416,7 +416,7 @@ export default function CaptivePortal(): React.ReactElement {
   };
 
   const validateStoredSession = async (storedToken: string) => {
-    // ── 1. Try gateway status (no internet needed) ─────────────────────────────
+    // â”€â”€ 1. Try gateway status (no internet needed) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     for (const base of getGatewayBases()) {
       try {
         const res = await fetch(`${base}/api/gateway/status`, {
@@ -425,7 +425,7 @@ export default function CaptivePortal(): React.ReactElement {
         const data = await res.json();
         if (data.authenticated) {
           setAuthenticated(true);
-          localStorage.removeItem(`dewifi_payment_${spotId}`);
+          localStorage.removeItem(`airlink_payment_${spotId}`);
           setSessionToken(storedToken);
           setExpiresAt(new Date(data.expiresAt));
           setGatewayRegistered(true);
@@ -438,7 +438,7 @@ export default function CaptivePortal(): React.ReactElement {
           setLoading(false);
           return;
         }
-        // Gateway says not authenticated — clear stored session and show login form
+        // Gateway says not authenticated â€” clear stored session and show login form
         localStorage.removeItem(`captive_session_${spotId}`);
         detectCaptivePortal();
         return;
@@ -447,7 +447,7 @@ export default function CaptivePortal(): React.ReactElement {
       }
     }
 
-    // ── 2. Fall back to backend validation ─────────────────────────────────────
+    // â”€â”€ 2. Fall back to backend validation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     try {
       const res = await fetch(`${API_BASE}/api/captive/validate`, {
         method: 'POST',
@@ -458,7 +458,7 @@ export default function CaptivePortal(): React.ReactElement {
 
       if (data.authenticated) {
         setAuthenticated(true);
-        localStorage.removeItem(`dewifi_payment_${spotId}`);
+        localStorage.removeItem(`airlink_payment_${spotId}`);
         setSessionToken(storedToken);
         setExpiresAt(new Date(data.expiresAt));
 
@@ -485,7 +485,7 @@ export default function CaptivePortal(): React.ReactElement {
     setAuthenticating(true);
 
     try {
-      // ── Step 1: Try gateway-direct auth first ───────────────────────────────
+      // â”€â”€ Step 1: Try gateway-direct auth first â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const gatewayResult = await tryGatewayAuth(
         spotId,
         useOTP ? undefined : accessToken.trim(),
@@ -497,7 +497,7 @@ export default function CaptivePortal(): React.ReactElement {
           const sToken = gatewayResult.sessionToken || 'gateway-managed';
           setSessionToken(sToken);
           setAuthenticated(true);
-          localStorage.removeItem(`dewifi_payment_${spotId}`);
+          localStorage.removeItem(`airlink_payment_${spotId}`);
           setExpiresAt(new Date(gatewayResult.expiresAt));
           setGatewayRegistered(true);
           if (sToken !== 'gateway-managed') {
@@ -518,7 +518,7 @@ export default function CaptivePortal(): React.ReactElement {
         }
       }
 
-      // ── Step 2: Gateway not reachable → call backend directly ───────────────
+      // â”€â”€ Step 2: Gateway not reachable â†’ call backend directly â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       const res = await fetch(`${API_BASE}/api/captive/authenticate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -534,7 +534,7 @@ export default function CaptivePortal(): React.ReactElement {
       if (data.success && data.sessionToken) {
         setSessionToken(data.sessionToken);
         setAuthenticated(true);
-        localStorage.removeItem(`dewifi_payment_${spotId}`);
+        localStorage.removeItem(`airlink_payment_${spotId}`);
         setExpiresAt(new Date(data.expiresAt!));
         
         if (data.deviceInfo) {
@@ -577,7 +577,7 @@ export default function CaptivePortal(): React.ReactElement {
 
   const handleDisconnect = async () => {
     try {
-      // ── Try gateway disconnect first (releases firewall rule) ──────────────
+      // â”€â”€ Try gateway disconnect first (releases firewall rule) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       let gatewayDisconnected = false;
       for (const base of getGatewayBases()) {
         try {
@@ -643,7 +643,7 @@ export default function CaptivePortal(): React.ReactElement {
     );
   }
 
-  // ── HTTPS + no internet — the user must open the local HTTP portal ───────────────
+  // â”€â”€ HTTPS + no internet â€” the user must open the local HTTP portal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Mixed Content policy prevents fetch() calls from this HTTPS page to the
   // HTTP gateway.  The only solution is to navigate to the gateway directly.
   if (needsGatewayRedirect && !authenticated) {
@@ -699,7 +699,7 @@ export default function CaptivePortal(): React.ReactElement {
               <Wifi className="w-7 h-7 text-white" strokeWidth={2.5} />
             </div>
             <span className="text-[1.8rem] font-black tracking-tight text-gray-900 leading-none">
-              de<span className="text-[#0055FF]">Wifi</span>
+              Air<span className="text-[#0055FF]">Link</span>
             </span>
           </div>
         </div>
@@ -928,12 +928,12 @@ export default function CaptivePortal(): React.ReactElement {
         {/* Footer Link */}
         <div className="text-center mt-6">
           <a
-            href="https://dewifi.com"
+            href="https://airlink.com"
             target="_blank"
             rel="noopener noreferrer"
             className="text-gray-500 hover:text-gray-700 text-xs font-medium transition-colors"
           >
-            Powered by deWifi
+            Powered by AirLink
           </a>
         </div>
       </motion.div>

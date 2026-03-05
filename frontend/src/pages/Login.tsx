@@ -151,7 +151,7 @@ export default function Login() {
                     {/* Heading */}
                     <div className="mb-8">
                         <h2 className="text-3xl font-black text-black tracking-tight mb-2">Welcome back</h2>
-                        <p className="text-gray-500 text-sm">Sign in to your deWifi account</p>
+                        <p className="text-gray-500 text-sm">Sign in to your AirLink account</p>
                     </div>
 
                     {/* Trust badges */}
@@ -240,7 +240,7 @@ export default function Login() {
                             disabled={loading}
                             className="w-full h-12 bg-[#0055FF] hover:bg-[#0044CC] text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                            {loading ? 'Signing in…' : 'Sign in to deWifi'}
+                            {loading ? 'Signing in…' : 'Sign in to AirLink'}
                             {!loading && <ArrowRight className="w-4 h-4 ml-2" />}
                         </Button>
                     </form>
