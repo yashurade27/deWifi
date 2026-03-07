@@ -1,7 +1,7 @@
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import { useState, useRef, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Circle, Popup, useMap } from 'react-leaflet';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSpots } from '@/hooks/useSpots';
 import type { ApiSpot } from '@/hooks/useSpots';
@@ -25,6 +25,8 @@ import {
   ChevronDown,
   ChevronUp,
   GripVertical,
+  LocateFixed,
+  Navigation2,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { WifiSpot } from '@/data/dummySpots';
@@ -71,6 +73,33 @@ const TAG_COLORS: Record<ApiSpot['tag'], string> = {
   Library: '#8b5cf6',
   CoWorking: '#0055FF',
 };
+
+// ─── Distance helpers ─────────────────────────────────────────────────────────
+function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatDistance(km: number): string {
+  if (km < 1) return `${Math.round(km * 1000)}m`;
+  return `${km.toFixed(1)}km`;
+}
+
+// ─── User location marker icon ────────────────────────────────────────────────
+const userLocationIcon = L.divIcon({
+  html: `<div class="user-location-marker"><div class="pulse-ring"></div><div class="location-dot"></div></div>`,
+  className: '',
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+});
 
 // ─── Freshness helpers ────────────────────────────────────────────────────────
 function getMonitoringFreshness(spot: ApiSpot): 'verified' | 'stale' | 'unknown' {
@@ -220,6 +249,16 @@ function FlyToSpot({ spot }: { spot: ApiSpot | null }) {
   return null;
 }
 
+// ─── Helper: fly to user's location ──────────────────────────────────────────
+function FlyToLocation({ position, trigger }: { position: [number, number] | null; trigger: number }) {
+  const map = useMap();
+  useEffect(() => {
+    if (position && trigger > 0) map.flyTo(position, 15, { duration: 1 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trigger, map]);
+  return null;
+}
+
 // ─── Tags / cities for filters ────────────────────────────────────────────────
 const ALL_TAGS: (ApiSpot['tag'] | 'All')[] = ['All', 'Home', 'Cafe', 'Office', 'Library', 'CoWorking'];
 
@@ -228,10 +267,12 @@ function SpotCard({
   spot,
   selected,
   onClick,
+  distance,
 }: {
   spot: ApiSpot;
   selected: boolean;
   onClick: () => void;
+  distance?: number;
 }) {
   return (
     <motion.div
@@ -281,9 +322,17 @@ function SpotCard({
 
       {/* Footer row */}
       <div className="mt-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-          <Clock size={11} />
-          {spot.availableFrom} – {spot.availableTo}
+        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          <span className="flex items-center gap-1">
+            <Clock size={11} />
+            {spot.availableFrom} – {spot.availableTo}
+          </span>
+          {distance !== undefined && (
+            <span className="flex items-center gap-1 text-blue-500 dark:text-blue-400 font-medium">
+              <Navigation2 size={10} />
+              {formatDistance(distance)}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1.5">
           <LiveStatusBadge spot={spot} />
@@ -315,24 +364,84 @@ export default function Explore() {
 
   const mapRef = useRef<L.Map | null>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const watchIdRef = useRef<number | null>(null);
+  const firstCallRef = useRef<boolean>(false);
+
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [sortByNearest, setSortByNearest] = useState(false);
+  const [locateTrigger, setLocateTrigger] = useState(0);
 
   // Build city list from live data
   const allCities = ['All', ...Array.from(new Set(spots.map((s) => s.city)))];
 
-  const filtered = spots.filter((s) => {
-    if (onlyActive && !s.isActive) return false;
-    if (cityFilter !== 'All' && s.city !== cityFilter) return false;
-    if (tagFilter !== 'All' && s.tag !== tagFilter) return false;
-    if (s.pricePerHour > maxPrice) return false;
-    if (
-      search &&
-      !s.name.toLowerCase().includes(search.toLowerCase()) &&
-      !s.city.toLowerCase().includes(search.toLowerCase()) &&
-      !s.address.toLowerCase().includes(search.toLowerCase())
-    )
-      return false;
-    return true;
-  });
+  const filtered = (() => {
+    const base = spots.filter((s) => {
+      if (onlyActive && !s.isActive) return false;
+      if (cityFilter !== 'All' && s.city !== cityFilter) return false;
+      if (tagFilter !== 'All' && s.tag !== tagFilter) return false;
+      if (s.pricePerHour > maxPrice) return false;
+      if (
+        search &&
+        !s.name.toLowerCase().includes(search.toLowerCase()) &&
+        !s.city.toLowerCase().includes(search.toLowerCase()) &&
+        !s.address.toLowerCase().includes(search.toLowerCase())
+      )
+        return false;
+      return true;
+    });
+    if (sortByNearest && userLocation) {
+      return [...base].sort((a, b) => {
+        const da = haversineDistance(userLocation.lat, userLocation.lng, a.lat, a.lng);
+        const db = haversineDistance(userLocation.lat, userLocation.lng, b.lat, b.lng);
+        return da - db;
+      });
+    }
+    return base;
+  })();
+
+  const handleLocateMe = useCallback(() => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser.');
+      return;
+    }
+    setIsLocating(true);
+    setLocationError(null);
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+    }
+    firstCallRef.current = true;
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => {
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserLocation(loc);
+        setIsLocating(false);
+        setSortByNearest(true);
+        if (firstCallRef.current) {
+          firstCallRef.current = false;
+          setLocateTrigger((t) => t + 1);
+        }
+      },
+      (err) => {
+        setIsLocating(false);
+        if (err.code === 1) {
+          setLocationError('Location permission denied. Please enable it in browser settings.');
+        } else {
+          setLocationError('Unable to retrieve your location. Please try again.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
+  }, []);
 
   const handleCardClick = (spot: ApiSpot) => {
     setSelectedSpot(spot);
@@ -522,10 +631,23 @@ export default function Explore() {
 
               {/* Spot list */}
               <div className="flex-1 overflow-y-auto px-3 pt-4 pb-3 space-y-2.5">
-                <div className="sticky top-0 bg-white dark:bg-gray-900 z-10 pb-2 mb-1">
-                  <p className="text-xs text-gray-600 dark:text-gray-400 font-semibold px-1 py-1.5 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700">
+                <div className="sticky top-0 bg-white dark:bg-gray-900 z-10 pb-2 mb-1 flex items-center gap-2">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 font-semibold px-1 py-1.5 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700 flex-1">
                     {filtered.length} spot{filtered.length !== 1 ? 's' : ''} found
                   </p>
+                  {userLocation && (
+                    <button
+                      onClick={() => setSortByNearest((v) => !v)}
+                      className={`flex items-center gap-1 text-xs px-2 py-1.5 rounded-md border font-medium transition-all whitespace-nowrap ${
+                        sortByNearest
+                          ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-400 text-blue-600 dark:text-blue-400'
+                          : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-blue-300 hover:text-blue-500'
+                      }`}
+                    >
+                      <Navigation2 size={11} />
+                      Nearest
+                    </button>
+                  )}
                 </div>
                 <AnimatePresence mode="popLayout">
                   {filtered.length === 0 ? (
@@ -544,6 +666,11 @@ export default function Explore() {
                         spot={spot}
                         selected={selectedSpot?._id === spot._id}
                         onClick={() => handleCardClick(spot)}
+                        distance={
+                          userLocation
+                            ? haversineDistance(userLocation.lat, userLocation.lng, spot.lat, spot.lng)
+                            : undefined
+                        }
                       />
                     ))
                   )}
@@ -596,6 +723,41 @@ export default function Explore() {
 
             {/* Fly to selected */}
             <FlyToSpot spot={selectedSpot} />
+
+            {/* User live location */}
+            <FlyToLocation
+              position={userLocation ? [userLocation.lat, userLocation.lng] : null}
+              trigger={locateTrigger}
+            />
+            {userLocation && (
+              <>
+                <Marker
+                  position={[userLocation.lat, userLocation.lng]}
+                  icon={userLocationIcon}
+                  zIndexOffset={1000}
+                >
+                  <Popup closeButton={false}>
+                    <div className="font-sans">
+                      <p className="text-xs font-bold text-blue-600">📍 Your Location</p>
+                      <p className="text-[10px] text-gray-500 mt-0.5">
+                        {userLocation.lat.toFixed(5)}, {userLocation.lng.toFixed(5)}
+                      </p>
+                    </div>
+                  </Popup>
+                </Marker>
+                <Circle
+                  center={[userLocation.lat, userLocation.lng]}
+                  radius={300}
+                  pathOptions={{
+                    color: '#2563eb',
+                    fillColor: '#2563eb',
+                    fillOpacity: 0.07,
+                    weight: 1.5,
+                    dashArray: '4 4',
+                  }}
+                />
+              </>
+            )}
 
             {spots.map((spot) => (
               <Marker
@@ -733,9 +895,15 @@ export default function Explore() {
               <span className="w-3 h-3 rounded-full border-2 border-white shadow bg-gray-400" />
               <span className="text-gray-500 dark:text-gray-400">Offline</span>
             </div>
+            {userLocation && (
+              <div className="flex items-center gap-2 pt-1 border-t border-gray-100 dark:border-gray-800">
+                <span className="w-3 h-3 rounded-full border-2 border-white shadow bg-blue-500" />
+                <span className="text-blue-600 dark:text-blue-400 font-medium">You</span>
+              </div>
+            )}
           </div>
 
-          {/* ── Stats bar ─────────────────────────────── */}
+          {/* ── Stats bar + Locate button ─────────────────────────── */}
           <div className="absolute top-4 right-4 z-[500] flex items-center gap-2">
             <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur rounded-full border border-gray-200 dark:border-gray-700 shadow-md px-3.5 py-2 flex items-center gap-2 text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -749,7 +917,30 @@ export default function Explore() {
               <span className="font-semibold text-gray-700 dark:text-gray-300">{spots.length}</span>
               <span className="text-gray-500 dark:text-gray-400">total</span>
             </div>
+            <motion.button
+              onClick={handleLocateMe}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title={userLocation ? 'Re-center on my location' : 'Show my location on map'}
+              className={`bg-white/95 dark:bg-gray-900/95 backdrop-blur rounded-full shadow-md px-3.5 py-2 flex items-center gap-1.5 text-xs font-medium border transition-all ${
+                isLocating
+                  ? 'border-blue-300 text-blue-500 dark:text-blue-400'
+                  : userLocation
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40'
+                  : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600'
+              }`}
+            >
+              <LocateFixed size={13} className={isLocating ? 'animate-pulse' : ''} />
+              {isLocating ? 'Locating…' : userLocation ? 'Located ✓' : 'My Location'}
+            </motion.button>
           </div>
+          {locationError && (
+            <div className="absolute top-16 right-4 z-[500] bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg px-3 py-2 text-xs text-red-600 dark:text-red-400 shadow-lg flex items-center gap-2 max-w-xs">
+              <AlertTriangle size={12} className="shrink-0" />
+              <span>{locationError}</span>
+              <button onClick={() => setLocationError(null)} className="ml-1 text-red-400 hover:text-red-600 font-bold shrink-0">×</button>
+            </div>
+          )}
         </div>
       </div>
     </div>

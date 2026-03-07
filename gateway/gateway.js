@@ -1,17 +1,17 @@
-﻿/**
- * â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
- * â•‘              AirLink Local Gateway Server (Windows)                  â•‘
- * â•‘                                                                    â•‘
- * â•‘  This script runs on the WiFi OWNER'S laptop and:                  â•‘
- * â•‘  1. Starts an HTTP server that acts as a captive portal gateway    â•‘
- * â•‘  2. Intercepts requests from hotspot-connected devices             â•‘
- * â•‘  3. Redirects unauthenticated devices to the captive portal page   â•‘
- * â•‘  4. Manages Windows Firewall rules to allow/block internet access  â•‘
- * â•‘  5. Periodically validates sessions against the backend API        â•‘
- * â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/**
+ * ╔══════════════════════════════════════════════════════════════════════╗
+ * ║              AirLink Local Gateway Server (Windows)                  ║
+ * ║                                                                    ║
+ * ║  This script runs on the WiFi OWNER'S laptop and:                  ║
+ * ║  1. Starts an HTTP server that acts as a captive portal gateway    ║
+ * ║  2. Intercepts requests from hotspot-connected devices             ║
+ * ║  3. Redirects unauthenticated devices to the captive portal page   ║
+ * ║  4. Manages Windows Firewall rules to allow/block internet access  ║
+ * ║  5. Periodically validates sessions against the backend API        ║
+ * ╚══════════════════════════════════════════════════════════════════════╝
  *
  * PREREQUISITES:
- *   - Windows Mobile Hotspot enabled (Settings â†’ Network â†’ Mobile Hotspot)
+ *   - Windows Mobile Hotspot enabled (Settings → Network → Mobile Hotspot)
  *   - Run this script as ADMINISTRATOR (required for firewall rules)
  *   - Backend server running at BACKEND_URL
  *
@@ -38,7 +38,7 @@ function syncAuthenticatedIPs() {
     }
 }
 
-// â”€â”€â”€ Configuration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Configuration ──────────────────────────────────────────────────────────
 
 // Parse command-line args
 const args = process.argv.slice(2);
@@ -56,18 +56,18 @@ const SESSION_CHECK_INTERVAL = 30000; // 30 seconds
 const CLEANUP_INTERVAL = 60000; // 1 minute
 
 if (!SPOT_ID) {
-    console.error("â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—");
-    console.error("â•‘  ERROR: --spot <SPOT_ID> is required                      â•‘");
-    console.error("â•‘                                                           â•‘");
-    console.error("â•‘  Usage:                                                   â•‘");
-    console.error("â•‘    node gateway.js --spot 6789abc123def456                â•‘");
-    console.error("â•‘                                                           â•‘");
-    console.error("â•‘  Get your Spot ID from the Owner Dashboard on AirLink      â•‘");
-    console.error("â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
+    console.error("╔════════════════════════════════════════════════════════════╗");
+    console.error("║  ERROR: --spot <SPOT_ID> is required                      ║");
+    console.error("║                                                           ║");
+    console.error("║  Usage:                                                   ║");
+    console.error("║    node gateway.js --spot 6789abc123def456                ║");
+    console.error("║                                                           ║");
+    console.error("║  Get your Spot ID from the Owner Dashboard on AirLink      ║");
+    console.error("╚════════════════════════════════════════════════════════════╝");
     process.exit(1);
 }
 
-// â”€â”€â”€ In-Memory State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── In-Memory State ────────────────────────────────────────────────────────
 
 /**
  * Map of authenticated client IPs -> session data
@@ -86,7 +86,7 @@ const blockedIPs = new Set();
  */
 const allowedIPs = new Set();
 
-// â”€â”€â”€ Windows Firewall Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Windows Firewall Helpers ───────────────────────────────────────────────
 
 function runCmd(command) {
     return new Promise((resolve, reject) => {
@@ -142,7 +142,7 @@ async function blockIP(ip) {
         `netsh advfirewall firewall add rule name="${ruleName}" dir=in action=block remoteip=${ip} enable=yes`
     );
     blockedIPs.add(ip);
-    console.log(`  ðŸš« Blocked: ${ip}`);
+    console.log(`  🚫 Blocked: ${ip}`);
 }
 
 /**
@@ -168,7 +168,7 @@ async function allowIP(ip) {
 
     blockedIPs.delete(ip);
     allowedIPs.add(ip);
-    console.log(`  âœ… Allowed: ${ip}`);
+    console.log(`  ✅ Allowed: ${ip}`);
 }
 
 /**
@@ -190,7 +190,7 @@ async function setupDefaultBlock(hotspotInterface) {
  * Clean up ALL AirLink firewall rules. Called on shutdown.
  */
 async function cleanupFirewallRules() {
-    console.log("\nðŸ§¹ Cleaning up firewall rules...");
+    console.log("\n🧹 Cleaning up firewall rules...");
 
     // Remove all AirLink_Block_* rules
     for (const ip of blockedIPs) {
@@ -204,10 +204,10 @@ async function cleanupFirewallRules() {
         await runCmd(`netsh advfirewall firewall delete rule name="${ruleName}"`);
     }
 
-    console.log("  âœ… All AirLink firewall rules removed");
+    console.log("  ✅ All AirLink firewall rules removed");
 }
 
-// â”€â”€â”€ Backend API Communication â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Backend API Communication ──────────────────────────────────────────────
 
 /**
  * Validate an access token against the backend.
@@ -227,7 +227,7 @@ async function validateTokenWithBackend(accessToken, otp) {
         });
         return await res.json();
     } catch (err) {
-        console.error("  âŒ Backend communication failed:", err.message);
+        console.error("  ❌ Backend communication failed:", err.message);
         return { success: false, message: "Cannot reach backend server" };
     }
 }
@@ -265,11 +265,11 @@ async function disconnectSessionOnBackend(sessionToken) {
     }
 }
 
-// â”€â”€â”€ Express Gateway Server â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Express Gateway Server ─────────────────────────────────────────────────
 
 const app = express();
 
-// CORS â€” allow the React frontend (any origin) to call gateway endpoints
+// CORS — allow the React frontend (any origin) to call gateway endpoints
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
     res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -285,7 +285,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/portal-assets", express.static(path.join(__dirname, "portal-assets")));
 
 /**
- * GET / â€” Captive portal detection.
+ * GET / — Captive portal detection.
  * When a device connects to the hotspot and opens a browser,
  * the OS sends probe requests (Apple: /hotspot-detect.html, Android: /generate_204, etc.)
  * We intercept ALL requests and check if the client IP is authenticated.
@@ -315,7 +315,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// â”€â”€â”€ Portal Authentication Endpoint â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Portal Authentication Endpoint ────────────────────────────────────────
 // This is the LOCAL endpoint that devices post to for authentication.
 // It proxies the request to the backend and manages firewall rules.
 
@@ -323,7 +323,7 @@ app.post("/api/gateway/authenticate", async (req, res) => {
     const { accessToken, otp } = req.body;
     const clientIP = req.clientIP;
 
-    console.log(`\nðŸ”‘ Auth attempt from ${clientIP}`, { accessToken: accessToken ? "***" : "", otp: otp ? "***" : "" });
+    console.log(`\n🔑 Auth attempt from ${clientIP}`, { accessToken: accessToken ? "***" : "", otp: otp ? "***" : "" });
 
     if (!accessToken && !otp) {
         return res.status(400).json({
@@ -347,7 +347,7 @@ app.post("/api/gateway/authenticate", async (req, res) => {
         await allowIP(clientIP);
         syncAuthenticatedIPs();
 
-        console.log(`  âœ… Authenticated: ${clientIP} (expires: ${result.expiresAt})`);
+        console.log(`  ✅ Authenticated: ${clientIP} (expires: ${result.expiresAt})`);
 
         res.json({
             success: true,
@@ -358,7 +358,7 @@ app.post("/api/gateway/authenticate", async (req, res) => {
             deviceInfo: result.deviceInfo,
         });
     } else {
-        console.log(`  âŒ Auth failed for ${clientIP}: ${result.message}`);
+        console.log(`  ❌ Auth failed for ${clientIP}: ${result.message}`);
         // Ensure they're blocked
         await blockIP(clientIP);
 
@@ -370,7 +370,7 @@ app.post("/api/gateway/authenticate", async (req, res) => {
     }
 });
 
-// â”€â”€â”€ Register Session (called by React CaptivePortal after backend auth) â”€â”€â”€â”€
+// ─── Register Session (called by React CaptivePortal after backend auth) ────
 // The React captive portal authenticates with the backend directly.
 // This endpoint lets it also notify the gateway so the IP gets whitelisted.
 app.post("/api/gateway/register-session", async (req, res) => {
@@ -394,15 +394,15 @@ app.post("/api/gateway/register-session", async (req, res) => {
         await allowIP(clientIP);
         syncAuthenticatedIPs();
 
-        console.log(`  âœ… Registered via React portal: ${clientIP} (expires: ${result.expiresAt})`);
+        console.log(`  ✅ Registered via React portal: ${clientIP} (expires: ${result.expiresAt})`);
         res.json({ success: true, message: "Device registered with gateway" });
     } else {
-        console.log(`  âŒ Register-session rejected for ${clientIP}: invalid session`);
+        console.log(`  ❌ Register-session rejected for ${clientIP}: invalid session`);
         res.status(401).json({ success: false, message: "Invalid session token" });
     }
 });
 
-// â”€â”€â”€ Session Status Check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Session Status Check ──────────────────────────────────────────────────
 
 app.get("/api/gateway/status", (req, res) => {
     const clientIP = req.clientIP;
@@ -420,7 +420,7 @@ app.get("/api/gateway/status", (req, res) => {
     }
 });
 
-// â”€â”€â”€ Spot Info Endpoint â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Spot Info Endpoint ────────────────────────────────────────────────────
 // Proxies spot metadata from the backend to clients that have no internet.
 // Clients on the captive portal hotspot call this so the React portal can
 // render spot details and unblock auto-authentication.
@@ -434,7 +434,7 @@ app.get("/api/gateway/spot-info", async (req, res) => {
         const data = await r.json();
         res.json(data);
     } catch (err) {
-        console.error("  âš ï¸  spot-info: backend unreachable, returning placeholder");
+        console.error("  ⚠️  spot-info: backend unreachable, returning placeholder");
         // Return a minimal placeholder so the portal form still renders
         res.json({
             authenticated: false,
@@ -443,7 +443,7 @@ app.get("/api/gateway/spot-info", async (req, res) => {
     }
 });
 
-// â”€â”€â”€ Disconnect Endpoint â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Disconnect Endpoint ───────────────────────────────────────────────────
 
 app.post("/api/gateway/disconnect", async (req, res) => {
     const clientIP = req.clientIP;
@@ -454,13 +454,13 @@ app.post("/api/gateway/disconnect", async (req, res) => {
         authenticatedClients.delete(clientIP);
         await blockIP(clientIP);
         syncAuthenticatedIPs();
-        console.log(`  ðŸ“´ Disconnected: ${clientIP}`);
+        console.log(`  📴 Disconnected: ${clientIP}`);
     }
 
     res.json({ success: true, message: "Disconnected" });
 });
 
-// â”€â”€â”€ Captive Portal Detection & Redirect â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Captive Portal Detection & Redirect ───────────────────────────────────
 
 // Handle all standard captive portal probe URLs
 CAPTIVE_DETECT_PATHS.forEach((detectPath) => {
@@ -469,7 +469,7 @@ CAPTIVE_DETECT_PATHS.forEach((detectPath) => {
         const session = authenticatedClients.get(clientIP);
 
         if (session && session.expiresAt > new Date()) {
-            // Client is authenticated â€” return success response
+            // Client is authenticated — return success response
             // This tells the OS "you have internet, no captive portal"
             if (detectPath.includes("generate_204") || detectPath.includes("gen_204")) {
                 return res.status(204).send();
@@ -486,7 +486,7 @@ CAPTIVE_DETECT_PATHS.forEach((detectPath) => {
             return res.send("OK");
         }
 
-        // Not authenticated â€” redirect to the LOCAL gateway portal (HTTP).
+        // Not authenticated — redirect to the LOCAL gateway portal (HTTP).
         // We deliberately do NOT redirect to the ngrok HTTPS URL here because
         // the phone has no internet yet and cannot reach ngrok.  More importantly,
         // a page served over HTTPS cannot make fetch() calls to an HTTP endpoint
@@ -494,12 +494,12 @@ CAPTIVE_DETECT_PATHS.forEach((detectPath) => {
         // gateway itself keeps everything on HTTP with no cross-origin issues.
         const gatewayIP = (req.socket.localAddress || '192.168.137.1').replace('::ffff:', '');
         const localUrl = `http://${gatewayIP}:${GATEWAY_PORT}/`;
-        console.log(`  ðŸ”„ Redirecting ${clientIP} â†’ local portal ${localUrl}`);
+        console.log(`  🔄 Redirecting ${clientIP} → local portal ${localUrl}`);
         res.redirect(302, localUrl);
     });
 });
 
-// â”€â”€â”€ Catch-All: Redirect unauthenticated to portal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Catch-All: Redirect unauthenticated to portal ────────────────────────
 
 app.get("*", (req, res) => {
     const clientIP = req.clientIP;
@@ -525,7 +525,7 @@ app.get("*", (req, res) => {
         </head>
         <body>
           <div class="card">
-            <div class="check">âœ…</div>
+            <div class="check">✅</div>
             <h1>You're Connected!</h1>
             <p>Internet access is active</p>
             <div class="timer" id="timer"></div>
@@ -551,10 +551,10 @@ app.get("*", (req, res) => {
     `);
     }
 
-    // Not authenticated â€” serve the inline portal (everything stays HTTP,
+    // Not authenticated — serve the inline portal (everything stays HTTP,
     // no Mixed Content issues, works even when the phone has no internet).
     // URL parameters:
-    //   ?token=XXX  â€” pre-fill the access token (used when booking email link
+    //   ?token=XXX  — pre-fill the access token (used when booking email link
     //                  redirected here with the token already in the URL)
     const urlToken = (req.query.token || '').toString().toUpperCase().substring(0, 16);
     const gatewayIP = (req.socket.localAddress || '192.168.137.1').replace('::ffff:', '');
@@ -605,14 +605,14 @@ app.get("*", (req, res) => {
       <body>
         <div class="container">
           <div class="shield">
-            <div class="shield-icon">ðŸ›œ</div>
+            <div class="shield-icon">🛜</div>
             <h1>AirLink Portal</h1>
             <p class="subtitle">Enter your booking credentials to connect</p>
           </div>
 
           <div id="errorMsg" class="error"></div>
 
-          <!-- â”€â”€ Login form â”€â”€ -->
+          <!-- ── Login form ── -->
           <div id="loginSection">
             <form id="authForm">
               <div class="tabs">
@@ -634,26 +634,26 @@ app.get("*", (req, res) => {
               </div>
 
               <button type="submit" class="btn" id="submitBtn">
-                <span>ðŸ“¶</span> Connect to WiFi
+                <span>📶</span> Connect to WiFi
               </button>
             </form>
           </div>
 
-          <!-- â”€â”€ Success view (shown after auth) â”€â”€ -->
+          <!-- ── Success view (shown after auth) ── -->
           <div id="successSection" class="success-card">
-            <div class="success-icon">âœ…</div>
+            <div class="success-icon">✅</div>
             <div class="success-title">Connected!</div>
             <p class="success-msg">Internet access is now active.</p>
             <div class="timer-box">
               <div class="timer-label">Time remaining</div>
               <div class="timer-value" id="countdown">--:--:--</div>
             </div>
-            <a id="sessionLink" href="${sessionPortalUrl}" class="open-btn">ðŸ“Š View session details</a>
+            <a id="sessionLink" href="${sessionPortalUrl}" class="open-btn">📊 View session details</a>
           </div>
 
           <div class="footer">
             Don't have a booking? <a href="${PORTAL_URL}/book/${SPOT_ID}" class="link">Book now</a>
-            &nbsp;Â·&nbsp; Secured by AirLink
+            &nbsp;·&nbsp; Secured by AirLink
           </div>
         </div>
 
@@ -700,7 +700,7 @@ app.get("*", (req, res) => {
                 clearInterval(countdownInterval);
                 document.getElementById('countdown').textContent = '00:00:00';
                 document.getElementById('successSection').innerHTML =
-                  '<div class="success-icon">â°</div><div class="success-title" style="color:#f87171">Session Expired</div><p class="success-msg">Reload the page to authenticate again.</p>';
+                  '<div class="success-icon">⏰</div><div class="success-title" style="color:#f87171">Session Expired</div><p class="success-msg">Reload the page to authenticate again.</p>';
               }
             }
             tick();
@@ -736,7 +736,7 @@ app.get("*", (req, res) => {
                 errorDiv.textContent = 'Please enter your access token.';
                 errorDiv.style.display = 'block';
                 btn.disabled = false;
-                btn.innerHTML = '<span>ðŸ“¶</span> Connect to WiFi';
+                btn.innerHTML = '<span>📶</span> Connect to WiFi';
                 return;
               }
             } else {
@@ -745,7 +745,7 @@ app.get("*", (req, res) => {
                 errorDiv.textContent = 'Please enter a 6-digit OTP.';
                 errorDiv.style.display = 'block';
                 btn.disabled = false;
-                btn.innerHTML = '<span>ðŸ“¶</span> Connect to WiFi';
+                btn.innerHTML = '<span>📶</span> Connect to WiFi';
                 return;
               }
             }
@@ -764,13 +764,13 @@ app.get("*", (req, res) => {
                 errorDiv.textContent = data.message || 'Authentication failed. Please check your token.';
                 errorDiv.style.display = 'block';
                 btn.disabled = false;
-                btn.innerHTML = '<span>ðŸ“¶</span> Connect to WiFi';
+                btn.innerHTML = '<span>📶</span> Connect to WiFi';
               }
             } catch (err) {
               errorDiv.textContent = 'Could not reach the gateway. Make sure you are connected to this WiFi hotspot.';
               errorDiv.style.display = 'block';
               btn.disabled = false;
-              btn.innerHTML = '<span>ðŸ“¶</span> Connect to WiFi';
+              btn.innerHTML = '<span>📶</span> Connect to WiFi';
             }
           });
         </script>
@@ -779,7 +779,7 @@ app.get("*", (req, res) => {
   `);
 });
 
-// â”€â”€â”€ Session Validation Loop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Session Validation Loop ────────────────────────────────────────────────
 
 /**
  * Periodically check all active sessions.
@@ -791,7 +791,7 @@ async function validateAllSessions() {
     for (const [ip, session] of authenticatedClients.entries()) {
         // Check local expiry first
         if (session.expiresAt <= now) {
-            console.log(`  â° Session expired for ${ip}`);
+            console.log(`  ⏰ Session expired for ${ip}`);
             authenticatedClients.delete(ip);
             await blockIP(ip);
             await disconnectSessionOnBackend(session.sessionToken);
@@ -801,7 +801,7 @@ async function validateAllSessions() {
         // Validate with backend (less frequently to reduce load)
         const result = await validateSessionWithBackend(session.sessionToken);
         if (!result.authenticated) {
-            console.log(`  ðŸš« Session invalidated by backend for ${ip}: ${result.message || "unknown reason"}`);
+            console.log(`  🚫 Session invalidated by backend for ${ip}: ${result.message || "unknown reason"}`);
             authenticatedClients.delete(ip);
             await blockIP(ip);
             syncAuthenticatedIPs();
@@ -809,7 +809,7 @@ async function validateAllSessions() {
     }
 }
 
-// â”€â”€â”€ Cleanup expired sessions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Cleanup expired sessions ───────────────────────────────────────────────
 
 async function cleanupExpired() {
     const now = new Date();
@@ -824,11 +824,11 @@ async function cleanupExpired() {
     }
     if (cleaned > 0) {
         syncAuthenticatedIPs();
-        console.log(`  ðŸ§¹ Cleaned ${cleaned} expired session(s)`);
+        console.log(`  🧹 Cleaned ${cleaned} expired session(s)`);
     }
 }
 
-// â”€â”€â”€ Connected Clients Monitor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Connected Clients Monitor ──────────────────────────────────────────────
 
 async function showConnectedClients() {
     const result = await runCmd(
@@ -837,22 +837,22 @@ async function showConnectedClients() {
     return result.stdout;
 }
 
-// â”€â”€â”€ Startup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Startup ────────────────────────────────────────────────────────────────
 
 async function start() {
-    console.log("â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—");
-    console.log("â•‘           AirLink Local Gateway Server v1.0                  â•‘");
-    console.log("â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
+    console.log("╔══════════════════════════════════════════════════════════════╗");
+    console.log("║           AirLink Local Gateway Server v1.0                  ║");
+    console.log("╚══════════════════════════════════════════════════════════════╝");
     console.log("");
-    console.log(`  ðŸ“¡ Spot ID:    ${SPOT_ID}`);
-    console.log(`  ðŸŒ Backend:    ${BACKEND_URL}`);
-    console.log(`  ðŸ–¥ï¸  Portal:     ${PORTAL_URL}`);
-    console.log(`  ðŸ”Œ Port:       ${GATEWAY_PORT}`);
+    console.log(`  📡 Spot ID:    ${SPOT_ID}`);
+    console.log(`  🌐 Backend:    ${BACKEND_URL}`);
+    console.log(`  🖥️  Portal:     ${PORTAL_URL}`);
+    console.log(`  🔌 Port:       ${GATEWAY_PORT}`);
     console.log("");
 
     // Detect hotspot interface
     const hotspotIface = await getHotspotInterface();
-    console.log(`  ðŸ“¶ Hotspot Interface: ${hotspotIface}`);
+    console.log(`  📶 Hotspot Interface: ${hotspotIface}`);
 
     // Setup firewall defaults
     await setupDefaultBlock(hotspotIface);
@@ -860,23 +860,23 @@ async function start() {
     // Start express server
     const server = app.listen(GATEWAY_PORT, "0.0.0.0", () => {
         console.log("");
-        console.log("â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
-        console.log(`  âœ… Gateway running at http://0.0.0.0:${GATEWAY_PORT}`);
+        console.log("═══════════════════════════════════════════════════════════════");
+        console.log(`  ✅ Gateway running at http://0.0.0.0:${GATEWAY_PORT}`);
         console.log("");
-        console.log("  ðŸ“± SETUP INSTRUCTIONS:");
+        console.log("  📱 SETUP INSTRUCTIONS:");
         console.log("  1. Enable Mobile Hotspot in Windows Settings");
         console.log("  2. Set your router's DHCP to point DNS to this laptop's IP");
         console.log("     OR tell users to navigate to http://192.168.137.1:" + GATEWAY_PORT);
         console.log("  3. Devices connecting to the hotspot will see the captive portal");
         console.log("  4. Users enter their Access Token or OTP to get internet access");
         console.log("");
-        console.log("  âŒ¨ï¸  Press Ctrl+C to stop the gateway and clean up firewall rules");
-        console.log("â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•");
+        console.log("  ⌨️  Press Ctrl+C to stop the gateway and clean up firewall rules");
+        console.log("═══════════════════════════════════════════════════════════════");
     });
 
     server.on("error", async (err) => {
         if (err.code === "EADDRINUSE") {
-            console.error(`\nâŒ Port ${GATEWAY_PORT} is already in use.`);
+            console.error(`\n❌ Port ${GATEWAY_PORT} is already in use.`);
             console.error("   Killing the stale process and retrying in 2s...\n");
             await runCmd(
                 `Get-NetTCPConnection -LocalPort ${GATEWAY_PORT} -State Listen -ErrorAction SilentlyContinue |` +
@@ -895,10 +895,10 @@ async function start() {
     setInterval(cleanupExpired, CLEANUP_INTERVAL);
 }
 
-// â”€â”€â”€ Graceful Shutdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Graceful Shutdown ──────────────────────────────────────────────────────
 
 async function shutdown() {
-    console.log("\n\nðŸ›‘ Shutting down gateway...");
+    console.log("\n\n🛑 Shutting down gateway...");
 
     // Disconnect all sessions on backend
     for (const [ip, session] of authenticatedClients.entries()) {
@@ -912,7 +912,7 @@ async function shutdown() {
     // Clean up auth IPs file
     try { fs.unlinkSync(AUTH_IPS_FILE); } catch { }
 
-    console.log("  âœ… Gateway stopped. All rules cleaned up.");
+    console.log("  ✅ Gateway stopped. All rules cleaned up.");
     process.exit(0);
 }
 

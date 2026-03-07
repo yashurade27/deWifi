@@ -170,3 +170,42 @@ html.dark body {
   background-color: var(--color-uplink-blue);
   color: white;
 }
+
+/* ── User Live Location Marker ─────────────────────────── */
+.user-location-marker {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.location-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  background: #2563eb;
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.6);
+  z-index: 2;
+}
+
+.pulse-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(37, 99, 235, 0.45);
+  border-radius: 50%;
+  animation: location-pulse 1.8s ease-out infinite;
+  z-index: 1;
+}
+
+@keyframes location-pulse {
+  0%   { transform: translate(-50%, -50%) scale(0.4); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+}
