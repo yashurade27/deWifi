@@ -939,7 +939,7 @@ gateway/
 ```
 
 #### WifiSpot Collection
-```javascript
+```javascript 
 {
   _id: ObjectId,
   owner: ObjectId,       // ref: User
