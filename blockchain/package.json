@@ -1,0 +1,19 @@
+{
+  "name": "airlink-blockchain",
+  "version": "1.0.0",
+  "description": "Airlink WiFi Marketplace - Ethereum Smart Contracts",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
+    "deploy:sepolia": "hardhat run scripts/deploy.ts --network sepolia",
+    "node": "hardhat node",
+    "verify": "hardhat verify --network sepolia"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@types/node": "^22.19.15",
+    "dotenv": "^16.3.1",
+    "hardhat": "^2.19.0"
+  }
+}
