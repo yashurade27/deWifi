@@ -6,6 +6,7 @@ import { OrbitControls, Stars } from '@react-three/drei';
 import { useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { useTheme } from '@/context/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 
 // Network particles/nodes component
 const NetworkNodes = () => {
@@ -214,6 +215,7 @@ const itemVariants = {
 export const Hero = () => {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const navigate = useNavigate();
 
     return (
         <section className="relative w-full min-h-[calc(100vh-4rem)] flex items-center justify-center bg-white dark:bg-black overflow-hidden">
@@ -230,21 +232,15 @@ export const Hero = () => {
                         className="flex flex-col items-start pt-10 lg:pt-0"
                     >
                         <motion.div variants={itemVariants}>
-                            <span className="inline-flex items-center gap-2.5 rounded-full bg-blue-50 px-5 py-2 text-xs font-bold text-[#0055FF] uppercase tracking-wide mb-8 border border-blue-100">
-                                <span className="relative flex h-2 w-2">
-                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#0055FF]"></span>
-                                </span>
-                                Live on Mainnet
-                            </span>
+                            
                         </motion.div>
 
                         <motion.h1
                             variants={itemVariants}
                             className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-black dark:text-white leading-[1.05] mb-6"
                         >
-                            Decentralized<br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0055FF] to-[#003399] dark:from-[#0088FF] dark:to-[#00DDFF]">WiFi Network</span>
+                            On-Demand<br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0055FF] to-[#003399] dark:from-[#0088FF] dark:to-[#00DDFF]">WiFi Access Platform</span>
                         </motion.h1>
 
                         <motion.p
@@ -256,12 +252,13 @@ export const Hero = () => {
                         </motion.p>
 
                         <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                            <Button className="bg-[#0055FF] hover:bg-[#0044CC] text-white rounded-full px-7 py-6 text-base font-bold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 w-full sm:w-auto">
+                            {/* <Button className="bg-[#0055FF] hover:bg-[#0044CC] text-white rounded-full px-7 py-6 text-base font-bold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 w-full sm:w-auto">
                                 Start Earning <ArrowRight className="ml-2 h-4 w-4" />
-                            </Button>
+                            </Button> */}
                             <Button
                                 variant="outline"
                                 className="border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#0055FF] hover:text-[#0055FF] hover:bg-blue-50 dark:hover:bg-blue-950 rounded-full px-7 py-6 text-base font-bold transition-all duration-300 w-full sm:w-auto"
+                                onClick={() => navigate('/explore')}
                             >
                                 Find Spots
                             </Button>
