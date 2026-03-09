@@ -1,60 +1,88 @@
 import { BrowserProvider, Contract, ethers, formatEther, parseEther } from "ethers";
 
 // ═══════════════════════════════════════════════════════════════
-//  CONTRACT CONFIGURATION
-//  Update AIRLINK_CONTRACT_ADDRESS after deployment
+//  AIRLINK v2 — MODULAR CONTRACT CONFIGURATION
+//  Update addresses after deployment (output of scripts/deploy.ts)
 // ═══════════════════════════════════════════════════════════════
 
-export const AIRLINK_CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000"; // UPDATE THIS
+export const CONTRACT_ADDRESSES = {
+  registry:      "0x0000000000000000000000000000000000000000", // WiFiRegistry
+  accessNFT:     "0x0000000000000000000000000000000000000000", // AirlinkAccessNFT
+  escrow:        "0x0000000000000000000000000000000000000000", // PaymentEscrow
+  accessManager: "0x0000000000000000000000000000000000000000", // AccessManager (main)
+};
 
-// ABI — only the functions we call from the frontend
-// Full ABI is in blockchain/artifacts/contracts/AirlinkMarketplace.sol/AirlinkMarketplace.json
-export const AIRLINK_ABI = [
-  // Spot Management
-  "function registerSpot(string _name, string _locationHash, string _metadataURI, uint256 _pricePerHourWei, uint256 _speedMbps, uint8 _maxUsers, uint8 _tag) external returns (uint256)",
-  "function updateSpot(uint256 _spotId, uint256 _newPrice, uint8 _newStatus) external",
-  "function getSpot(uint256 _spotId) external view returns (tuple(uint256 id, address owner, string name, string locationHash, string metadataURI, uint256 pricePerHourWei, uint256 speedMbps, uint8 maxUsers, uint8 currentUsers, uint8 tag, uint8 status, bool isVerified, uint256 totalEarnings, uint256 totalBookings, uint256 registeredAt))",
-  "function getOwnerSpots(address _owner) external view returns (uint256[])",
-  "function getActiveSpotCount() external view returns (uint256)",
+// Backwards-compatible alias
+export const AIRLINK_CONTRACT_ADDRESS = CONTRACT_ADDRESSES.accessManager;
 
-  // Booking
-  "function bookAccess(uint256 _spotId, uint256 _durationHours, uint256 _startTime) external payable returns (uint256)",
-  "function activateBooking(uint256 _bookingId, bytes32 _accessTokenHash) external",
-  "function completeBooking(uint256 _bookingId) external",
-  "function cancelBooking(uint256 _bookingId) external",
-  "function getBooking(uint256 _bookingId) external view returns (tuple(uint256 id, uint256 spotId, address user, address spotOwner, uint256 startTime, uint256 endTime, uint256 durationHours, uint256 totalPaid, uint256 ownerEarnings, uint256 platformFee, uint8 status, bytes32 accessTokenHash, bool ownerWithdrawn, uint256 createdAt))",
-  "function getUserBookings(address _user) external view returns (uint256[])",
-  "function calculateBookingCost(uint256 _spotId, uint256 _durationHours) external view returns (uint256 total, uint256 ownerShare, uint256 fee)",
+// ═══════════════════════════════════════════════════════════════
+//  ABIs — Human-readable (only functions called from frontend)
+// ═══════════════════════════════════════════════════════════════
 
-  // Access Verification
-  "function verifyAccess(uint256 _bookingId, string _accessToken) external view returns (bool)",
+export const ACCESS_MANAGER_ABI = [
+  // Purchase & Session
+  "function purchaseAccess(uint256 spotId, uint256 durationHours, uint256 startTime) external payable returns (uint256)",
+  "function completeSession(uint256 tokenId) external",
+  "function cancelSession(uint256 tokenId) external",
+  "function disputeSession(uint256 tokenId) external",
 
-  // Earnings
-  "function getOwnerEarnings(address _owner) external view returns (uint256 totalEarnings, uint256 withdrawableBalance)",
-  "function withdrawEarnings() external",
+  // Gateway verification
+  "function verifyAccess(uint256 tokenId, address user) external view returns (bool valid, uint256 spotId, uint256 expiresAt)",
+  "function verifyAccessForSpot(uint256 tokenId, address user, uint256 spotId) external view returns (bool valid, uint256 expiresAt)",
 
-  // Dispute
-  "function disputeBooking(uint256 _bookingId) external",
+  // View
+  "function calculateCost(uint256 spotId, uint256 durationHours) external view returns (uint256 total, uint256 ownerShare, uint256 fee)",
+  "function getSession(uint256 tokenId) external view returns (tuple(uint256 tokenId, uint256 spotId, address user, address spotOwner, uint256 totalPaid, uint256 ownerShare, uint256 platformFee, uint256 startTime, uint256 endTime, uint8 status))",
+  "function getUserSessions(address user) external view returns (uint256[])",
+
+  // Events
+  "event AccessPurchased(uint256 indexed tokenId, uint256 indexed spotId, address indexed user, uint256 totalPaid, uint256 startTime, uint256 endTime)",
+  "event SessionCompleted(uint256 indexed tokenId, uint256 ownerEarnings)",
+  "event SessionCancelled(uint256 indexed tokenId, uint256 refundPercent)",
+] as const;
+
+export const REGISTRY_ABI = [
+  // Spot management
+  "function registerSpot(string name, string locationHash, string metadataURI, uint256 pricePerHourWei, uint256 speedMbps, uint8 maxUsers, uint8 tag) external returns (uint256)",
+  "function updateSpot(uint256 spotId, uint256 newPrice, uint8 newStatus) external",
+
+  // View
+  "function getSpot(uint256 spotId) external view returns (tuple(uint256 id, address owner, string name, string locationHash, string metadataURI, uint256 pricePerHourWei, uint256 speedMbps, uint8 maxUsers, uint8 currentUsers, uint8 tag, uint8 status, bool isVerified, uint256 totalEarnings, uint256 totalBookings, uint256 registeredAt))",
+  "function getOwnerSpots(address owner) external view returns (uint256[])",
+  "function isSpotActive(uint256 spotId) external view returns (bool)",
+  "function getSpotPrice(uint256 spotId) external view returns (uint256)",
+  "function hasCapacity(uint256 spotId) external view returns (bool)",
 
   // Events
   "event SpotRegistered(uint256 indexed spotId, address indexed owner, string name, uint256 pricePerHourWei, uint8 tag, uint256 timestamp)",
-  "event BookingCreated(uint256 indexed bookingId, uint256 indexed spotId, address indexed user, uint256 durationHours, uint256 totalPaid, uint256 startTime, uint256 endTime)",
-  "event BookingActivated(uint256 indexed bookingId, bytes32 accessTokenHash, uint256 timestamp)",
-  "event BookingCompleted(uint256 indexed bookingId, uint256 ownerEarnings, uint256 platformFee)",
-  "event BookingCancelled(uint256 indexed bookingId, address cancelledBy, uint256 refundAmount)",
-  "event EarningsWithdrawn(address indexed owner, uint256 amount, uint256 timestamp)",
+  "event SpotUpdated(uint256 indexed spotId, uint256 newPrice, uint8 newStatus)",
 ] as const;
+
+export const ACCESS_NFT_ABI = [
+  "function isAccessValid(uint256 tokenId) external view returns (bool)",
+  "function isAccessValidFor(uint256 tokenId, address user) external view returns (bool)",
+  "function getAccessPass(uint256 tokenId) external view returns (tuple(uint256 spotId, address originalBuyer, uint256 startTime, uint256 expiresAt, uint256 durationHours, bool revoked))",
+  "function tokenURI(uint256 tokenId) external view returns (string)",
+  "function balanceOf(address owner) external view returns (uint256)",
+  "function ownerOf(uint256 tokenId) external view returns (address)",
+] as const;
+
+export const ESCROW_ABI = [
+  "function getDeposit(uint256 tokenId) external view returns (tuple(address payer, address recipient, uint256 ownerShare, uint256 platformFee, uint256 totalDeposited, bool released, bool refunded))",
+  "function platformBalance() external view returns (uint256)",
+] as const;
+
+// Legacy alias for backwards compatibility
+export const AIRLINK_ABI = ACCESS_MANAGER_ABI;
 
 // ═══════════════════════════════════════════════════════════════
 //  PROVIDER & SIGNER HELPERS
 // ═══════════════════════════════════════════════════════════════
 
-/** Check if MetaMask (or another injected wallet) is available */
 export function isWalletAvailable(): boolean {
   return typeof window !== "undefined" && typeof window.ethereum !== "undefined";
 }
 
-/** Get an ethers.js BrowserProvider from the injected wallet */
 export function getProvider(): BrowserProvider {
   if (!isWalletAvailable()) {
     throw new Error("No Ethereum wallet found. Please install MetaMask.");
@@ -62,28 +90,41 @@ export function getProvider(): BrowserProvider {
   return new BrowserProvider(window.ethereum!);
 }
 
-/** Connect wallet and return signer + address */
 export async function connectWallet(): Promise<{
   provider: BrowserProvider;
   signer: ethers.Signer;
   address: string;
 }> {
   const provider = getProvider();
-  // This prompts MetaMask
   await provider.send("eth_requestAccounts", []);
   const signer = await provider.getSigner();
   const address = await signer.getAddress();
   return { provider, signer, address };
 }
 
-/** Get a read-only contract instance */
-export function getReadContract(provider: BrowserProvider): Contract {
-  return new Contract(AIRLINK_CONTRACT_ADDRESS, AIRLINK_ABI, provider);
+// ═══════════════════════════════════════════════════════════════
+//  CONTRACT INSTANCES
+// ═══════════════════════════════════════════════════════════════
+
+export function getManagerContract(providerOrSigner: BrowserProvider | ethers.Signer): Contract {
+  return new Contract(CONTRACT_ADDRESSES.accessManager, ACCESS_MANAGER_ABI, providerOrSigner);
 }
 
-/** Get a write contract instance (needs signer) */
+export function getRegistryContract(providerOrSigner: BrowserProvider | ethers.Signer): Contract {
+  return new Contract(CONTRACT_ADDRESSES.registry, REGISTRY_ABI, providerOrSigner);
+}
+
+export function getNFTContract(providerOrSigner: BrowserProvider | ethers.Signer): Contract {
+  return new Contract(CONTRACT_ADDRESSES.accessNFT, ACCESS_NFT_ABI, providerOrSigner);
+}
+
+// Legacy aliases
+export function getReadContract(provider: BrowserProvider): Contract {
+  return getManagerContract(provider);
+}
+
 export function getWriteContract(signer: ethers.Signer): Contract {
-  return new Contract(AIRLINK_CONTRACT_ADDRESS, AIRLINK_ABI, signer);
+  return getManagerContract(signer);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -108,9 +149,8 @@ export interface SpotData {
   totalBookings: number;
 }
 
-/** Fetch a single spot by ID */
 export async function fetchSpot(provider: BrowserProvider, spotId: number): Promise<SpotData> {
-  const contract = getReadContract(provider);
+  const contract = getRegistryContract(provider);
   const raw = await contract.getSpot(spotId);
   return {
     id: Number(raw.id),
@@ -131,7 +171,6 @@ export async function fetchSpot(provider: BrowserProvider, spotId: number): Prom
   };
 }
 
-/** Register a new WiFi spot on-chain */
 export async function registerSpot(
   signer: ethers.Signer,
   params: {
@@ -144,7 +183,7 @@ export async function registerSpot(
     tag: number;
   }
 ): Promise<{ spotId: number; txHash: string }> {
-  const contract = getWriteContract(signer);
+  const contract = getRegistryContract(signer);
   const tx = await contract.registerSpot(
     params.name,
     params.locationHash,
@@ -156,8 +195,7 @@ export async function registerSpot(
   );
   const receipt = await tx.wait();
 
-  // Parse SpotRegistered event to get the spot ID
-  const iface = new ethers.Interface(AIRLINK_ABI);
+  const iface = new ethers.Interface(REGISTRY_ABI);
   for (const log of receipt.logs) {
     try {
       const parsed = iface.parseLog({ topics: log.topics as string[], data: log.data });
@@ -172,7 +210,7 @@ export async function registerSpot(
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  BOOKING FUNCTIONS
+//  SESSION FUNCTIONS (replaces booking functions)
 // ═══════════════════════════════════════════════════════════════
 
 export interface BookingCost {
@@ -184,14 +222,13 @@ export interface BookingCost {
   feeEth: string;
 }
 
-/** Preview the cost of a booking (free call, no gas) */
 export async function calculateBookingCost(
   provider: BrowserProvider,
   spotId: number,
   durationHours: number
 ): Promise<BookingCost> {
-  const contract = getReadContract(provider);
-  const [total, ownerShare, fee] = await contract.calculateBookingCost(spotId, durationHours);
+  const contract = getManagerContract(provider);
+  const [total, ownerShare, fee] = await contract.calculateCost(spotId, durationHours);
   return {
     total,
     totalEth: formatEther(total),
@@ -202,124 +239,170 @@ export async function calculateBookingCost(
   };
 }
 
-/** Book WiFi access — sends ETH to the contract */
+/**
+ * Purchase WiFi access — sends ETH, mints NFT, escrows payment.
+ * Returns the NFT tokenId (which is also the session ID).
+ */
 export async function bookWifiAccess(
   signer: ethers.Signer,
   spotId: number,
   durationHours: number,
   totalCostWei: bigint
 ): Promise<{ bookingId: number; txHash: string }> {
-  const contract = getWriteContract(signer);
-  const tx = await contract.bookAccess(spotId, durationHours, 0, {
+  const contract = getManagerContract(signer);
+  const tx = await contract.purchaseAccess(spotId, durationHours, 0, {
     value: totalCostWei,
   });
   const receipt = await tx.wait();
 
-  const iface = new ethers.Interface(AIRLINK_ABI);
+  const iface = new ethers.Interface(ACCESS_MANAGER_ABI);
   for (const log of receipt.logs) {
     try {
       const parsed = iface.parseLog({ topics: log.topics as string[], data: log.data });
-      if (parsed?.name === "BookingCreated") {
-        return { bookingId: Number(parsed.args.bookingId), txHash: receipt.hash };
+      if (parsed?.name === "AccessPurchased") {
+        return { bookingId: Number(parsed.args.tokenId), txHash: receipt.hash };
       }
     } catch {
       // Not our event, skip
     }
   }
-  throw new Error("BookingCreated event not found in transaction");
+  throw new Error("AccessPurchased event not found in transaction");
 }
 
-/** Activate a booking by setting the access token hash */
-export async function activateBooking(
-  signer: ethers.Signer,
-  bookingId: number,
-  accessToken: string
-): Promise<string> {
-  const tokenHash = ethers.keccak256(ethers.toUtf8Bytes(accessToken));
-  const contract = getWriteContract(signer);
-  const tx = await contract.activateBooking(bookingId, tokenHash);
-  const receipt = await tx.wait();
-  return receipt.hash;
-}
-
-/** Complete a booking — releases funds to owner */
+/**
+ * Complete a session — releases escrowed ETH to the spot owner.
+ */
 export async function completeBooking(
   signer: ethers.Signer,
-  bookingId: number
+  tokenId: number
 ): Promise<string> {
-  const contract = getWriteContract(signer);
-  const tx = await contract.completeBooking(bookingId);
+  const contract = getManagerContract(signer);
+  const tx = await contract.completeSession(tokenId);
   const receipt = await tx.wait();
   return receipt.hash;
 }
 
-/** Cancel a booking — triggers refund */
+/**
+ * Cancel a session — proportional refund based on remaining time.
+ */
 export async function cancelBooking(
   signer: ethers.Signer,
-  bookingId: number
+  tokenId: number
 ): Promise<string> {
-  const contract = getWriteContract(signer);
-  const tx = await contract.cancelBooking(bookingId);
+  const contract = getManagerContract(signer);
+  const tx = await contract.cancelSession(tokenId);
   const receipt = await tx.wait();
   return receipt.hash;
 }
 
-/** Verify access token against a booking (free call) */
+/**
+ * Verify access on-chain (free view call).
+ * Used by gateways and the frontend to check if a user has valid access.
+ */
 export async function verifyAccess(
   provider: BrowserProvider,
-  bookingId: number,
-  accessToken: string
-): Promise<boolean> {
-  const contract = getReadContract(provider);
-  return await contract.verifyAccess(bookingId, accessToken);
-}
-
-// ═══════════════════════════════════════════════════════════════
-//  EARNINGS FUNCTIONS
-// ═══════════════════════════════════════════════════════════════
-
-export interface OwnerEarnings {
-  totalEarnings: bigint;
-  totalEarningsEth: string;
-  withdrawableBalance: bigint;
-  withdrawableBalanceEth: string;
-}
-
-/** Get owner's earnings summary */
-export async function getOwnerEarnings(
-  provider: BrowserProvider,
-  ownerAddress: string
-): Promise<OwnerEarnings> {
-  const contract = getReadContract(provider);
-  const [totalEarnings, withdrawableBalance] = await contract.getOwnerEarnings(ownerAddress);
+  tokenId: number,
+  userAddress: string
+): Promise<{ valid: boolean; spotId: number; expiresAt: number }> {
+  const contract = getManagerContract(provider);
+  const [valid, spotId, expiresAt] = await contract.verifyAccess(tokenId, userAddress);
   return {
-    totalEarnings,
-    totalEarningsEth: formatEther(totalEarnings),
-    withdrawableBalance,
-    withdrawableBalanceEth: formatEther(withdrawableBalance),
+    valid,
+    spotId: Number(spotId),
+    expiresAt: Number(expiresAt),
   };
 }
 
-/** Withdraw accumulated earnings to owner's wallet */
-export async function withdrawEarnings(signer: ethers.Signer): Promise<string> {
-  const contract = getWriteContract(signer);
-  const tx = await contract.withdrawEarnings();
-  const receipt = await tx.wait();
-  return receipt.hash;
+/**
+ * Get session details by token/session ID.
+ */
+export interface SessionData {
+  tokenId: number;
+  spotId: number;
+  user: string;
+  spotOwner: string;
+  totalPaid: bigint;
+  totalPaidEth: string;
+  ownerShare: bigint;
+  platformFee: bigint;
+  startTime: number;
+  endTime: number;
+  status: number; // 0=Active, 1=Completed, 2=Cancelled, 3=Disputed
+}
+
+export async function getSession(
+  provider: BrowserProvider,
+  tokenId: number
+): Promise<SessionData> {
+  const contract = getManagerContract(provider);
+  const raw = await contract.getSession(tokenId);
+  return {
+    tokenId: Number(raw.tokenId),
+    spotId: Number(raw.spotId),
+    user: raw.user,
+    spotOwner: raw.spotOwner,
+    totalPaid: raw.totalPaid,
+    totalPaidEth: formatEther(raw.totalPaid),
+    ownerShare: raw.ownerShare,
+    platformFee: raw.platformFee,
+    startTime: Number(raw.startTime),
+    endTime: Number(raw.endTime),
+    status: Number(raw.status),
+  };
+}
+
+/**
+ * Get all session IDs for a user.
+ */
+export async function getUserSessions(
+  provider: BrowserProvider,
+  userAddress: string
+): Promise<number[]> {
+  const contract = getManagerContract(provider);
+  const ids = await contract.getUserSessions(userAddress);
+  return ids.map((id: bigint) => Number(id));
+}
+
+/**
+ * Get NFT access pass details.
+ */
+export async function getAccessPass(
+  provider: BrowserProvider,
+  tokenId: number
+) {
+  const contract = getNFTContract(provider);
+  const pass = await contract.getAccessPass(tokenId);
+  return {
+    spotId: Number(pass.spotId),
+    originalBuyer: pass.originalBuyer,
+    startTime: Number(pass.startTime),
+    expiresAt: Number(pass.expiresAt),
+    durationHours: Number(pass.durationHours),
+    revoked: pass.revoked,
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  UTILITY: Generate access token off-chain
+//  LEGACY COMPATIBILITY (activateBooking is no longer needed —
+//  NFTs are minted automatically during purchase)
 // ═══════════════════════════════════════════════════════════════
 
-/** Generate a random 16-char hex access token (matches existing Airlink format) */
+export async function activateBooking(
+  _signer: ethers.Signer,
+  _bookingId: number,
+  _accessToken: string
+): Promise<string> {
+  // No-op in v2 — activation is automatic via NFT minting
+  console.warn("activateBooking is deprecated in v2. NFTs are minted automatically on purchase.");
+  return "";
+}
+
 export function generateAccessToken(): string {
   const array = new Uint8Array(8);
   crypto.getRandomValues(array);
   return Array.from(array, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-/** Generate a 6-digit OTP */
 export function generateOTP(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
 }

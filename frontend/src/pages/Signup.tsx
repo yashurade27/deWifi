@@ -34,7 +34,7 @@ const ROLE_OPTIONS: { value: Role; icon: typeof User; label: string; sub: string
 
 const PERKS = [
     'No setup fees — free forever',
-    'Payments secured by Razorpay',
+    'Payments secured on Ethereum blockchain',
     'Cancel or pause any time',
     'Verified hosts only',
 ];

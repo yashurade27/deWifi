@@ -18,7 +18,7 @@ const USER_STEPS = [
     {
         id: 2,
         title: "Book & Pay",
-        description: "Select your preferred WiFi spot and choose your duration (hourly booking). Pay securely via Razorpay with UPI, card, or net banking.",
+        description: "Select your preferred WiFi spot and choose your duration (hourly booking). Pay securely with ETH via your MetaMask wallet — funds are held in a smart contract escrow.",
         icon: CreditCard,
         iconBg: "bg-[#66FF00]",
         glow: "rgba(102,255,0,0.30)",
