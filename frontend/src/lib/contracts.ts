@@ -6,10 +6,10 @@ import { BrowserProvider, Contract, ethers, formatEther, parseEther } from "ethe
 // ═══════════════════════════════════════════════════════════════
 
 export const CONTRACT_ADDRESSES = {
-  registry:      "0x0000000000000000000000000000000000000000", // WiFiRegistry
-  accessNFT:     "0x0000000000000000000000000000000000000000", // AirlinkAccessNFT
-  escrow:        "0x0000000000000000000000000000000000000000", // PaymentEscrow
-  accessManager: "0x0000000000000000000000000000000000000000", // AccessManager (main)
+  registry:      import.meta.env.VITE_WIFI_REGISTRY_ADDRESS      ?? "0x0000000000000000000000000000000000000000",
+  accessNFT:     import.meta.env.VITE_ACCESS_NFT_ADDRESS         ?? "0x0000000000000000000000000000000000000000",
+  escrow:        import.meta.env.VITE_PAYMENT_ESCROW_ADDRESS     ?? "0x0000000000000000000000000000000000000000",
+  accessManager: import.meta.env.VITE_ACCESS_MANAGER_ADDRESS     ?? "0x0000000000000000000000000000000000000000",
 };
 
 // Backwards-compatible alias

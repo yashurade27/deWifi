@@ -37,6 +37,10 @@ router.post("/", async (req: AuthRequest, res: Response) => {
     const bookingStartTime = startTime ? new Date(startTime) : new Date();
     const bookingEndTime = new Date(bookingStartTime.getTime() + durationHours * 60 * 60 * 1000);
 
+    const subtotal = spot.pricePerHour * durationHours;
+    const platformFee = Math.round(subtotal * 0.02 * 100) / 100;
+    const ownerEarnings = subtotal - platformFee;
+
     const booking = await Booking.create({
       user: req.userId,
       wifiSpot: spot._id,
@@ -45,8 +49,10 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       endTime: bookingEndTime,
       durationHours,
       pricePerHour: spot.pricePerHour,
-      subtotal: spot.pricePerHour * durationHours,
-      totalAmount: spot.pricePerHour * durationHours,
+      subtotal,
+      platformFee,
+      ownerEarnings,
+      totalAmount: subtotal,
       status: "confirmed",
       paymentStatus: "paid",
       txHash,
@@ -58,10 +64,16 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       $inc: { currentUsers: 1 },
     });
 
+    // Generate access token & OTP for captive portal
+    booking.generateAccessToken();
+    await booking.save();
+
     res.status(201).json({
       success: true,
       booking: {
         id: (booking as any)._id,
+        accessToken: booking.accessToken,
+        accessTokenOTP: booking.accessTokenOTP,
         txHash,
         tokenId,
         spot: { id: spot._id, name: spot.name, address: spot.address },

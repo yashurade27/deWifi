@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { useAuth } from '@/context/AuthContext';
+import { useWeb3 } from '@/context/Web3Context';
 import { apiFetch } from '@/lib/api';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -21,6 +22,7 @@ import {
   Coffee,
   BookOpen,
   Briefcase,
+  Wallet,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -58,6 +60,7 @@ interface FormData {
   tag: string;
   amenities: string[];
   paymentSetup: {
+    walletAddress: string;
     upiId: string;
     bankAccountNumber: string;
     ifscCode: string;
@@ -67,6 +70,7 @@ interface FormData {
 
 export default function WifiSetup() {
   const { user, token, isAuthenticated } = useAuth();
+  const { connect: connectWallet, address: walletAddr, isConnecting: walletConnecting, walletAvailable } = useWeb3();
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = !!id;
@@ -92,6 +96,7 @@ export default function WifiSetup() {
     tag: 'Home',
     amenities: [],
     paymentSetup: {
+      walletAddress: '',
       upiId: '',
       bankAccountNumber: '',
       ifscCode: '',
@@ -643,9 +648,59 @@ export default function WifiSetup() {
 
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                 <p className="text-sm text-green-800">
-                  Set up your payment details to receive earnings directly to your bank account. 
+                  Set up your payment details to receive earnings. Connect your Ethereum wallet 
+                  for blockchain payments, or add UPI/bank details for fiat payments.
                   You'll receive 98% of each booking amount.
                 </p>
+              </div>
+
+              {/* Wallet Address - Primary for blockchain */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <Wallet size={16} className="inline mr-1" />
+                  Ethereum Wallet Address (for blockchain payments)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={formData.paymentSetup.walletAddress || walletAddr || ''}
+                    onChange={(e) => updateField('paymentSetup.walletAddress', e.target.value)}
+                    placeholder="0x..."
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                  />
+                  {walletAvailable && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!walletAddr) {
+                          await connectWallet();
+                        }
+                        if (walletAddr) {
+                          updateField('paymentSetup.walletAddress', walletAddr);
+                        }
+                      }}
+                      disabled={walletConnecting}
+                      className="px-4 py-2 bg-[#0055FF] text-white rounded-lg hover:bg-[#0044CC] transition-colors text-sm font-semibold disabled:opacity-50 flex items-center gap-2 whitespace-nowrap"
+                    >
+                      <Wallet size={16} />
+                      {walletConnecting ? '...' : walletAddr ? 'Use Connected' : 'Connect'}
+                    </button>
+                  )}
+                </div>
+                {walletAddr && !formData.paymentSetup.walletAddress && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    Wallet connected: {walletAddr.slice(0, 6)}...{walletAddr.slice(-4)} — Click "Use Connected" to fill
+                  </p>
+                )}
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">or UPI / Bank Account</span>
+                </div>
               </div>
 
               <div>

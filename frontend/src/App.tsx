@@ -16,13 +16,15 @@ import Community from './pages/Community';
 import Profile from './pages/Profile';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { Web3Provider } from './context/Web3Context';
 import './index.css';
 
 export function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <BrowserRouter>
+      <Web3Provider>
+        <AuthProvider>
+          <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
@@ -45,6 +47,7 @@ export function App() {
           </Routes>
         </BrowserRouter>
       </AuthProvider>
+      </Web3Provider>
     </ThemeProvider>
   );
 }

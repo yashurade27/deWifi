@@ -8,6 +8,7 @@
     "deploy": "hardhat run scripts/deploy-with-env.ts --network localhost",
     "deploy:local": "hardhat run scripts/deploy-with-env.ts --network localhost",
     "deploy:sepolia": "hardhat run scripts/deploy-with-env.ts --network sepolia",
+    "seed:spots": "hardhat run scripts/seedSpots.ts --network localhost",
     "node": "hardhat node",
     "node:start": "hardhat node > node.log 2>&1 &",
     "verify": "hardhat verify --network sepolia"

@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Wifi, Eye, EyeOff, ArrowRight, ShieldCheck, Zap, Star } from 'lucide-react';
+import { Wifi, Eye, EyeOff, ArrowRight, ShieldCheck, Zap, Star, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
+import { useWeb3 } from '@/context/Web3Context';
 
 const TESTIMONIAL = {
     quote: "I made ₹6,200 last month just by sharing my home broadband. Setup took 5 minutes.",
@@ -29,6 +30,7 @@ export default function Login() {
     const [error, setError] = useState('');
 
     const { signin } = useAuth();
+    const { connect: connectWallet, address: walletAddress, isConnecting: walletConnecting, walletAvailable } = useWeb3();
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -42,6 +44,15 @@ export default function Login() {
             setError(err instanceof Error ? err.message : 'Sign in failed.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleWalletConnect = async () => {
+        setError('');
+        try {
+            await connectWallet();
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Wallet connection failed.');
         }
     };
 
@@ -252,13 +263,41 @@ export default function Login() {
                         </div>
                         <div className="relative flex justify-center">
                             <span className="bg-white px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                Quick access
+                                or continue with
                             </span>
                         </div>
                     </div>
 
+                    {/* Wallet Connect */}
+                    {walletAvailable ? (
+                        <button
+                            type="button"
+                            onClick={handleWalletConnect}
+                            disabled={walletConnecting}
+                            className="w-full flex items-center justify-center gap-3 h-12 rounded-xl border-2 border-gray-200 bg-gray-50 hover:border-[#0055FF]/40 hover:bg-blue-50/50 transition-all font-bold text-sm text-gray-700 disabled:opacity-50"
+                        >
+                            <Wallet className="w-5 h-5 text-[#0055FF]" />
+                            {walletConnecting
+                                ? 'Connecting...'
+                                : walletAddress
+                                ? `Connected: ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+                                : 'Connect MetaMask Wallet'
+                            }
+                        </button>
+                    ) : (
+                        <a
+                            href="https://metamask.io/download/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full flex items-center justify-center gap-3 h-12 rounded-xl border-2 border-gray-200 bg-gray-50 hover:border-orange-300 hover:bg-orange-50/50 transition-all font-bold text-sm text-gray-700"
+                        >
+                            <Wallet className="w-5 h-5 text-orange-500" />
+                            Install MetaMask to use Web3
+                        </a>
+                    )}
+
                     {/* Quick role login hint */}
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-3 mt-5">
                         <div className="flex items-center gap-2.5 p-3.5 rounded-xl border border-gray-200 bg-gray-50 hover:border-[#0055FF]/40 hover:bg-blue-50/50 transition-all cursor-pointer group">
                             <div className="w-8 h-8 rounded-lg bg-[#0055FF]/10 flex items-center justify-center shrink-0 group-hover:bg-[#0055FF]/20 transition-colors">
                                 <Wifi className="w-4 h-4 text-[#0055FF]" />

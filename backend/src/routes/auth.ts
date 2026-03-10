@@ -14,7 +14,7 @@ function signToken(userId: string) {
 // ─── POST /api/auth/signup ─────────────────────────────────────────────────
 router.post("/signup", async (req: Request, res: Response) => {
   try {
-    const { name, email, phone, password, role } = req.body;
+    const { name, email, phone, password, role, walletAddress } = req.body;
 
     if (!name || !email || !phone || !password) {
       res.status(400).json({ message: "All fields are required." });
@@ -27,7 +27,7 @@ router.post("/signup", async (req: Request, res: Response) => {
       return;
     }
 
-    const user = await User.create({ name, email, phone, password, role: role ?? "user" });
+    const user = await User.create({ name, email, phone, password, role: role ?? "user", walletAddress: walletAddress ?? "" });
     const token = signToken(String(user._id));
 
     res.status(201).json({
@@ -39,6 +39,7 @@ router.post("/signup", async (req: Request, res: Response) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        walletAddress: user.walletAddress || "",
         profilePhoto: user.profilePhoto || "",
       },
     });
@@ -75,6 +76,7 @@ router.post("/signin", async (req: Request, res: Response) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        walletAddress: user.walletAddress || "",
         profilePhoto: user.profilePhoto || "",
       },
     });
@@ -95,7 +97,7 @@ router.post("/signout", (_req: Request, res: Response) => {
 // Update user profile (name, email, phone, profilePhoto)
 router.put("/profile", protect, async (req: AuthRequest, res: Response) => {
   try {
-    const { name, email, phone, profilePhoto } = req.body;
+    const { name, email, phone, profilePhoto, walletAddress } = req.body;
     const userId = req.userId;
 
     if (!userId) {
@@ -124,6 +126,7 @@ router.put("/profile", protect, async (req: AuthRequest, res: Response) => {
     if (name) user.name = name;
     if (phone) user.phone = phone;
     if (profilePhoto !== undefined) user.profilePhoto = profilePhoto;
+    if (walletAddress !== undefined) user.walletAddress = walletAddress;
 
     await user.save();
 
@@ -135,6 +138,7 @@ router.put("/profile", protect, async (req: AuthRequest, res: Response) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        walletAddress: user.walletAddress || "",
         profilePhoto: user.profilePhoto || "",
       },
     });

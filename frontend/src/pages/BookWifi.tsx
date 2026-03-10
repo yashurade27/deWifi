@@ -187,7 +187,7 @@ export default function BookWifi() {
         // spot._id is the MongoDB id; we need the on-chain spotId.
         // For the hackathon demo, we use the spot's blockchain ID if available,
         // or fall back to 1 (first registered spot).
-        const onChainSpotId = (spot as any).blockchainSpotId ?? 1;
+        const onChainSpotId = (spot as any).blockchainSpotId ?? 0;
         const cost = await calculateBookingCost(provider, onChainSpotId, duration);
         if (!cancelled) setCostEth(cost.totalEth);
       } catch {
@@ -216,7 +216,7 @@ export default function BookWifi() {
     try {
       // Step 1: Calculate cost on-chain
       const provider = getProvider();
-      const onChainSpotId = (spot as any).blockchainSpotId ?? 1;
+      const onChainSpotId = (spot as any).blockchainSpotId ?? 0;
       const cost = await calculateBookingCost(provider, onChainSpotId, duration);
 
       // Step 2: Purchase access on-chain (sends ETH, mints NFT, escrows payment)

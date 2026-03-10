@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Wifi, Eye, EyeOff, ArrowRight, ShieldCheck, User, Zap, CheckCircle2,
+    Wifi, Eye, EyeOff, ArrowRight, ShieldCheck, User, Zap, CheckCircle2, Wallet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
+import { useWeb3 } from '@/context/Web3Context';
 
 type Role = 'user' | 'owner';
 
@@ -64,10 +65,20 @@ export default function Signup() {
     const [error, setError] = useState('');
 
     const { signup } = useAuth();
+    const { connect: connectWallet, address: walletAddress, isConnecting: walletConnecting, walletAvailable, disconnect: disconnectWallet } = useWeb3();
     const navigate = useNavigate();
 
     const handleChange = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm(prev => ({ ...prev, [field]: e.target.value }));
+    };
+
+    const handleWalletConnect = async () => {
+        setError('');
+        try {
+            await connectWallet();
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Wallet connection failed.');
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -76,7 +87,14 @@ export default function Signup() {
         setError('');
         setLoading(true);
         try {
-            await signup({ name: form.name, email: form.email, phone: form.phone, password: form.password, role });
+            await signup({
+                name: form.name,
+                email: form.email,
+                phone: form.phone,
+                password: form.password,
+                role,
+                walletAddress: walletAddress || undefined,
+            });
             navigate('/');
         } catch (err: unknown) {
             setError(err instanceof Error ? err.message : 'Sign up failed.');
@@ -281,6 +299,54 @@ export default function Signup() {
                                     className="h-12 rounded-xl border-gray-200 bg-gray-50 text-sm pl-12 focus-visible:border-[#0055FF] focus-visible:ring-[#0055FF]/20 transition-all"
                                 />
                             </div>
+                        </div>
+
+                        {/* Wallet Connect */}
+                        <div className="space-y-1">
+                            <Label className="text-sm font-semibold text-gray-700">
+                                <Wallet className="w-4 h-4 inline mr-1" />
+                                Ethereum Wallet {role === 'owner' ? '(Recommended)' : '(Optional)'}
+                            </Label>
+                            {walletAddress ? (
+                                <div className="flex items-center gap-2 h-12 px-4 rounded-xl border-2 border-green-300 bg-green-50">
+                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                    <span className="text-sm font-mono text-green-800 flex-1">
+                                        {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={disconnectWallet}
+                                        className="text-xs font-semibold text-red-500 hover:text-red-700"
+                                    >
+                                        Disconnect
+                                    </button>
+                                </div>
+                            ) : walletAvailable ? (
+                                <button
+                                    type="button"
+                                    onClick={handleWalletConnect}
+                                    disabled={walletConnecting}
+                                    className="w-full flex items-center justify-center gap-2 h-12 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 hover:border-[#0055FF] hover:bg-blue-50/50 transition-all text-sm font-semibold text-gray-600 disabled:opacity-50"
+                                >
+                                    <Wallet className="w-4 h-4 text-[#0055FF]" />
+                                    {walletConnecting ? 'Connecting...' : 'Connect MetaMask'}
+                                </button>
+                            ) : (
+                                <a
+                                    href="https://metamask.io/download/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full flex items-center justify-center gap-2 h-12 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 hover:border-orange-300 hover:bg-orange-50/50 transition-all text-sm font-semibold text-gray-500"
+                                >
+                                    <Wallet className="w-4 h-4 text-orange-500" />
+                                    Install MetaMask
+                                </a>
+                            )}
+                            {role === 'owner' && !walletAddress && (
+                                <p className="text-xs text-amber-600 font-medium mt-1">
+                                    Owners should connect a wallet to receive ETH payments from bookings
+                                </p>
+                            )}
                         </div>
 
                         {/* Password */}

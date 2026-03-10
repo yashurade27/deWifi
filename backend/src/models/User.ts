@@ -7,6 +7,7 @@ export interface IUser extends Document {
   phone: string;
   password: string;
   role: "user" | "owner";
+  walletAddress?: string;
   profilePhoto?: string;
   createdAt: Date;
   comparePassword(candidate: string): Promise<boolean>;
@@ -25,6 +26,7 @@ const UserSchema = new Schema(
     phone: { type: String, required: true, trim: true },
     password: { type: String, required: true, minlength: 8 },
     role: { type: String, enum: ["user", "owner"], default: "user" },
+    walletAddress: { type: String, default: "", trim: true },
     profilePhoto: { type: String, default: "" },
   },
   { timestamps: true }
