@@ -159,8 +159,8 @@ const NetworkGlobe3D = ({ isDark }: { isDark: boolean }) => {
                     <Wifi className="w-4 h-4 text-white" strokeWidth={2.5} />
                 </div>
                 <div>
-                    <p className="text-[9px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Avg Speed</p>
-                    <p className="text-base font-black text-black dark:text-white leading-none">350 Mbps</p>
+                    <p className="text-[9px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">NFT Access Pass</p>
+                    <p className="text-base font-black text-black dark:text-white leading-none">ERC-721</p>
                 </div>
             </motion.div>
 
@@ -175,7 +175,7 @@ const NetworkGlobe3D = ({ isDark }: { isDark: boolean }) => {
                     <Users className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                    <p className="text-[9px] text-blue-200 font-bold uppercase tracking-wider">Active Nodes</p>
+                    <p className="text-[9px] text-blue-200 font-bold uppercase tracking-wider">Active Users</p>
                     <p className="text-base font-black leading-none">2,400+</p>
                 </div>
             </motion.div>
@@ -191,8 +191,8 @@ const NetworkGlobe3D = ({ isDark }: { isDark: boolean }) => {
                     <Zap className="w-4 h-4 text-uplink-green" />
                 </div>
                 <div>
-                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Live Earnings</p>
-                    <p className="text-base font-black text-uplink-green leading-none">₹ 1.2/min</p>
+                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Avg Earnings</p>
+                    <p className="text-base font-black text-uplink-green leading-none">0.05 ETH/day</p>
                 </div>
             </motion.div>
         </div>
@@ -239,16 +239,15 @@ export const Hero = () => {
                             variants={itemVariants}
                             className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-black dark:text-white leading-[1.05] mb-6"
                         >
-                            On-Demand<br />
-                            <span className="text-transparent bg-clip-text bg-linear-to-r from-uplink-blue to-[#003399] dark:from-[#0088FF] dark:to-[#00DDFF]">WiFi Access Platform</span>
+                            Decentralized<br />
+                            <span className="text-transparent bg-clip-text bg-linear-to-r from-uplink-blue to-[#003399] dark:from-[#0088FF] dark:to-[#00DDFF]">WiFi Marketplace</span>
                         </motion.h1>
 
                         <motion.p
                             variants={itemVariants}
                             className="max-w-135 text-lg text-gray-600 dark:text-gray-400 font-medium leading-relaxed mb-8"
                         >
-                            Turn your router into a passive income stream.
-                            The world's first marketplace for peer-to-peer internet bandwidth sharing.
+                            Earn Ethereum from your excess bandwidth. The first peer-to-peer WiFi marketplace powered by blockchain technology.
                         </motion.p>
 
                         <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -267,8 +266,8 @@ export const Hero = () => {
                             className="grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-gray-100 dark:border-gray-800 w-full max-w-md"
                         >
                             {[
-                                { value: '2.4k+', label: 'Active Nodes' },
-                                { value: '₹30/hr', label: 'Avg Price' },
+                                { value: '100% Web3', label: 'Decentralized' },
+                                { value: 'Ethereum', label: 'Blockchain' },
                                 { value: '99.9%', label: 'Uptime' },
                             ].map((stat) => (
                                 <div key={stat.label}>

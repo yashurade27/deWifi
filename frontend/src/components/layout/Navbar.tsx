@@ -11,7 +11,6 @@ const NAV_LINKS = [
     { label: 'Explore', to: '/explore' },
     { label: 'How it works', to: '/how-it-works' },
     { label: 'Community', to: '/community' },
-    { label: 'Enterprise', to: '/enterprise' },
 ];
 
 export const Navbar = () => {

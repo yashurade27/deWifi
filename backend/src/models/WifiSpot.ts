@@ -43,9 +43,6 @@ export interface IWifiSpot extends Document {
   // Payment setup
   paymentSetup: {
     walletAddress: string;
-    upiId: string;
-    bankAccountNumber: string;
-    ifscCode: string;
     accountHolderName: string;
     isVerified: boolean;
   };
@@ -95,9 +92,6 @@ const WifiSpotSchema = new Schema<IWifiSpot>(
     // Payment setup for owner earnings
     paymentSetup: {
       walletAddress:     { type: String, default: "" },
-      upiId:             { type: String, default: "" },
-      bankAccountNumber: { type: String, default: "" },
-      ifscCode:          { type: String, default: "" },
       accountHolderName: { type: String, default: "" },
       isVerified:        { type: Boolean, default: false },
     },

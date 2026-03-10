@@ -193,7 +193,7 @@ export default function OwnerDashboard() {
               <p className="text-gray-500 dark:text-gray-400 mb-4">Start monetizing your internet by adding your first WiFi spot.</p>
               <Link
                 to="/owner/spots/new"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0055FF] text-white rounded-full font-bold hover:bg-[#0044CC] shadow-md shadow-blue-500/25 transition-all duration-300"
               >
                 <Plus size={20} />
                 Add Your First Spot

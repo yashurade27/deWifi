@@ -3,7 +3,6 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Explore from './pages/Explore';
-import Enterprise from './pages/Enterprise';
 import OwnerDashboard from './pages/OwnerDashboard';
 import WifiSetup from './pages/WifiSetup';
 import BookWifi from './pages/BookWifi';
@@ -30,7 +29,6 @@ export function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/explore" element={<Explore />} />
-            <Route path="/enterprise" element={<Enterprise />} />
             <Route path="/how-it-works" element={<HowItWorksPage />} />
             <Route path="/community" element={<Community />} />
             <Route path="/spots/:id" element={<SpotDetails />} />

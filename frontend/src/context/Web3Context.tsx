@@ -58,7 +58,15 @@ export function Web3Provider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const { provider: p, signer: s, address: addr } = await connectWeb3Wallet();
+      // Add timeout: if wallet doesn't respond in 10 seconds, give up
+      const connectionPromise = connectWeb3Wallet();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Wallet connection timed out after 10 seconds. Is MetaMask unlocked and on the right network?")), 10000)
+      );
+      const { provider: p, signer: s, address: addr } = await Promise.race([
+        connectionPromise,
+        timeoutPromise as Promise<any>
+      ]);
       const network = await p.getNetwork();
 
       setProvider(p);
@@ -68,8 +76,10 @@ export function Web3Provider({ children }: { children: ReactNode }) {
 
       // Persist connection preference
       localStorage.setItem("airlink_web3_connected", "true");
+      console.log("✓ Wallet connected:", { address: addr, chainId: Number(network.chainId) });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to connect wallet";
+      console.error("✗ Wallet connection failed:", message);
       setError(message);
     } finally {
       setIsConnecting(false);
@@ -100,7 +110,8 @@ export function Web3Provider({ children }: { children: ReactNode }) {
       if (accounts.length === 0) {
         disconnect();
       } else {
-        setAddress(accounts[0]);
+        // Re-run full connect to get a fresh signer for the new account
+        connect();
       }
     };
 
