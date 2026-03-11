@@ -15,7 +15,6 @@ import {
   Eye,
   EyeOff,
   MapPin,
-  IndianRupee,
   Copy,
   Check,
   Terminal,
@@ -272,8 +271,8 @@ function SpotRow({ spot, onToggle, onDelete }: { spot: WifiSpot; onToggle: () =>
               {spot.address}
             </span>
             <span className="flex items-center gap-1">
-              <IndianRupee size={14} />
-              ₹{spot.pricePerHour}/hr
+              <Wifi size={14} />
+              {spot.pricePerHour} ETH/hr
             </span>
             <span className="flex items-center gap-1">
               <Users size={14} />

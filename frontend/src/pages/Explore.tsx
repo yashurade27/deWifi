@@ -55,7 +55,7 @@ function makeIcon(color: string, isSelected: boolean) {
         </filter>
       </defs>
       <text x="22" y="23" text-anchor="middle" fill="white"
-        font-size="${isSelected ? 11 : 10}" font-family="sans-serif" font-weight="700">₹</text>
+        font-size="${isSelected ? 11 : 10}" font-family="sans-serif" font-weight="700">Ξ</text>
     </svg>`;
   return L.divIcon({
     html: svg,
@@ -337,7 +337,7 @@ function SpotCard({
         <div className="flex items-center gap-1.5">
           <LiveStatusBadge spot={spot} />
           <span className="text-sm font-black text-[#0055FF] dark:text-blue-400">
-            ₹{spot.pricePerHour}
+            {spot.pricePerHour} ETH
             <span className="text-xs font-medium text-gray-400 dark:text-gray-500">/hr</span>
           </span>
         </div>
@@ -359,7 +359,8 @@ export default function Explore() {
   const [search, setSearch] = useState('');
   const [cityFilter, setCityFilter] = useState('All');
   const [tagFilter, setTagFilter] = useState<ApiSpot['tag'] | 'All'>('All');
-  const [maxPrice, setMaxPrice] = useState(100);
+  const [maxPrice, setMaxPrice] = useState(Infinity);
+  const [priceInited, setPriceInited] = useState(false);
   const [onlyActive, setOnlyActive] = useState(false);
 
   const mapRef = useRef<L.Map | null>(null);
@@ -373,6 +374,21 @@ export default function Explore() {
   const [sortByNearest, setSortByNearest] = useState(false);
   const [locateTrigger, setLocateTrigger] = useState(0);
 
+  // Derive price ceiling from the loaded spots so the slider always covers all data
+  const highestPrice = spots.length
+    ? Math.ceil(Math.max(...spots.map((s) => s.pricePerHour)) * 1000) / 1000
+    : 0.01;
+  const sliderMax  = Math.max(highestPrice, 0.01);   // never below 0.01
+  const sliderStep = sliderMax <= 0.01 ? 0.001 : sliderMax <= 1 ? 0.01 : 10;
+
+  // Auto-set maxPrice to the ceiling once spots arrive
+  useEffect(() => {
+    if (spots.length > 0 && !priceInited) {
+      setMaxPrice(sliderMax);
+      setPriceInited(true);
+    }
+  }, [spots, sliderMax, priceInited]);
+
   // Build city list from live data
   const allCities = ['All', ...Array.from(new Set(spots.map((s) => s.city)))];
 
@@ -381,7 +397,7 @@ export default function Explore() {
       if (onlyActive && !s.isActive) return false;
       if (cityFilter !== 'All' && s.city !== cityFilter) return false;
       if (tagFilter !== 'All' && s.tag !== tagFilter) return false;
-      if (s.pricePerHour > maxPrice) return false;
+      if (maxPrice !== Infinity && s.pricePerHour > maxPrice) return false;
       if (
         search &&
         !s.name.toLowerCase().includes(search.toLowerCase()) &&
@@ -596,14 +612,14 @@ export default function Explore() {
                 <div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">
                     Max price:{' '}
-                    <span className="font-semibold text-gray-800 dark:text-gray-200">₹{maxPrice}/hr</span>
+                    <span className="font-semibold text-gray-800 dark:text-gray-200">{maxPrice === Infinity ? sliderMax : maxPrice} ETH/hr</span>
                   </p>
                   <input
                     type="range"
-                    min={25}
-                    max={100}
-                    step={5}
-                    value={maxPrice}
+                    min={sliderStep}
+                    max={sliderMax}
+                    step={sliderStep}
+                    value={maxPrice === Infinity ? sliderMax : maxPrice}
                     onChange={(e) => setMaxPrice(Number(e.target.value))}
                     className="w-full accent-[#0055FF]"
                   />
@@ -759,7 +775,7 @@ export default function Explore() {
               </>
             )}
 
-            {spots.map((spot) => (
+            {filtered.map((spot) => (
               <Marker
                 key={spot._id}
                 position={[spot.lat, spot.lng]}
@@ -848,7 +864,7 @@ export default function Explore() {
                     {/* CTA */}
                     <div className="mt-3 flex items-center justify-between">
                       <span className="text-lg font-black text-[#0055FF]">
-                        ₹{spot.pricePerHour}
+                        {spot.pricePerHour} ETH
                         <span className="text-xs font-medium text-gray-400">/hr</span>
                       </span>
                       <div className="flex items-center gap-2">

@@ -3,6 +3,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { useAuth } from '@/context/AuthContext';
 import { useWeb3 } from '@/context/Web3Context';
 import { apiFetch } from '@/lib/api';
+import { findDummySpot } from '@/data/dummySpots';
 import { bookWifiAccess, calculateBookingCost, getProvider } from '@/lib/contracts';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -166,8 +167,14 @@ export default function BookWifi() {
       const res = await apiFetch<{ spot: SpotDetails }>(`/api/spots/${spotId}`);
       setSpot(res.spot);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to load spot';
-      setError(message);
+      // API failed — try dummy data as fallback
+      const dummy = findDummySpot(spotId!);
+      if (dummy) {
+        setSpot(dummy as unknown as SpotDetails);
+      } else {
+        const message = err instanceof Error ? err.message : 'Failed to load spot';
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -184,14 +191,18 @@ export default function BookWifi() {
     (async () => {
       try {
         const provider = getProvider();
-        // spot._id is the MongoDB id; we need the on-chain spotId.
-        // For the hackathon demo, we use the spot's blockchain ID if available,
-        // or fall back to 1 (first registered spot).
+        // blockchainSpotId is the on-chain WiFiRegistry ID stored in MongoDB.
+        // Falls back to 0 (first seeded spot) if not set.
         const onChainSpotId = (spot as any).blockchainSpotId ?? 0;
         const cost = await calculateBookingCost(provider, onChainSpotId, duration);
         if (!cancelled) setCostEth(cost.totalEth);
-      } catch {
+      } catch (err: unknown) {
+        // Spot may not be seeded on-chain yet — silently hide ETH price.
         if (!cancelled) setCostEth(null);
+        const msg = err instanceof Error ? err.message : '';
+        if (!cancelled && (msg.includes('Spot does not exist') || msg.includes('Spot not active'))) {
+          setError('This spot is not yet registered on-chain. Please run the blockchain seed script.');
+        }
       }
     })();
     return () => { cancelled = true; };
@@ -217,7 +228,19 @@ export default function BookWifi() {
       // Step 1: Calculate cost on-chain
       const provider = getProvider();
       const onChainSpotId = (spot as any).blockchainSpotId ?? 0;
-      const cost = await calculateBookingCost(provider, onChainSpotId, duration);
+      let cost;
+      try {
+        cost = await calculateBookingCost(provider, onChainSpotId, duration);
+      } catch (calcErr: unknown) {
+        const msg = calcErr instanceof Error ? calcErr.message : String(calcErr);
+        if (msg.includes('Spot does not exist') || msg.includes('Spot not active')) {
+          throw new Error(
+            'This spot is not registered on the blockchain yet. ' +
+            'Please run: npx hardhat run scripts/seedSpots.ts --network localhost'
+          );
+        }
+        throw calcErr;
+      }
 
       // Step 2: Purchase access on-chain (sends ETH, mints NFT, escrows payment)
       const currentSigner = signer!;
@@ -355,7 +378,7 @@ export default function BookWifi() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-500 text-sm">Amount Paid</span>
-                <span className="font-bold text-green-600">{costEth ? `${costEth} ETH` : `₹${total}`}</span>
+                <span className="font-bold text-green-600">{costEth ? `${costEth} ETH` : 'Paid in ETH'}</span>
               </div>
             </div>
 
@@ -756,18 +779,24 @@ export default function BookWifi() {
 
               <div className="space-y-3 pb-4 border-b border-gray-200">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">₹{spot.pricePerHour}/hr × {duration} hr{duration > 1 ? 's' : ''}</span>
-                  <span>₹{subtotal}</span>
+                  <span className="text-gray-600">
+                    {costEth
+                      ? `${(parseFloat(costEth) / duration).toFixed(6)} ETH/hr × ${duration} hr${duration > 1 ? 's' : ''}`
+                      : `${duration} hr${duration > 1 ? 's' : ''}`}
+                  </span>
+                  <span>{costEth ? `${(parseFloat(costEth) * 0.98).toFixed(6)} ETH` : '—'}</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-500">
                   <span>Platform fee (2%)</span>
-                  <span>₹{platformFee.toFixed(2)}</span>
+                  <span>{costEth ? `${(parseFloat(costEth) * 0.02).toFixed(6)} ETH` : '—'}</span>
                 </div>
               </div>
 
               <div className="flex justify-between py-4 text-lg font-bold">
                 <span>Total</span>
-                <span className="text-blue-600">{costEth ? `${costEth} ETH` : `₹${total}`}</span>
+                <span className="text-blue-600">
+                  {costEth ? `${costEth} ETH` : <span className="text-gray-400 text-sm font-normal">Loading…</span>}
+                </span>
               </div>
 
               <div className="mb-4 p-3 bg-green-50 rounded-lg">
@@ -845,7 +874,7 @@ export default function BookWifi() {
                 ) : (
                   <>
                     <Wallet size={20} />
-                    Pay {costEth ? `${costEth} ETH` : `₹${total}`}
+                    Pay {costEth ? `${costEth} ETH` : 'with ETH'}
                   </>
                 )}
               </button>

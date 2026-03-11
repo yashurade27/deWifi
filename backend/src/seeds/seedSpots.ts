@@ -63,7 +63,7 @@ async function seed() {
       description: "Blazing-fast JioFiber connection in a quiet residential flat. Perfect for remote work or study sessions.",
       lat: 18.5204, lng: 73.8567,
       address: "12, Koregaon Park Lane 5, Pune", city: "Pune", state: "Maharashtra",
-      pricePerHour: 35, speedMbps: 200, maxUsers: 3,
+      pricePerHour: 0.002, speedMbps: 200, maxUsers: 3,
       rating: 4.8, reviewCount: 24, isActive: true,
       amenities: ["AC", "Parking", "Power Outlet", "Tea/Coffee"],
       availableFrom: "09:00", availableTo: "21:00",
@@ -75,7 +75,7 @@ async function seed() {
       description: "Cozy corner cafÃ© with unlimited high-speed WiFi, great coffee and a productive vibe.",
       lat: 18.5286, lng: 73.8476,
       address: "FC Road, Deccan Gymkhana, Pune", city: "Pune", state: "Maharashtra",
-      pricePerHour: 50, speedMbps: 100, maxUsers: 8,
+      pricePerHour: 0.003, speedMbps: 100, maxUsers: 8,
       rating: 4.5, reviewCount: 61, isActive: true,
       amenities: ["AC", "Coffee", "Snacks", "Power Outlet", "Washroom"],
       availableFrom: "08:00", availableTo: "22:00",
@@ -87,7 +87,7 @@ async function seed() {
       description: "Dedicated co-working desk with 300 Mbps connection, standing desks available.",
       lat: 18.5583, lng: 73.8077,
       address: "D-Wing, Rahul Tower, Aundh, Pune", city: "Pune", state: "Maharashtra",
-      pricePerHour: 75, speedMbps: 300, maxUsers: 12,
+      pricePerHour: 0.005, speedMbps: 300, maxUsers: 12,
       rating: 4.9, reviewCount: 112, isActive: true,
       amenities: ["AC", "Standing Desk", "Locker", "Printer", "Power Outlet", "Coffee"],
       availableFrom: "07:00", availableTo: "23:00",
@@ -99,7 +99,7 @@ async function seed() {
       description: "Silent study room in a residential building near COEP. Ideal for students who need no distractions.",
       lat: 18.5308, lng: 73.8473,
       address: "Near COEP, Shivajinagar, Pune", city: "Pune", state: "Maharashtra",
-      pricePerHour: 25, speedMbps: 50, maxUsers: 2,
+      pricePerHour: 0.001, speedMbps: 50, maxUsers: 2,
       rating: 4.3, reviewCount: 18, isActive: true,
       amenities: ["Fan", "Power Outlet", "Whiteboard"],
       availableFrom: "06:00", availableTo: "23:00",
@@ -111,7 +111,7 @@ async function seed() {
       description: "Spacious lounge inside Phase 1 IT Park. Great for freelancers working near the tech corridor.",
       lat: 18.5912, lng: 73.7389,
       address: "Phase 1, Hinjewadi Rajiv Gandhi Infotech Park, Pune", city: "Pune", state: "Maharashtra",
-      pricePerHour: 60, speedMbps: 250, maxUsers: 20,
+      pricePerHour: 0.004, speedMbps: 250, maxUsers: 20,
       rating: 4.6, reviewCount: 87, isActive: true,
       amenities: ["AC", "Standing Desk", "Power Outlet", "Cafeteria Access"],
       availableFrom: "08:00", availableTo: "20:00",
@@ -123,7 +123,7 @@ async function seed() {
       description: "Reading cafÃ© with fast WiFi, green tea and the smell of fresh books.",
       lat: 18.5679, lng: 73.9143,
       address: "North Main Road, Viman Nagar, Pune", city: "Pune", state: "Maharashtra",
-      pricePerHour: 40, speedMbps: 80, maxUsers: 6,
+      pricePerHour: 0.002, speedMbps: 80, maxUsers: 6,
       rating: 4.7, reviewCount: 45, isActive: false,
       amenities: ["AC", "Books", "Tea", "Power Outlet"],
       availableFrom: "10:00", availableTo: "20:00",
@@ -136,7 +136,7 @@ async function seed() {
       description: "Premium lounge in the heart of Bandra Kurla Complex. Gigabit fibre, printer included.",
       lat: 19.0693, lng: 72.8680,
       address: "G Block, BKC, Bandra East, Mumbai", city: "Mumbai", state: "Maharashtra",
-      pricePerHour: 100, speedMbps: 500, maxUsers: 15,
+      pricePerHour: 0.007, speedMbps: 500, maxUsers: 15,
       rating: 4.9, reviewCount: 203, isActive: true,
       amenities: ["AC", "Printer", "Scanner", "Coffee", "Power Outlet", "Locker"],
       availableFrom: "07:00", availableTo: "22:00",
@@ -148,7 +148,7 @@ async function seed() {
       description: "Spare bedroom converted into a private office. Dedicated bandwidth, very private.",
       lat: 19.1197, lng: 72.8468,
       address: "Lokhandwala Complex, Andheri West, Mumbai", city: "Mumbai", state: "Maharashtra",
-      pricePerHour: 55, speedMbps: 150, maxUsers: 2,
+      pricePerHour: 0.003, speedMbps: 150, maxUsers: 2,
       rating: 4.4, reviewCount: 31, isActive: true,
       amenities: ["AC", "Power Outlet", "Snacks", "Dedicated Desk"],
       availableFrom: "09:00", availableTo: "21:00",
@@ -160,7 +160,7 @@ async function seed() {
       description: "Work while watching the sea! Outdoor setup near Carter Road promenade.",
       lat: 19.0568, lng: 72.8188,
       address: "Carter Road, Bandra West, Mumbai", city: "Mumbai", state: "Maharashtra",
-      pricePerHour: 45, speedMbps: 75, maxUsers: 5,
+      pricePerHour: 0.003, speedMbps: 75, maxUsers: 5,
       rating: 4.2, reviewCount: 56, isActive: true,
       amenities: ["Outdoor Seating", "Sea View", "Snacks Nearby"],
       availableFrom: "08:00", availableTo: "20:00",
@@ -173,7 +173,7 @@ async function seed() {
       description: "Startup-ready desk in Koramangala 5th Block. Hot-desking community, great networking.",
       lat: 12.9352, lng: 77.6245,
       address: "5th Block, Koramangala, Bengaluru", city: "Bengaluru", state: "Karnataka",
-      pricePerHour: 80, speedMbps: 400, maxUsers: 25,
+      pricePerHour: 0.005, speedMbps: 400, maxUsers: 25,
       rating: 4.8, reviewCount: 167, isActive: true,
       amenities: ["AC", "Coffee", "Meeting Rooms", "Power Outlet", "Printer"],
       availableFrom: "07:00", availableTo: "24:00",
@@ -182,10 +182,10 @@ async function seed() {
     },
     {
       ownerAvatar: "DK", name: "Indiranagar Library WiFi",
-      description: "Quiet reading library with complimentary WiFi for members. â‚¹80/hr non-member access.",
+      description: "Quiet reading library with complimentary WiFi for members. 0.005 ETH/hr non-member access.",
       lat: 12.9784, lng: 77.6408,
       address: "100 Feet Road, Indiranagar, Bengaluru", city: "Bengaluru", state: "Karnataka",
-      pricePerHour: 80, speedMbps: 100, maxUsers: 10,
+      pricePerHour: 0.005, speedMbps: 100, maxUsers: 10,
       rating: 4.6, reviewCount: 89, isActive: true,
       amenities: ["AC", "Silent Zone", "Power Outlet", "Books"],
       availableFrom: "09:00", availableTo: "21:00",
@@ -198,7 +198,7 @@ async function seed() {
       description: "Rooftop terrace with panoramic city views and a dedicated leased line. Executive experience.",
       lat: 17.4435, lng: 78.3772,
       address: "Cyber Towers, HITEC City, Hyderabad", city: "Hyderabad", state: "Telangana",
-      pricePerHour: 90, speedMbps: 350, maxUsers: 8,
+      pricePerHour: 0.006, speedMbps: 350, maxUsers: 8,
       rating: 4.7, reviewCount: 74, isActive: true,
       amenities: ["AC", "Rooftop View", "Coffee", "Power Outlet", "Meeting Room"],
       availableFrom: "08:00", availableTo: "22:00",
@@ -211,7 +211,7 @@ async function seed() {
       description: "Heritage cafÃ© at CP with strong WiFi. Great place to work between meetings in central Delhi.",
       lat: 28.6328, lng: 77.2194,
       address: "Block A, Connaught Place, New Delhi", city: "New Delhi", state: "Delhi",
-      pricePerHour: 55, speedMbps: 120, maxUsers: 10,
+      pricePerHour: 0.003, speedMbps: 120, maxUsers: 10,
       rating: 4.3, reviewCount: 98, isActive: true,
       amenities: ["AC", "Coffee", "Snacks", "Power Outlet"],
       availableFrom: "09:00", availableTo: "23:00",
@@ -221,8 +221,12 @@ async function seed() {
   ] as const;
 
   // â”€â”€ Upsert spots (match by name) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  for (const s of spots) {
+  for (let idx = 0; idx < spots.length; idx++) {
+    const s = spots[idx];
     const { ownerAvatar, ...rest } = s;
+    // blockchainSpotId: maps MongoDB spot to on-chain WiFiRegistry ID.
+    // 5 spots are registered on-chain (IDs 0–4), so cycle with idx % 5.
+    const blockchainSpotId = idx % 5;
     await WifiSpot.findOneAndUpdate(
       { name: rest.name },
       {
@@ -231,11 +235,12 @@ async function seed() {
           owner: ownerMap[ownerAvatar],
           ownerName: owners.find((o) => o.avatar === ownerAvatar)!.name,
           ownerAvatar,
+          blockchainSpotId,
         },
       },
       { upsert: true, new: true }
     );
-    console.log(`  ðŸ“¶ Spot upserted: ${rest.name}`);
+
   }
 
   console.log("\nðŸŽ‰ Seed complete!");

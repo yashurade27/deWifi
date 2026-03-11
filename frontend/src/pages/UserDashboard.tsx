@@ -11,7 +11,6 @@ import {
   XCircle,
   PlayCircle,
   Calendar,
-  IndianRupee,
   ChevronRight,
   Activity,
 } from 'lucide-react';
@@ -325,8 +324,8 @@ function BookingRow({
               {booking.durationHours}h
             </span>
             <span className="flex items-center gap-1">
-              <IndianRupee size={14} />
-              ₹{booking.totalAmount}
+              <Wifi size={14} />
+              {booking.totalAmount} ETH
             </span>
           </div>
         </div>

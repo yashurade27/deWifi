@@ -7,7 +7,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   Wifi,
   MapPin,
-  IndianRupee,
   Clock,
   Users,
   Zap,
@@ -48,7 +47,7 @@ interface FormData {
   address: string;
   city: string;
   state: string;
-  pricePerHour: number;
+  pricePerHour: number; // in ETH
   speedMbps: number;
   maxUsers: number;
   availableFrom: string;
@@ -80,7 +79,7 @@ export default function WifiSetup() {
     address: '',
     city: '',
     state: '',
-    pricePerHour: 30,
+    pricePerHour: 0.003,
     speedMbps: 50,
     maxUsers: 5,
     availableFrom: '08:00',
@@ -163,7 +162,7 @@ export default function WifiSetup() {
     }
 
     if (currentStep === 3) {
-      if (formData.pricePerHour <= 0) newErrors.pricePerHour = 'Price must be greater than 0';
+      if (formData.pricePerHour <= 0) newErrors.pricePerHour = 'Price must be greater than 0 ETH';
     }
 
     setErrors(newErrors);
@@ -572,21 +571,22 @@ export default function WifiSetup() {
           {step === 3 && (
             <div className="space-y-6">
               <div className="flex items-center gap-3 mb-4">
-                <IndianRupee className="text-blue-600" size={24} />
-                <h2 className="text-lg font-semibold">Pricing Setup</h2>
+                <Wallet className="text-blue-600" size={24} />
+                <h2 className="text-lg font-semibold">Pricing Setup (ETH)</h2>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Price Per Hour (₹) *
+                  Price Per Hour (ETH) *
                 </label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">₹</span>
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">Ξ</span>
                   <input
                     type="number"
                     value={formData.pricePerHour}
-                    onChange={(e) => updateField('pricePerHour', parseInt(e.target.value) || 0)}
-                    min="1"
+                    onChange={(e) => updateField('pricePerHour', parseFloat(e.target.value) || 0)}
+                    min="0.0001"
+                    step="0.0001"
                     className={`w-full pl-8 pr-4 py-3 text-2xl font-bold border rounded-lg focus:ring-2 focus:ring-blue-500 ${
                       errors.pricePerHour ? 'border-red-500' : 'border-gray-300'
                     }`}
@@ -600,15 +600,15 @@ export default function WifiSetup() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">User pays per hour</span>
-                    <span className="font-medium">₹{formData.pricePerHour}</span>
+                    <span className="font-medium">{formData.pricePerHour} ETH</span>
                   </div>
                   <div className="flex justify-between text-red-600">
                     <span>Platform fee (2%)</span>
-                    <span>- ₹{(formData.pricePerHour * 0.02).toFixed(2)}</span>
+                    <span>- {(formData.pricePerHour * 0.02).toFixed(6)} ETH</span>
                   </div>
                   <div className="border-t border-blue-200 pt-2 flex justify-between font-semibold text-green-700">
                     <span>Your earnings per hour</span>
-                    <span>₹{(formData.pricePerHour * 0.98).toFixed(2)}</span>
+                    <span>{(formData.pricePerHour * 0.98).toFixed(6)} ETH</span>
                   </div>
                 </div>
               </div>
@@ -616,7 +616,7 @@ export default function WifiSetup() {
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="font-medium text-gray-900 mb-2">Suggested Pricing</h3>
                 <div className="grid grid-cols-3 gap-2">
-                  {[20, 30, 50].map((price) => (
+                  {[0.001, 0.003, 0.005].map((price) => (
                     <button
                       key={price}
                       type="button"
@@ -627,7 +627,7 @@ export default function WifiSetup() {
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      <span className="text-xl font-bold">₹{price}</span>
+                      <span className="text-lg font-bold">{price} ETH</span>
                       <span className="text-xs text-gray-500 block">/hour</span>
                     </button>
                   ))}

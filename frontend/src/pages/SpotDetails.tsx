@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { useAuth } from '@/context/AuthContext';
 import { apiFetch } from '@/lib/api';
+import { findDummySpot } from '@/data/dummySpots';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
   Wifi,
@@ -26,7 +27,7 @@ interface WifiSpot {
   city: string;
   lat: number;
   lng: number;
-  pricePerHour: number;
+  pricePerHour: number; // in ETH
   speedMbps: number;
   maxUsers: number;
   rating: number;
@@ -113,8 +114,14 @@ export default function SpotDetails() {
       setReviews(reviewsRes.reviews);
       setReviewStats(reviewsRes.stats);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to load spot details';
-      setError(message);
+      // API failed — try dummy data as fallback
+      const dummy = findDummySpot(id!);
+      if (dummy) {
+        setSpot(dummy as unknown as WifiSpot);
+      } else {
+        const message = err instanceof Error ? err.message : 'Failed to load spot details';
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -205,7 +212,7 @@ export default function SpotDetails() {
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-3xl font-bold">₹{spot.pricePerHour}</p>
+                <p className="text-3xl font-bold">{spot.pricePerHour} ETH</p>
                 <p className="text-sm opacity-75">per hour</p>
               </div>
             </div>
@@ -298,7 +305,7 @@ export default function SpotDetails() {
               className="w-full py-4 bg-blue-600 text-white text-center rounded-xl font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
             >
               <Wifi size={20} />
-              Book Now - ₹{spot.pricePerHour}/hour
+              Book Now - {spot.pricePerHour} ETH/hour
               <ChevronRight size={20} />
             </Link>
           </div>
