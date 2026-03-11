@@ -38,7 +38,7 @@ const AMENITIES = [
   'Food Available', 'Drinks Available', 'Seating', '24/7 Access'
 ];
 
-const SECURITY_TYPES = ['WPA2', 'WPA3', 'WEP', 'Open'];
+const SECURITY_TYPES = ['WPA2', 'WPA3'];
 
 interface FormData {
   name: string;
@@ -156,7 +156,7 @@ export default function WifiSetup() {
 
     if (currentStep === 2) {
       if (!formData.ssid.trim()) newErrors.ssid = 'SSID is required';
-      if (!formData.wifiPassword.trim() && formData.securityType !== 'Open') {
+      if (!formData.wifiPassword.trim()) {
         newErrors.wifiPassword = 'Password is required';
       }
       if (formData.speedMbps <= 0) newErrors.speedMbps = 'Speed must be greater than 0';
