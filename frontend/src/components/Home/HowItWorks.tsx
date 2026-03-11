@@ -216,7 +216,13 @@ export const HowItWorks = ({ standalone = false }: { standalone?: boolean }) => 
                     transition={{ delay: 0.9 }}
                     className="mt-16 text-center"
                 >
-                    <Link to={activeTab === 'user' ? '/explore' : '/signup'}>
+                    <Link to={
+                        !isAuthenticated
+                            ? '/login'
+                            : activeTab === 'user'
+                                ? '/dashboard'
+                                : '/owner/dashboard'
+                    }>
                         <Button className={`rounded-full px-8 py-6 font-bold text-base shadow-lg transition-all duration-200 ${
                             activeTab === 'user'
                                 ? 'bg-[#0055FF] hover:bg-blue-600 text-white shadow-blue-500/20'
