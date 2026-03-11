@@ -9,7 +9,7 @@ export interface WifiSpot {
   address: string;
   city: string;
   state: string;
-  pricePerHour: number;       // in ₹
+  pricePerHour: number;       // in ETH
   speedMbps: number;
   maxUsers: number;
   rating: number;
@@ -21,6 +21,85 @@ export interface WifiSpot {
   images: string[];
   ssid: string;
   tag: "Home" | "Cafe" | "Office" | "Library" | "CoWorking";
+}
+
+// ─── ApiSpot-compatible shape for fallback usage ──────────────────────────────
+// This converts a local WifiSpot into the shape the frontend expects from the API
+// so that Explore, SpotDetails, and BookWifi all work without a running backend.
+export interface DummyApiSpot {
+  _id: string;
+  owner: string;
+  ownerName: string;
+  ownerAvatar: string;
+  name: string;
+  description: string;
+  lat: number;
+  lng: number;
+  address: string;
+  city: string;
+  state: string;
+  pricePerHour: number;
+  speedMbps: number;
+  maxUsers: number;
+  currentUsers: number;
+  rating: number;
+  reviewCount: number;
+  isActive: boolean;
+  isApproved: boolean;
+  amenities: string[];
+  availableFrom: string;
+  availableTo: string;
+  images: string[];
+  tag: "Home" | "Cafe" | "Office" | "Library" | "CoWorking";
+  monitoring: {
+    isOnline: boolean;
+    uptimePercent: number;
+    lastPingAt: string | null;
+    latencyMs: number | null;
+  };
+  createdAt: string;
+  updatedAt: string;
+  blockchainSpotId: number;
+}
+
+/** Convert a dummy WifiSpot into the ApiSpot-compatible shape */
+function toApiSpot(spot: WifiSpot, index: number): DummyApiSpot {
+  const now = new Date().toISOString();
+  return {
+    _id: spot.id,
+    owner: `owner-${spot.ownerAvatar.toLowerCase()}`,
+    ownerName: spot.ownerName,
+    ownerAvatar: spot.ownerAvatar,
+    name: spot.name,
+    description: spot.description,
+    lat: spot.lat,
+    lng: spot.lng,
+    address: spot.address,
+    city: spot.city,
+    state: spot.state,
+    pricePerHour: spot.pricePerHour,
+    speedMbps: spot.speedMbps,
+    maxUsers: spot.maxUsers,
+    currentUsers: 0,
+    rating: spot.rating,
+    reviewCount: spot.reviewCount,
+    isActive: spot.isActive,
+    isApproved: true,
+    amenities: spot.amenities,
+    availableFrom: spot.availableFrom,
+    availableTo: spot.availableTo,
+    images: spot.images,
+    tag: spot.tag,
+    monitoring: {
+      isOnline: spot.isActive,
+      uptimePercent: spot.isActive ? 99 : 0,
+      lastPingAt: spot.isActive ? now : null,
+      latencyMs: spot.isActive ? Math.floor(Math.random() * 30) + 5 : null,
+    },
+    createdAt: now,
+    updatedAt: now,
+    blockchainSpotId: index % 5,   // matches seed logic
+  };
 }
 
 export const dummySpots: WifiSpot[] = [
@@ -36,7 +115,7 @@ export const dummySpots: WifiSpot[] = [
     address: "12, Koregaon Park Lane 5, Pune",
     city: "Pune",
     state: "Maharashtra",
-    pricePerHour: 35,
+    pricePerHour: 0.002,
     speedMbps: 200,
     maxUsers: 3,
     rating: 4.8,
@@ -60,7 +139,7 @@ export const dummySpots: WifiSpot[] = [
     address: "FC Road, Deccan Gymkhana, Pune",
     city: "Pune",
     state: "Maharashtra",
-    pricePerHour: 50,
+    pricePerHour: 0.003,
     speedMbps: 100,
     maxUsers: 8,
     rating: 4.5,
@@ -84,7 +163,7 @@ export const dummySpots: WifiSpot[] = [
     address: "D-Wing, Rahul Tower, Aundh, Pune",
     city: "Pune",
     state: "Maharashtra",
-    pricePerHour: 75,
+    pricePerHour: 0.005,
     speedMbps: 300,
     maxUsers: 12,
     rating: 4.9,
@@ -108,7 +187,7 @@ export const dummySpots: WifiSpot[] = [
     address: "Near COEP, Shivajinagar, Pune",
     city: "Pune",
     state: "Maharashtra",
-    pricePerHour: 25,
+    pricePerHour: 0.001,
     speedMbps: 50,
     maxUsers: 2,
     rating: 4.3,
@@ -132,7 +211,7 @@ export const dummySpots: WifiSpot[] = [
     address: "Phase 1, Hinjewadi Rajiv Gandhi Infotech Park, Pune",
     city: "Pune",
     state: "Maharashtra",
-    pricePerHour: 60,
+    pricePerHour: 0.004,
     speedMbps: 250,
     maxUsers: 20,
     rating: 4.6,
@@ -156,7 +235,7 @@ export const dummySpots: WifiSpot[] = [
     address: "North Main Road, Viman Nagar, Pune",
     city: "Pune",
     state: "Maharashtra",
-    pricePerHour: 40,
+    pricePerHour: 0.002,
     speedMbps: 80,
     maxUsers: 6,
     rating: 4.7,
@@ -182,7 +261,7 @@ export const dummySpots: WifiSpot[] = [
     address: "G Block, BKC, Bandra East, Mumbai",
     city: "Mumbai",
     state: "Maharashtra",
-    pricePerHour: 100,
+    pricePerHour: 0.007,
     speedMbps: 500,
     maxUsers: 15,
     rating: 4.9,
@@ -206,7 +285,7 @@ export const dummySpots: WifiSpot[] = [
     address: "Lokhandwala Complex, Andheri West, Mumbai",
     city: "Mumbai",
     state: "Maharashtra",
-    pricePerHour: 55,
+    pricePerHour: 0.003,
     speedMbps: 150,
     maxUsers: 2,
     rating: 4.4,
@@ -230,7 +309,7 @@ export const dummySpots: WifiSpot[] = [
     address: "Carter Road, Bandra West, Mumbai",
     city: "Mumbai",
     state: "Maharashtra",
-    pricePerHour: 45,
+    pricePerHour: 0.003,
     speedMbps: 75,
     maxUsers: 5,
     rating: 4.2,
@@ -256,7 +335,7 @@ export const dummySpots: WifiSpot[] = [
     address: "5th Block, Koramangala, Bengaluru",
     city: "Bengaluru",
     state: "Karnataka",
-    pricePerHour: 80,
+    pricePerHour: 0.005,
     speedMbps: 400,
     maxUsers: 25,
     rating: 4.8,
@@ -274,13 +353,13 @@ export const dummySpots: WifiSpot[] = [
     name: "Indiranagar Library WiFi",
     ownerName: "Deepa Krishnamurthy",
     ownerAvatar: "DK",
-    description: "Quiet reading library with complimentary WiFi for members. ₹80/hr non-member access.",
+    description: "Quiet reading library with complimentary WiFi for members. 0.005 ETH/hr non-member access.",
     lat: 12.9784,
     lng: 77.6408,
     address: "100 Feet Road, Indiranagar, Bengaluru",
     city: "Bengaluru",
     state: "Karnataka",
-    pricePerHour: 80,
+    pricePerHour: 0.005,
     speedMbps: 100,
     maxUsers: 10,
     rating: 4.6,
@@ -306,7 +385,7 @@ export const dummySpots: WifiSpot[] = [
     address: "Cyber Towers, HITEC City, Hyderabad",
     city: "Hyderabad",
     state: "Telangana",
-    pricePerHour: 90,
+    pricePerHour: 0.006,
     speedMbps: 350,
     maxUsers: 8,
     rating: 4.7,
@@ -332,7 +411,7 @@ export const dummySpots: WifiSpot[] = [
     address: "Block A, Connaught Place, New Delhi",
     city: "New Delhi",
     state: "Delhi",
-    pricePerHour: 55,
+    pricePerHour: 0.003,
     speedMbps: 120,
     maxUsers: 10,
     rating: 4.3,
@@ -346,3 +425,13 @@ export const dummySpots: WifiSpot[] = [
     tag: "Cafe",
   },
 ];
+
+// ── Derived exports (placed AFTER dummySpots so the array is defined) ─────────
+
+/** All dummy spots converted to ApiSpot shape — ready for Explore, Book, Details */
+export const dummyApiSpots: DummyApiSpot[] = dummySpots.map((s, i) => toApiSpot(s, i));
+
+/** Find a single dummy spot by ID (for SpotDetails / BookWifi fallback) */
+export function findDummySpot(id: string): DummyApiSpot | undefined {
+  return dummyApiSpots.find((s) => s._id === id);
+}

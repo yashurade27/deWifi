@@ -10,7 +10,7 @@ const MOCK_SPOTS = [
         id: 1,
         name: "Yash's Home WiFi",
         location: "Pune, MH",
-        price: 50,
+        price: 0.003,
         rating: 4.8,
         speed: 100,
         image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&fit=crop&q=80&w=1000",
@@ -20,7 +20,7 @@ const MOCK_SPOTS = [
         id: 2,
         name: "Cafe Coffee Day",
         location: "Mumbai, MH",
-        price: 80,
+        price: 0.005,
         rating: 4.5,
         speed: 150,
         image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=1000",
@@ -30,7 +30,7 @@ const MOCK_SPOTS = [
         id: 3,
         name: "Library Public Access",
         location: "Pune, MH",
-        price: 30,
+        price: 0.001,
         rating: 4.2,
         speed: 50,
         image: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&q=80&w=1000",
@@ -110,7 +110,7 @@ export const FeaturedSpots = () => {
 
                                 <CardFooter className="p-5 pt-0 flex justify-between items-center border-t border-gray-200 dark:border-white/5">
                                     <div>
-                                        <span className="text-2xl font-black text-gray-900 dark:text-white">₹{spot.price}</span>
+                                        <span className="text-2xl font-black text-gray-900 dark:text-white">{spot.price} ETH</span>
                                         <span className="text-gray-600 dark:text-gray-600 text-xs ml-1">/hour</span>
                                     </div>
                                     <Button className="rounded-full bg-[#0055FF] hover:bg-[#0044CC] text-sm font-bold px-5 h-9 shadow-md shadow-blue-500/20 hover:shadow-blue-500/40 transition-all duration-300">

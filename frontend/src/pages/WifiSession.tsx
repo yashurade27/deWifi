@@ -598,7 +598,7 @@ export default function WifiSession() {
           <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
             <div className="flex items-center justify-between text-sm text-gray-500">
               <span>Booking ID: {booking._id.slice(-8).toUpperCase()}</span>
-              <span>Paid: ₹{booking.totalAmount}</span>
+              <span>Paid: {booking.totalAmount} ETH</span>
             </div>
           </div>
         </motion.div>

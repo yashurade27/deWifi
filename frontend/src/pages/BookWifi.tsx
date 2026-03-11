@@ -3,6 +3,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { useAuth } from '@/context/AuthContext';
 import { useWeb3 } from '@/context/Web3Context';
 import { apiFetch } from '@/lib/api';
+import { findDummySpot } from '@/data/dummySpots';
 import { bookWifiAccess, calculateBookingCost, getProvider } from '@/lib/contracts';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -166,8 +167,14 @@ export default function BookWifi() {
       const res = await apiFetch<{ spot: SpotDetails }>(`/api/spots/${spotId}`);
       setSpot(res.spot);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to load spot';
-      setError(message);
+      // API failed — try dummy data as fallback
+      const dummy = findDummySpot(spotId!);
+      if (dummy) {
+        setSpot(dummy as unknown as SpotDetails);
+      } else {
+        const message = err instanceof Error ? err.message : 'Failed to load spot';
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }

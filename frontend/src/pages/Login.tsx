@@ -9,7 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useWeb3 } from '@/context/Web3Context';
 
 const TESTIMONIAL = {
-    quote: "I made ₹6,200 last month just by sharing my home broadband. Setup took 5 minutes.",
+    quote: "I earned 0.5 ETH last month just by sharing my home broadband. Setup took 5 minutes.",
     author: "Yash Urade",
     role: "WiFi Host, Pune",
     rating: 5,
@@ -17,7 +17,7 @@ const TESTIMONIAL = {
 
 const STATS = [
     { value: '12,000+', label: 'Active Spots' },
-    { value: '₹3.2Cr', label: 'Paid to Hosts' },
+    { value: '150 ETH', label: 'Paid to Hosts' },
     { value: '4.9★', label: 'Avg Rating' },
 ];
 

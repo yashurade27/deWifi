@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '@/lib/api';
+import { dummyApiSpots } from '@/data/dummySpots';
 
 // Shape returned by the API (mirrors the Mongoose document minus ssid)
 export interface ApiSpot {
@@ -63,9 +64,16 @@ export function useSpots(): UseSpotsReturn {
     setError(null);
     try {
       const data = await apiFetch<SpotsResponse>('/api/spots?limit=100');
-      setSpots(data.spots);
+      // If the API returned spots, use them; otherwise fall back to dummy data
+      if (data.spots && data.spots.length > 0) {
+        setSpots(data.spots);
+      } else {
+        setSpots(dummyApiSpots as unknown as ApiSpot[]);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load spots.');
+      // API unreachable or errored — fall back to dummy data so the UI still works
+      console.warn('API fetch failed, using dummy spots:', err);
+      setSpots(dummyApiSpots as unknown as ApiSpot[]);
     } finally {
       setLoading(false);
     }

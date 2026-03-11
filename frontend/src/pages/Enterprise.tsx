@@ -82,7 +82,7 @@ const USE_CASES = [
     icon: Store,
     title: 'Retail Chains',
     description: 'Monetize your store WiFi infrastructure across multiple locations.',
-    stats: 'Earn ₹15K-50K per location/month',
+    stats: 'Earn 0.5-2 ETH per location/month',
     color: 'bg-green-500',
   },
   {
@@ -104,7 +104,7 @@ const USE_CASES = [
 const PRICING_TIERS = [
   {
     name: 'Startup',
-    price: '4,999',
+    price: '0.5',
     period: 'month',
     description: 'Perfect for small teams and startups',
     features: [
@@ -119,7 +119,7 @@ const PRICING_TIERS = [
   },
   {
     name: 'Business',
-    price: '14,999',
+    price: '1.5',
     period: 'month',
     description: 'Ideal for growing businesses',
     features: [
@@ -159,7 +159,7 @@ const STATS = [
   { value: '500+', label: 'Enterprise Clients' },
   { value: '99.9%', label: 'Uptime SLA' },
   { value: '2M+', label: 'Business Hours Saved' },
-  { value: '₹50Cr+', label: 'Revenue Generated' },
+  { value: '500+ ETH', label: 'Revenue Generated' },
 ];
 
 export default function Enterprise() {
@@ -384,7 +384,7 @@ export default function Enterprise() {
                   <p className="text-sm text-gray-600 mb-4">{tier.description}</p>
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-black text-gray-900">
-                      {tier.price === 'Custom' ? 'Custom' : `₹${tier.price}`}
+                      {tier.price === 'Custom' ? 'Custom' : `${tier.price} ETH`}
                     </span>
                     {tier.period && <span className="text-gray-600">/{tier.period}</span>}
                   </div>

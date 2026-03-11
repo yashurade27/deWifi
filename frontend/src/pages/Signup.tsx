@@ -45,12 +45,12 @@ const LEFT_PANEL_CONTENT: Record<Role, { badge: string; title: string; highlight
         badge: 'For Users',
         title: 'Fast WiFi,\nanywhere.',
         highlight: 'Pay only for what you use.',
-        desc: 'Browse thousands of verified spots near you. Book by the hour starting at ₹30 — no subscriptions, no contracts.',
+        desc: 'Browse thousands of verified spots near you. Book by the hour starting at 0.001 ETH — no subscriptions, no contracts.',
     },
     owner: {
         badge: 'For Hosts',
         title: 'Your router.\nYour income.',
-        highlight: 'Earn ₹3,000–8,000/month.',
+        highlight: 'Earn 0.5–2 ETH/month.',
         desc: 'Turn your unused bandwidth into passive income. List your spot, set your price, and get paid automatically.',
     },
 };
