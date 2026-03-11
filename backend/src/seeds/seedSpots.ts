@@ -221,8 +221,12 @@ async function seed() {
   ] as const;
 
   // â”€â”€ Upsert spots (match by name) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  for (const s of spots) {
+  for (let idx = 0; idx < spots.length; idx++) {
+    const s = spots[idx];
     const { ownerAvatar, ...rest } = s;
+    // blockchainSpotId: maps MongoDB spot to on-chain WiFiRegistry ID.
+    // 5 spots are registered on-chain (IDs 0–4), so cycle with idx % 5.
+    const blockchainSpotId = idx % 5;
     await WifiSpot.findOneAndUpdate(
       { name: rest.name },
       {
@@ -231,11 +235,12 @@ async function seed() {
           owner: ownerMap[ownerAvatar],
           ownerName: owners.find((o) => o.avatar === ownerAvatar)!.name,
           ownerAvatar,
+          blockchainSpotId,
         },
       },
       { upsert: true, new: true }
     );
-    console.log(`  ðŸ“¶ Spot upserted: ${rest.name}`);
+
   }
 
   console.log("\nðŸŽ‰ Seed complete!");

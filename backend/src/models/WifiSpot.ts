@@ -40,6 +40,8 @@ export interface IWifiSpot extends Document {
   wifiPassword: string;     // encrypted WiFi password
   securityType: "WPA2" | "WPA3" | "WEP" | "Open";
   tag: "Home" | "Cafe" | "Office" | "Library" | "CoWorking";
+  // Blockchain spot ID (on-chain ID in WiFiRegistry / AirlinkMarketplace)
+  blockchainSpotId: number;
   // Payment setup
   paymentSetup: {
     walletAddress: string;
@@ -89,6 +91,8 @@ const WifiSpotSchema = new Schema<IWifiSpot>(
       default: "Home",
       index: true,
     },
+    // On-chain spot ID (index in WiFiRegistry — seeded in order 0,1,2,...)
+    blockchainSpotId: { type: Number, default: 0 },
     // Payment setup for owner earnings
     paymentSetup: {
       walletAddress:     { type: String, default: "" },
