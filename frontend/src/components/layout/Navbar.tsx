@@ -2,15 +2,15 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Wifi, LogOut, Settings, LayoutDashboard, Plus, Sun, Moon } from 'lucide-react';
+import { Menu, X, Wifi, LogOut, Settings, LayoutDashboard, Plus, Sun, Moon, Wallet } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useWeb3 } from '@/context/Web3Context';
 
 const NAV_LINKS = [
     { label: 'Explore', to: '/explore' },
     { label: 'How it works', to: '/how-it-works' },
     { label: 'Community', to: '/community' },
-    { label: 'Enterprise', to: '/enterprise' },
 ];
 
 export const Navbar = () => {
@@ -19,6 +19,7 @@ export const Navbar = () => {
     const [dropdownOpen, setDropdownOpen] = React.useState(false);
     const { user, signout } = useAuth();
     const { theme, toggleTheme } = useTheme();
+    const { address: walletAddress, connect: connectWallet, disconnect: disconnectWallet, isConnecting: walletConnecting, walletAvailable } = useWeb3();
     const navigate = useNavigate();
     const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -98,6 +99,29 @@ export const Navbar = () => {
                 {/* CTA */}
                 {user ? (
                     <div className="hidden md:flex items-center gap-3">
+                        {/* Wallet Connect Button */}
+                        {walletAvailable && (
+                            <button
+                                onClick={walletAddress ? disconnectWallet : connectWallet}
+                                disabled={walletConnecting}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-200 ${
+                                    walletAddress
+                                        ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
+                                        : 'bg-blue-50 dark:bg-blue-900/30 text-[#0055FF] dark:text-blue-400 border border-blue-200 dark:border-blue-800 hover:bg-blue-100'
+                                }`}
+                                title={walletAddress ? `Connected: ${walletAddress}\nClick to disconnect` : 'Connect MetaMask'}
+                            >
+                                <Wallet className="w-3.5 h-3.5" />
+                                {walletConnecting
+                                    ? '...'
+                                    : walletAddress
+                                    ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-3)}`
+                                    : 'Wallet'
+                                }
+                                {walletAddress && <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />}
+                            </button>
+                        )}
+
                         {/* Theme Toggle */}
                         <button
                             onClick={toggleTheme}
@@ -226,6 +250,28 @@ export const Navbar = () => {
                     </div>
                 ) : (
                     <div className="hidden md:flex items-center gap-3">
+                        {/* Wallet Connect (shown when not logged in too) */}
+                        {walletAvailable && (
+                            <button
+                                onClick={walletAddress ? disconnectWallet : connectWallet}
+                                disabled={walletConnecting}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-200 ${
+                                    walletAddress
+                                        ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
+                                        : 'bg-blue-50 dark:bg-blue-900/30 text-[#0055FF] dark:text-blue-400 border border-blue-200 dark:border-blue-800 hover:bg-blue-100'
+                                }`}
+                            >
+                                <Wallet className="w-3.5 h-3.5" />
+                                {walletConnecting
+                                    ? '...'
+                                    : walletAddress
+                                    ? `${walletAddress.slice(0, 4)}...${walletAddress.slice(-3)}`
+                                    : 'Wallet'
+                                }
+                                {walletAddress && <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />}
+                            </button>
+                        )}
+
                         {/* Theme Toggle */}
                         <button
                             onClick={toggleTheme}

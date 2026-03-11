@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { useAuth } from '@/context/AuthContext';
+import { useWeb3 } from '@/context/Web3Context';
 import { apiFetch } from '@/lib/api';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -11,7 +12,6 @@ import {
   Users,
   Zap,
   Shield,
-  CreditCard,
   Save,
   ArrowLeft,
   Eye,
@@ -21,6 +21,7 @@ import {
   Coffee,
   BookOpen,
   Briefcase,
+  Wallet,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -37,7 +38,7 @@ const AMENITIES = [
   'Food Available', 'Drinks Available', 'Seating', '24/7 Access'
 ];
 
-const SECURITY_TYPES = ['WPA2', 'WPA3', 'WEP', 'Open'];
+const SECURITY_TYPES = ['WPA2', 'WPA3'];
 
 interface FormData {
   name: string;
@@ -58,15 +59,13 @@ interface FormData {
   tag: string;
   amenities: string[];
   paymentSetup: {
-    upiId: string;
-    bankAccountNumber: string;
-    ifscCode: string;
-    accountHolderName: string;
+    walletAddress: string;
   };
 }
 
 export default function WifiSetup() {
   const { user, token, isAuthenticated } = useAuth();
+  const { connect: connectWallet, address: walletAddr, isConnecting: walletConnecting, walletAvailable } = useWeb3();
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = !!id;
@@ -92,10 +91,7 @@ export default function WifiSetup() {
     tag: 'Home',
     amenities: [],
     paymentSetup: {
-      upiId: '',
-      bankAccountNumber: '',
-      ifscCode: '',
-      accountHolderName: '',
+      walletAddress: '',
     },
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -160,7 +156,7 @@ export default function WifiSetup() {
 
     if (currentStep === 2) {
       if (!formData.ssid.trim()) newErrors.ssid = 'SSID is required';
-      if (!formData.wifiPassword.trim() && formData.securityType !== 'Open') {
+      if (!formData.wifiPassword.trim()) {
         newErrors.wifiPassword = 'Password is required';
       }
       if (formData.speedMbps <= 0) newErrors.speedMbps = 'Speed must be greater than 0';
@@ -221,8 +217,10 @@ export default function WifiSetup() {
     }
   };
 
+  const STEP_LABELS = ['Location', 'WiFi Config', 'Pricing', 'Payment'];
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
       <Navbar />
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -230,39 +228,44 @@ export default function WifiSetup() {
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => navigate('/owner/dashboard')}
-            className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors"
           >
             <ArrowLeft size={24} />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {isEdit ? 'Edit WiFi Spot' : 'Setup New WiFi Spot'}
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              {isEdit ? 'Edit WiFi Spot' : 'Add New WiFi Spot'}
             </h1>
-            <p className="text-gray-600">
-              {isEdit ? 'Update your WiFi spot details' : 'Share your WiFi and start earning'}
+            <p className="text-gray-500 dark:text-gray-400">
+              {isEdit ? 'Update your WiFi spot details' : 'List your WiFi and start earning ETH'}
             </p>
           </div>
         </div>
 
         {/* Progress Steps */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center mb-8">
           {[1, 2, 3, 4].map((s) => (
-            <div key={s} className="flex items-center">
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-colors ${
-                  step >= s
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-500'
-                }`}
-              >
-                {s}
+            <div key={s} className="flex items-center flex-1 last:flex-none">
+              <div className="flex flex-col items-center gap-1">
+                <div
+                  className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                    step > s
+                      ? 'bg-[#66FF00] text-black'
+                      : step === s
+                      ? 'bg-[#0055FF] text-white shadow-lg shadow-blue-500/30'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
+                  }`}
+                >
+                  {step > s ? '✓' : s}
+                </div>
+                <span className={`text-[10px] font-semibold hidden sm:block ${
+                  step >= s ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-600'
+                }`}>{STEP_LABELS[s - 1]}</span>
               </div>
               {s < 4 && (
-                <div
-                  className={`w-16 sm:w-24 h-1 mx-2 rounded ${
-                    step > s ? 'bg-blue-600' : 'bg-gray-200'
-                  }`}
-                />
+                <div className={`flex-1 h-0.5 mx-2 rounded transition-all ${
+                  step > s ? 'bg-[#66FF00]' : 'bg-gray-200 dark:bg-gray-800'
+                }`} />
               )}
             </div>
           ))}
@@ -273,7 +276,7 @@ export default function WifiSetup() {
           key={step}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+          className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-6"
         >
           {/* Step 1: Basic Info & Location */}
           {step === 1 && (
@@ -633,98 +636,94 @@ export default function WifiSetup() {
             </div>
           )}
 
-          {/* Step 4: Payment Setup */}
+          {/* Step 4: Payment Setup — Blockchain Wallet Only */}
           {step === 4 && (
             <div className="space-y-6">
-              <div className="flex items-center gap-3 mb-4">
-                <CreditCard className="text-blue-600" size={24} />
-                <h2 className="text-lg font-semibold">Payment Setup</h2>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 bg-[#0055FF]/10 rounded-xl flex items-center justify-center">
+                  <Wallet className="text-[#0055FF]" size={20} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">Ethereum Wallet</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Where you'll receive ETH payments</p>
+                </div>
               </div>
 
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                <p className="text-sm text-green-800">
-                  Set up your payment details to receive earnings directly to your bank account. 
-                  You'll receive 98% of each booking amount.
+              <div className="bg-[#0055FF]/5 dark:bg-[#0055FF]/10 border border-[#0055FF]/20 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-[#0055FF] rounded-lg flex items-center justify-center shrink-0 mt-0.5">
+                    <Wallet size={14} className="text-white" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-[#0055FF] dark:text-blue-300 mb-1">Powered by Ethereum Smart Contracts</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Payments are handled entirely on-chain. When a user books your spot, funds are held in escrow and automatically released to your wallet after the session. You keep <strong className="text-gray-900 dark:text-white">98%</strong> of every booking.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Wallet Input */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Wallet Address <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={formData.paymentSetup.walletAddress || walletAddr || ''}
+                    onChange={(e) => updateField('paymentSetup.walletAddress', e.target.value)}
+                    placeholder="0x..."
+                    className="flex-1 px-4 py-3 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 rounded-xl focus:ring-2 focus:ring-[#0055FF] focus:border-[#0055FF] font-mono text-sm transition-all"
+                  />
+                  {walletAvailable && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!walletAddr) await connectWallet();
+                        if (walletAddr) updateField('paymentSetup.walletAddress', walletAddr);
+                      }}
+                      disabled={walletConnecting}
+                      className="px-4 py-3 bg-[#0055FF] text-white rounded-xl hover:bg-[#0044CC] transition-colors text-sm font-bold disabled:opacity-50 flex items-center gap-2 whitespace-nowrap shadow-md shadow-blue-500/25"
+                    >
+                      <Wallet size={16} />
+                      {walletConnecting ? 'Connecting...' : walletAddr ? 'Use Connected' : 'Connect'}
+                    </button>
+                  )}
+                </div>
+                {walletAddr && !formData.paymentSetup.walletAddress && (
+                  <p className="text-xs text-[#0055FF] dark:text-blue-400 mt-2 font-medium">
+                    ✓ MetaMask connected: {walletAddr.slice(0, 6)}...{walletAddr.slice(-4)} — click "Use Connected"
+                  </p>
+                )}
+                {formData.paymentSetup.walletAddress && (
+                  <p className="text-xs text-green-600 dark:text-green-400 mt-2 font-medium">
+                    ✓ Wallet address saved
+                  </p>
+                )}
+              </div>
+
+              <div className="bg-[#66FF00]/10 dark:bg-[#66FF00]/5 border border-[#66FF00]/30 rounded-xl p-4">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  <span className="font-bold text-gray-900 dark:text-white">How it works:</span> Payments are sent directly to your wallet via smart contracts — no intermediary, no withdrawal wait times, no KYC required.
                 </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  UPI ID (Preferred)
-                </label>
-                <input
-                  type="text"
-                  value={formData.paymentSetup.upiId}
-                  onChange={(e) => updateField('paymentSetup.upiId', e.target.value)}
-                  placeholder="yourname@upi"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">or Bank Account</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Account Holder Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.paymentSetup.accountHolderName}
-                  onChange={(e) => updateField('paymentSetup.accountHolderName', e.target.value)}
-                  placeholder="As per bank records"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Bank Account Number
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.paymentSetup.bankAccountNumber}
-                    onChange={(e) => updateField('paymentSetup.bankAccountNumber', e.target.value)}
-                    placeholder="Account number"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    IFSC Code
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.paymentSetup.ifscCode}
-                    onChange={(e) => updateField('paymentSetup.ifscCode', e.target.value.toUpperCase())}
-                    placeholder="e.g., SBIN0001234"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
               {errors.submit && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-red-700">{errors.submit}</p>
+                <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl p-4">
+                  <p className="text-red-700 dark:text-red-400 text-sm">{errors.submit}</p>
                 </div>
               )}
             </div>
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
+          <div className="flex justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
             {step > 1 ? (
               <button
                 type="button"
                 onClick={prevStep}
-                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-6 py-3 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-semibold"
               >
                 Back
               </button>
@@ -736,16 +735,16 @@ export default function WifiSetup() {
               <button
                 type="button"
                 onClick={nextStep}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-6 py-3 bg-[#0055FF] text-white rounded-xl hover:bg-[#0044CC] transition-colors font-bold shadow-md shadow-blue-500/25"
               >
-                Continue
+                Continue →
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleSubmit}
                 disabled={loading}
-                className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-6 py-3 bg-[#66FF00] text-black rounded-xl hover:bg-[#55ee00] transition-colors font-bold disabled:opacity-50 shadow-md shadow-green-400/25"
               >
                 <Save size={18} />
                 {loading ? 'Saving...' : isEdit ? 'Update Spot' : 'Create WiFi Spot'}

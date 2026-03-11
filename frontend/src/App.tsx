@@ -3,7 +3,6 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Explore from './pages/Explore';
-import Enterprise from './pages/Enterprise';
 import OwnerDashboard from './pages/OwnerDashboard';
 import WifiSetup from './pages/WifiSetup';
 import BookWifi from './pages/BookWifi';
@@ -16,19 +15,20 @@ import Community from './pages/Community';
 import Profile from './pages/Profile';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { Web3Provider } from './context/Web3Context';
 import './index.css';
 
 export function App() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <BrowserRouter>
+      <Web3Provider>
+        <AuthProvider>
+          <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/explore" element={<Explore />} />
-            <Route path="/enterprise" element={<Enterprise />} />
             <Route path="/how-it-works" element={<HowItWorksPage />} />
             <Route path="/community" element={<Community />} />
             <Route path="/spots/:id" element={<SpotDetails />} />
@@ -45,6 +45,7 @@ export function App() {
           </Routes>
         </BrowserRouter>
       </AuthProvider>
+      </Web3Provider>
     </ThemeProvider>
   );
 }

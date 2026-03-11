@@ -42,10 +42,7 @@ export interface IWifiSpot extends Document {
   tag: "Home" | "Cafe" | "Office" | "Library" | "CoWorking";
   // Payment setup
   paymentSetup: {
-    razorpayAccountId: string;
-    upiId: string;
-    bankAccountNumber: string;
-    ifscCode: string;
+    walletAddress: string;
     accountHolderName: string;
     isVerified: boolean;
   };
@@ -94,10 +91,7 @@ const WifiSpotSchema = new Schema<IWifiSpot>(
     },
     // Payment setup for owner earnings
     paymentSetup: {
-      razorpayAccountId: { type: String, default: "" },
-      upiId:             { type: String, default: "" },
-      bankAccountNumber: { type: String, default: "" },
-      ifscCode:          { type: String, default: "" },
+      walletAddress:     { type: String, default: "" },
       accountHolderName: { type: String, default: "" },
       isVerified:        { type: Boolean, default: false },
     },

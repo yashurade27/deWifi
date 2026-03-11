@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Wifi, Zap, Users } from 'lucide-react';
+import { Wifi, Zap, Users } from 'lucide-react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import { useRef, useMemo } from 'react';
@@ -91,11 +91,11 @@ const NetworkSphere = ({ isDark }: { isDark: boolean }) => {
 // 3D Globe visualization using React Three Fiber
 const NetworkGlobe3D = ({ isDark }: { isDark: boolean }) => {
     return (
-        <div className="relative w-full h-[500px] lg:h-[600px] flex items-center justify-center">
+        <div className="relative w-full h-125 lg:h-150 flex items-center justify-center">
             {/* Ambient glow behind the globe in dark mode */}
             {isDark && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-[420px] h-[420px] rounded-full bg-[radial-gradient(circle,rgba(0,85,255,0.25)_0%,rgba(0,85,255,0.08)_50%,transparent_70%)] blur-xl" />
+                    <div className="w-105 h-105 rounded-full bg-[radial-gradient(circle,rgba(0,85,255,0.25)_0%,rgba(0,85,255,0.08)_50%,transparent_70%)] blur-xl" />
                 </div>
             )}
 
@@ -155,12 +155,12 @@ const NetworkGlobe3D = ({ isDark }: { isDark: boolean }) => {
                 transition={{ delay: 1, duration: 0.6 }}
                 className="absolute top-[12%] right-[8%] bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-gray-100 dark:border-gray-800 shadow-2xl rounded-2xl px-4 py-3 flex items-center gap-3 z-10"
             >
-                <div className="w-10 h-10 bg-[#0055FF] rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <div className="w-10 h-10 bg-uplink-blue rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30">
                     <Wifi className="w-4 h-4 text-white" strokeWidth={2.5} />
                 </div>
                 <div>
-                    <p className="text-[9px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Avg Speed</p>
-                    <p className="text-base font-black text-black dark:text-white leading-none">350 Mbps</p>
+                    <p className="text-[9px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">NFT Access Pass</p>
+                    <p className="text-base font-black text-black dark:text-white leading-none">ERC-721</p>
                 </div>
             </motion.div>
 
@@ -169,13 +169,13 @@ const NetworkGlobe3D = ({ isDark }: { isDark: boolean }) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2, duration: 0.6 }}
-                className="absolute bottom-[15%] left-[8%] bg-[#0055FF] text-white shadow-2xl shadow-blue-500/40 rounded-2xl px-4 py-3 flex items-center gap-3 z-10"
+                className="absolute bottom-[15%] left-[8%] bg-uplink-blue text-white shadow-2xl shadow-blue-500/40 rounded-2xl px-4 py-3 flex items-center gap-3 z-10"
             >
                 <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
                     <Users className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                    <p className="text-[9px] text-blue-200 font-bold uppercase tracking-wider">Active Nodes</p>
+                    <p className="text-[9px] text-blue-200 font-bold uppercase tracking-wider">Active Users</p>
                     <p className="text-base font-black leading-none">2,400+</p>
                 </div>
             </motion.div>
@@ -185,14 +185,14 @@ const NetworkGlobe3D = ({ isDark }: { isDark: boolean }) => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 1.4, duration: 0.6 }}
-                className="absolute top-[52%] right-[25%] bg-gray-900 dark:bg-[#050511] text-white shadow-2xl rounded-2xl px-4 py-3 flex items-center gap-3 border border-gray-800 dark:border-white/10 z-10"
+                className="absolute top-[52%] right-[25%] bg-gray-900 dark:bg-uplink-dark text-white shadow-2xl rounded-2xl px-4 py-3 flex items-center gap-3 border border-gray-800 dark:border-white/10  z-10"
             >
-                <div className="w-10 h-10 bg-[#66FF00]/20 rounded-xl flex items-center justify-center">
-                    <Zap className="w-4 h-4 text-[#66FF00]" />
+                <div className="w-10 h-10 bg-uplink-green/20 rounded-xl flex items-center justify-center">
+                    <Zap className="w-4 h-4 text-uplink-green" />
                 </div>
                 <div>
-                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Live Earnings</p>
-                    <p className="text-base font-black text-[#66FF00] leading-none">₹ 1.2/min</p>
+                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Avg Earnings</p>
+                    <p className="text-base font-black text-uplink-green leading-none">0.05 ETH/day</p>
                 </div>
             </motion.div>
         </div>
@@ -239,25 +239,21 @@ export const Hero = () => {
                             variants={itemVariants}
                             className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight text-black dark:text-white leading-[1.05] mb-6"
                         >
-                            On-Demand<br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0055FF] to-[#003399] dark:from-[#0088FF] dark:to-[#00DDFF]">WiFi Access Platform</span>
+                            Decentralized<br />
+                            <span className="text-transparent bg-clip-text bg-linear-to-r from-uplink-blue to-[#003399] dark:from-[#0088FF] dark:to-[#00DDFF]">WiFi Marketplace</span>
                         </motion.h1>
 
                         <motion.p
                             variants={itemVariants}
-                            className="max-w-[540px] text-lg text-gray-600 dark:text-gray-400 font-medium leading-relaxed mb-8"
+                            className="max-w-135 text-lg text-gray-600 dark:text-gray-400 font-medium leading-relaxed mb-8"
                         >
-                            Turn your router into a passive income stream.
-                            The world's first marketplace for peer-to-peer internet bandwidth sharing.
+                            Earn Ethereum from your excess bandwidth. The first peer-to-peer WiFi marketplace powered by blockchain technology.
                         </motion.p>
 
                         <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                            {/* <Button className="bg-[#0055FF] hover:bg-[#0044CC] text-white rounded-full px-7 py-6 text-base font-bold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300 w-full sm:w-auto">
-                                Start Earning <ArrowRight className="ml-2 h-4 w-4" />
-                            </Button> */}
                             <Button
                                 variant="outline"
-                                className="border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-[#0055FF] hover:text-[#0055FF] hover:bg-blue-50 dark:hover:bg-blue-950 rounded-full px-7 py-6 text-base font-bold transition-all duration-300 w-full sm:w-auto"
+                                className="border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-uplink-blue hover:text-uplink-blue hover:bg-blue-50 dark:hover:bg-blue-950 rounded-full px-7 py-6 text-base font-bold transition-all duration-300 w-full sm:w-auto"
                                 onClick={() => navigate('/explore')}
                             >
                                 Find Spots
@@ -270,8 +266,8 @@ export const Hero = () => {
                             className="grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-gray-100 dark:border-gray-800 w-full max-w-md"
                         >
                             {[
-                                { value: '2.4k+', label: 'Active Nodes' },
-                                { value: '₹30/hr', label: 'Avg Price' },
+                                { value: '100% Web3', label: 'Decentralized' },
+                                { value: 'Ethereum', label: 'Blockchain' },
                                 { value: '99.9%', label: 'Uptime' },
                             ].map((stat) => (
                                 <div key={stat.label}>
@@ -287,7 +283,7 @@ export const Hero = () => {
                         initial={{ opacity: 0, scale: 0.85 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 1, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
-                        className="hidden lg:flex relative items-center justify-center min-h-[600px]"
+                        className="hidden lg:flex relative items-center justify-center min-h-150"
                     >
                         <NetworkGlobe3D isDark={isDark} />
                     </motion.div>

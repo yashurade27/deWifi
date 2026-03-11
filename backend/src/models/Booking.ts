@@ -22,10 +22,9 @@ export interface IBooking extends Document {
   status: "pending" | "confirmed" | "active" | "completed" | "cancelled" | "refunded";
   paymentStatus: "pending" | "paid" | "failed" | "refunded";
   
-  // Razorpay
-  razorpayOrderId: string;
-  razorpayPaymentId: string;
-  razorpaySignature: string;
+  // Blockchain
+  txHash: string;
+  tokenId: number;
   
   // WiFi Access (revealed after payment)
   wifiCredentialsRevealed: boolean;
@@ -77,9 +76,8 @@ const BookingSchema = new Schema<IBooking>(
       index: true,
     },
     
-    razorpayOrderId:   { type: String, default: "" },
-    razorpayPaymentId: { type: String, default: "", sparse: true },
-    razorpaySignature: { type: String, default: "" },
+    txHash:  { type: String, default: "" },
+    tokenId: { type: Number, default: 0 },
     
     wifiCredentialsRevealed: { type: Boolean, default: false },
     

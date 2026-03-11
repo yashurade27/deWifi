@@ -8,6 +8,7 @@ export interface AuthUser {
   email: string;
   phone: string;
   role: "user" | "owner";
+  walletAddress?: string;
   profilePhoto?: string;
 }
 
@@ -22,6 +23,7 @@ interface SignupPayload {
   phone: string;
   password: string;
   role?: "user" | "owner";
+  walletAddress?: string;
 }
 
 interface SigninPayload {

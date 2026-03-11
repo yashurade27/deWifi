@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { useAuth } from '@/context/AuthContext';
+import { useWeb3 } from '@/context/Web3Context';
 import { apiFetch } from '@/lib/api';
+import { bookWifiAccess, calculateBookingCost, getProvider } from '@/lib/contracts';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Wifi,
@@ -13,7 +15,7 @@ import {
   Shield,
   ArrowLeft,
   CheckCircle,
-  CreditCard,
+  Wallet,
   Activity,
   Copy,
   Check,
@@ -66,6 +68,7 @@ interface HealthData {
 
 export default function BookWifi() {
   const { user, token, isAuthenticated } = useAuth();
+  const { address, signer, connect, isConnecting } = useWeb3();
   const navigate = useNavigate();
   const { spotId } = useParams();
 
@@ -84,6 +87,9 @@ export default function BookWifi() {
   const [accessToken, setAccessToken] = useState('');
   const [accessTokenOTP, setAccessTokenOTP] = useState('');
   const [copied, setCopied] = useState<'token' | 'otp' | null>(null);
+
+  // On-chain cost estimate
+  const [costEth, setCostEth] = useState<string | null>(null);
 
   // ── Restore payment state that was persisted before a network-switch reload ──
   // Key is per-spot so multiple bookings don't clash.
@@ -171,25 +177,63 @@ export default function BookWifi() {
   const platformFee = Math.round(subtotal * 0.02 * 100) / 100;
   const total = subtotal;
 
+  // Fetch on-chain cost whenever spot or duration changes
+  useEffect(() => {
+    if (!spot) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const provider = getProvider();
+        // spot._id is the MongoDB id; we need the on-chain spotId.
+        // For the hackathon demo, we use the spot's blockchain ID if available,
+        // or fall back to 1 (first registered spot).
+        const onChainSpotId = (spot as any).blockchainSpotId ?? 0;
+        const cost = await calculateBookingCost(provider, onChainSpotId, duration);
+        if (!cancelled) setCostEth(cost.totalEth);
+      } catch {
+        if (!cancelled) setCostEth(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [spot, duration]);
+
   const handleBooking = async () => {
     if (!spot || !user) return;
+
+    // Ensure wallet is connected
+    if (!address || !signer) {
+      try {
+        await connect();
+      } catch {
+        setError('Please connect your MetaMask wallet to continue.');
+        return;
+      }
+    }
 
     setBooking(true);
     setError('');
 
     try {
-      // Step 1: Get Razorpay key
-      const keyRes = await apiFetch<{ key: string }>('/api/bookings/razorpay-key', {
-        token: token!,
-      });
+      // Step 1: Calculate cost on-chain
+      const provider = getProvider();
+      const onChainSpotId = (spot as any).blockchainSpotId ?? 0;
+      const cost = await calculateBookingCost(provider, onChainSpotId, duration);
 
-      // Step 2: Create booking and get Razorpay order
+      // Step 2: Purchase access on-chain (sends ETH, mints NFT, escrows payment)
+      const currentSigner = signer!;
+      const { bookingId: tokenId, txHash } = await bookWifiAccess(
+        currentSigner,
+        onChainSpotId,
+        duration,
+        cost.total
+      );
+
+      // Step 3: Record booking in backend database
       const bookingRes = await apiFetch<{
         booking: {
           id: string;
-          razorpayOrderId: string;
-          amount: number;
-          currency: string;
+          accessToken?: string;
+          accessTokenOTP?: string;
         };
       }>('/api/bookings', {
         method: 'POST',
@@ -197,81 +241,39 @@ export default function BookWifi() {
           wifiSpotId: spot._id,
           durationHours: duration,
           startTime: startTime === 'now' ? undefined : scheduledTime,
+          txHash,
+          tokenId,
         },
         token: token!,
       });
 
-      const { booking: bookingData } = bookingRes;
+      const newBookingId = bookingRes.booking.id;
+      const newToken = bookingRes.booking.accessToken || '';
+      const newOTP = bookingRes.booking.accessTokenOTP || '';
 
-      // Step 3: Initialize Razorpay checkout
-      const options = {
-        key: keyRes.key,
-        amount: bookingData.amount,
-        currency: bookingData.currency,
-        name: 'AirLink',
-        description: `WiFi Access - ${spot.name}`,
-        order_id: bookingData.razorpayOrderId,
-        handler: async (response: any) => {
-          try {
-            // Step 4: Verify payment on backend
-            const verifyRes = await apiFetch<{
-              booking: { id: string; accessToken?: string; accessTokenOTP?: string };
-            }>('/api/bookings/verify-payment', {
-              method: 'POST',
-              body: {
-                bookingId: bookingData.id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              },
-              token: token!,
-            });
+      // Persist so a page reload doesn't lose creds
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          bookingId: newBookingId,
+          accessToken: newToken,
+          accessTokenOTP: newOTP,
+          duration,
+          savedAt: Date.now(),
+        }));
+      } catch { /* storage full — ignore */ }
 
-            const newBookingId = verifyRes.booking.id;
-            const newToken = verifyRes.booking.accessToken || '';
-            const newOTP = verifyRes.booking.accessTokenOTP || '';
-
-            // Persist immediately so a network-switch page reload doesn't lose creds
-            try {
-              localStorage.setItem(STORAGE_KEY, JSON.stringify({
-                bookingId: newBookingId,
-                accessToken: newToken,
-                accessTokenOTP: newOTP,
-                duration,
-                savedAt: Date.now(),
-              }));
-            } catch { /* storage full — ignore */ }
-
-            setSuccess(true);
-            setBookingId(newBookingId);
-            if (newToken) setAccessToken(newToken);
-            if (newOTP) setAccessTokenOTP(newOTP);
-          } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : 'Payment verification failed';
-            setError(message);
-            setBooking(false);
-          }
-        },
-        prefill: {
-          name: user.name,
-          email: user.email,
-        },
-        theme: {
-          color: '#2563eb',
-        },
-        modal: {
-          ondismiss: () => {
-            setBooking(false);
-            setError('Payment cancelled');
-          },
-        },
-      };
-
-      const razorpay = new (window as any).Razorpay(options);
-      razorpay.open();
+      setSuccess(true);
+      setBookingId(newBookingId);
+      if (newToken) setAccessToken(newToken);
+      if (newOTP) setAccessTokenOTP(newOTP);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Booking failed';
-      setError(message);
+      if (message.includes('user rejected') || message.includes('ACTION_REJECTED')) {
+        setError('Transaction cancelled by user.');
+      } else {
+        setError(message);
+      }
+    } finally {
       setBooking(false);
     }
   };
@@ -353,7 +355,7 @@ export default function BookWifi() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-500 text-sm">Amount Paid</span>
-                <span className="font-bold text-green-600">₹{total}</span>
+                <span className="font-bold text-green-600">{costEth ? `${costEth} ETH` : `₹${total}`}</span>
               </div>
             </div>
 
@@ -765,13 +767,13 @@ export default function BookWifi() {
 
               <div className="flex justify-between py-4 text-lg font-bold">
                 <span>Total</span>
-                <span className="text-blue-600">₹{total}</span>
+                <span className="text-blue-600">{costEth ? `${costEth} ETH` : `₹${total}`}</span>
               </div>
 
               <div className="mb-4 p-3 bg-green-50 rounded-lg">
                 <div className="flex items-center gap-2 text-green-700 text-sm">
                   <Shield size={16} />
-                  <span>Secure payment via Razorpay</span>
+                  <span>Secured by Ethereum smart contract</span>
                 </div>
               </div>
 
@@ -808,9 +810,29 @@ export default function BookWifi() {
                 return null;
               })()}
 
+              {!address ? (
+                <button
+                  onClick={connect}
+                  disabled={isConnecting}
+                  className="w-full py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-3"
+                >
+                  {isConnecting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      Connecting Wallet...
+                    </>
+                  ) : (
+                    <>
+                      <Wallet size={20} />
+                      Connect Wallet
+                    </>
+                  )}
+                </button>
+              ) : null}
+
               <button
                 onClick={handleBooking}
-                disabled={booking ||
+                disabled={booking || !address ||
                   (healthData?.freshness === 'verified' && !healthData.isOnline) ||
                   spot.currentUsers >= spot.maxUsers}
                 className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -818,12 +840,12 @@ export default function BookWifi() {
                 {booking ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Processing...
+                    Confirming on blockchain...
                   </>
                 ) : (
                   <>
-                    <CreditCard size={20} />
-                    Pay ₹{total}
+                    <Wallet size={20} />
+                    Pay {costEth ? `${costEth} ETH` : `₹${total}`}
                   </>
                 )}
               </button>
