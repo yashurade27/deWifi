@@ -348,7 +348,7 @@ function SpotCard({
 
 // ─── Main Explore Page ────────────────────────────────────────────────────────
 export default function Explore() {
-  const { spots, loading, error, refetch } = useSpots();
+  const { spots, loading, error, isUsingFallback, refetch } = useSpots();
   const navigate = useNavigate();
 
   const [selectedSpot, setSelectedSpot] = useState<ApiSpot | null>(null);
@@ -524,9 +524,14 @@ export default function Explore() {
                 </div>
               )}
               {error && (
-                <div className="px-4 py-2 border-b border-red-100 bg-red-50 flex items-center justify-between text-xs text-red-600">
+                <div className="px-4 py-2 border-b border-red-100 bg-red-50 dark:bg-red-950/30 dark:border-red-900 flex items-center justify-between text-xs text-red-600 dark:text-red-400">
                   <span>{error}</span>
-                  <button onClick={refetch} className="underline font-medium">Retry</button>
+                  <button onClick={refetch} className="underline font-medium shrink-0 ml-2">Retry</button>
+                </div>
+              )}
+              {!error && isUsingFallback && (
+                <div className="px-4 py-2 border-b border-amber-100 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-900 flex items-center justify-between text-xs text-amber-700 dark:text-amber-400">
+                  <span>Showing demo spots — your created spots are not visible. Start the backend and <button onClick={refetch} className="underline font-medium">refresh</button>.</span>
                 </div>
               )}
 

@@ -6,10 +6,10 @@ import { BrowserProvider, Contract, ethers, formatEther, parseEther } from "ethe
 // ═══════════════════════════════════════════════════════════════
 
 export const CONTRACT_ADDRESSES = {
-  registry:      import.meta.env.VITE_WIFI_REGISTRY_ADDRESS      ?? "0x0000000000000000000000000000000000000000",
-  accessNFT:     import.meta.env.VITE_ACCESS_NFT_ADDRESS         ?? "0x0000000000000000000000000000000000000000",
-  escrow:        import.meta.env.VITE_PAYMENT_ESCROW_ADDRESS     ?? "0x0000000000000000000000000000000000000000",
-  accessManager: import.meta.env.VITE_ACCESS_MANAGER_ADDRESS     ?? "0x0000000000000000000000000000000000000000",
+  registry:      import.meta.env.VITE_WIFI_REGISTRY_ADDRESS      ?? "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+  accessNFT:     import.meta.env.VITE_ACCESS_NFT_ADDRESS         ?? "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+  escrow:        import.meta.env.VITE_PAYMENT_ESCROW_ADDRESS     ?? "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+  accessManager: import.meta.env.VITE_ACCESS_MANAGER_ADDRESS     ?? "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
 };
 
 // Backwards-compatible alias
@@ -227,16 +227,40 @@ export async function calculateBookingCost(
   spotId: number,
   durationHours: number
 ): Promise<BookingCost> {
+  if (CONTRACT_ADDRESSES.accessManager === "0x0000000000000000000000000000000000000000") {
+    throw new Error(
+      "Contracts not deployed — run the deploy script and set VITE_ACCESS_MANAGER_ADDRESS in your .env file."
+    );
+  }
   const contract = getManagerContract(provider);
-  const [total, ownerShare, fee] = await contract.calculateCost(spotId, durationHours);
-  return {
-    total,
-    totalEth: formatEther(total),
-    ownerShare,
-    ownerShareEth: formatEther(ownerShare),
-    fee,
-    feeEth: formatEther(fee),
-  };
+  try {
+    const [total, ownerShare, fee] = await contract.calculateCost(spotId, durationHours);
+    return {
+      total,
+      totalEth: formatEther(total),
+      ownerShare,
+      ownerShareEth: formatEther(ownerShare),
+      fee,
+      feeEth: formatEther(fee),
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    // ethers v6 puts the decoded revert reason in `reason` / `shortMessage`, not always in `message`
+    const reason = (err as any)?.reason ?? (err as any)?.shortMessage ?? '';
+    const combined = msg + ' ' + reason;
+    if (
+      combined.includes('BAD_DATA') ||
+      combined.includes('could not decode result data') ||
+      combined.includes('Spot does not exist')
+    ) {
+      throw new Error('Spot does not exist on-chain — please seed the blockchain spots.');
+    }
+    // Generic revert that we couldn't decode → treat as spot not accessible
+    if (combined.includes('CALL_EXCEPTION') || combined.includes('execution reverted')) {
+      throw new Error(`Spot is not accessible on-chain: ${reason || msg}`);
+    }
+    throw err;
+  }
 }
 
 /**

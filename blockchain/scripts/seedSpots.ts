@@ -5,6 +5,8 @@
  *   npx hardhat run scripts/seedSpots.ts --network localhost
  */
 import hre from "hardhat";
+import fs from "fs";
+import path from "path";
 
 const { ethers } = hre;
 
@@ -83,8 +85,25 @@ async function main() {
 
   const WiFiRegistry = await ethers.getContractAt("WiFiRegistry", registryAddress);
 
-  // Check nextSpotId to see how many spots already exist
-  const startId = await WiFiRegistry.nextSpotId();
+  // Check nextSpotId to see how many spots already exist.
+  // If this throws BAD_DATA / 0x it means the Hardhat node was restarted and
+  // contracts were wiped — run deploy-and-seed.ts instead.
+  let startId!: bigint;
+  try {
+    startId = await WiFiRegistry.nextSpotId();
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes("BAD_DATA") || msg.includes("could not decode result data")) {
+      console.error(
+        "\n❌  Contract not found at the stored address.\n" +
+        "    The Hardhat node was likely restarted and its state was wiped.\n\n" +
+        "    Fix: re-deploy and seed in one command:\n\n" +
+        "      npx hardhat run scripts/deploy-and-seed.ts --network localhost\n"
+      );
+      process.exit(1);
+    }
+    throw e;
+  }
   console.log(`  Current nextSpotId: ${startId}`);
 
   if (Number(startId) >= DEMO_SPOTS.length) {
@@ -117,6 +136,73 @@ async function main() {
   console.log("\n════════════════════════════════════════════════════════");
   console.log("  ✅ Spots seeded successfully!");
   console.log("════════════════════════════════════════════════════════\n");
+
+  // Sync blockchainSpotIds to MongoDB
+  const seededIds = DEMO_SPOTS.map((s, i) => ({ name: s.name, chainId: Number(startId) + i }));
+  await syncMongoDBBlockchainIds(
+    path.join(__dirname, "../../backend/.env"),
+    path.join(__dirname, "../../backend/node_modules/mongoose"),
+    seededIds
+  );
+}
+
+async function syncMongoDBBlockchainIds(
+  backendEnvPath: string,
+  mongoosePath: string,
+  spots: Array<{ name: string; chainId: number }>
+) {
+  console.log("📦 Syncing blockchainSpotId → MongoDB...");
+
+  let mongoUri = "";
+  try {
+    const envContent = fs.readFileSync(backendEnvPath, "utf8");
+    const match = envContent.match(/^MONGO_URI=(.+)$/m);
+    if (match) mongoUri = match[1].trim();
+  } catch {
+    console.log("  ⚠️  Could not read backend/.env — skipping MongoDB sync.");
+    return;
+  }
+
+  if (!mongoUri) {
+    console.log("  ⚠️  MONGO_URI not set in backend/.env — skipping sync.");
+    return;
+  }
+
+  let mongoose: any;
+  try {
+    mongoose = require(mongoosePath);
+  } catch {
+    console.log("  ⚠️  mongoose not found in backend/node_modules — skipping sync.");
+    return;
+  }
+
+  try {
+    await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 8000 });
+    const db = mongoose.connection.db;
+    let updated = 0;
+
+    for (const { name, chainId } of spots) {
+      const result = await db.collection("wifispots").updateMany(
+        { name: { $regex: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") } },
+        { $set: { blockchainSpotId: chainId } }
+      );
+      if (result.modifiedCount > 0) {
+        console.log(`  ✓ "${name}" → blockchainSpotId = ${chainId}`);
+        updated += result.modifiedCount;
+      }
+    }
+
+    console.log(updated > 0
+      ? `\n  ✅ Updated ${updated} spot(s) in MongoDB.`
+      : "  ℹ️  No matching spots found in MongoDB (run 'npm run seed' in backend/ first)."
+    );
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.log(`  ⚠️  MongoDB sync failed: ${msg}`);
+    console.log("     Use Owner Dashboard → \"Set ID\" to link spots manually.");
+  } finally {
+    try { await mongoose.disconnect(); } catch { /* ignore */ }
+  }
 }
 
 main().catch((err) => {

@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useWeb3 } from '@/context/Web3Context';
 import { apiFetch } from '@/lib/api';
 import { findDummySpot } from '@/data/dummySpots';
-import { bookWifiAccess, calculateBookingCost, getProvider } from '@/lib/contracts';
+import { bookWifiAccess, calculateBookingCost, getProvider, connectWallet } from '@/lib/contracts';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Wifi,
@@ -91,6 +91,8 @@ export default function BookWifi() {
 
   // On-chain cost estimate
   const [costEth, setCostEth] = useState<string | null>(null);
+  const [costLoading, setCostLoading] = useState(false);
+  const [notOnChain, setNotOnChain] = useState(false);
 
   // ── Restore payment state that was persisted before a network-switch reload ──
   // Key is per-spot so multiple bookings don't clash.
@@ -187,22 +189,41 @@ export default function BookWifi() {
   // Fetch on-chain cost whenever spot or duration changes
   useEffect(() => {
     if (!spot) return;
+    const onChainSpotId = (spot as any).blockchainSpotId;
+    // Skip the blockchain call if the spot hasn't been registered on-chain yet
+    // (blockchainSpotId < 0 means "not registered", which is the default for new spots)
+    if (onChainSpotId === null || onChainSpotId === undefined || onChainSpotId < 0) {
+      setCostEth(null);
+      setNotOnChain(true);
+      setCostLoading(false);
+      return;
+    }
     let cancelled = false;
+    setCostLoading(true);
+    setNotOnChain(false);
     (async () => {
       try {
         const provider = getProvider();
-        // blockchainSpotId is the on-chain WiFiRegistry ID stored in MongoDB.
-        // Falls back to 0 (first seeded spot) if not set.
-        const onChainSpotId = (spot as any).blockchainSpotId ?? 0;
         const cost = await calculateBookingCost(provider, onChainSpotId, duration);
-        if (!cancelled) setCostEth(cost.totalEth);
-      } catch (err: unknown) {
-        // Spot may not be seeded on-chain yet — silently hide ETH price.
-        if (!cancelled) setCostEth(null);
-        const msg = err instanceof Error ? err.message : '';
-        if (!cancelled && (msg.includes('Spot does not exist') || msg.includes('Spot not active'))) {
-          setError('This spot is not yet registered on-chain. Please run the blockchain seed script.');
+        if (!cancelled) {
+          setCostEth(cost.totalEth);
+          setNotOnChain(false);
         }
+      } catch (err: unknown) {
+        if (!cancelled) {
+          setCostEth(null);
+          const msg = err instanceof Error ? err.message : '';
+          // ethers v6: check both message and reason property
+          const reason = (err as any)?.reason ?? (err as any)?.shortMessage ?? '';
+          const combined = msg + ' ' + reason;
+          if (combined.includes('Spot does not exist') || combined.includes('on-chain') || combined.includes('not accessible')) {
+            setNotOnChain(true);
+          } else if (combined.includes('Contracts not deployed')) {
+            setError('Blockchain contracts are not configured. Deploy contracts and set .env addresses.');
+          }
+        }
+      } finally {
+        if (!cancelled) setCostLoading(false);
       }
     })();
     return () => { cancelled = true; };
@@ -211,10 +232,16 @@ export default function BookWifi() {
   const handleBooking = async () => {
     if (!spot || !user) return;
 
-    // Ensure wallet is connected
-    if (!address || !signer) {
+    // Get a live signer — if wallet isn't connected yet, call connectWallet()
+    // directly rather than relying on React state (which updates asynchronously
+    // and would leave signer === null in this closure even after connect() resolves).
+    let activeSigner = signer;
+    if (!activeSigner) {
       try {
-        await connect();
+        const { signer: freshSigner } = await connectWallet();
+        activeSigner = freshSigner;
+        // Also update the Web3Context state so the navbar/wallet indicator refreshes.
+        connect().catch(() => {});
       } catch {
         setError('Please connect your MetaMask wallet to continue.');
         return;
@@ -223,6 +250,14 @@ export default function BookWifi() {
 
     setBooking(true);
     setError('');
+
+    // Guard: spot must be registered on-chain before it can be booked
+    const onChainSpotId = (spot as any).blockchainSpotId;
+    if (notOnChain || onChainSpotId === null || onChainSpotId === undefined || onChainSpotId < 0) {
+      setError('This spot is not yet registered on the blockchain. The spot owner needs to register it first.');
+      setBooking(false);
+      return;
+    }
 
     try {
       // Step 1: Calculate cost on-chain
@@ -233,17 +268,30 @@ export default function BookWifi() {
         cost = await calculateBookingCost(provider, onChainSpotId, duration);
       } catch (calcErr: unknown) {
         const msg = calcErr instanceof Error ? calcErr.message : String(calcErr);
-        if (msg.includes('Spot does not exist') || msg.includes('Spot not active')) {
+        const calcReason = (calcErr as any)?.reason ?? (calcErr as any)?.shortMessage ?? '';
+        const calcCombined = msg + ' ' + calcReason;
+        if (
+          calcCombined.includes('Spot does not exist') ||
+          calcCombined.includes('Spot not active') ||
+          calcCombined.includes('on-chain') ||
+          calcCombined.includes('not accessible')
+        ) {
           throw new Error(
             'This spot is not registered on the blockchain yet. ' +
             'Please run: npx hardhat run scripts/seedSpots.ts --network localhost'
+          );
+        }
+        if (msg.includes('Contracts not deployed')) {
+          throw new Error(
+            'Blockchain contracts are not configured. ' +
+            'Deploy the contracts and set the contract addresses in your .env file.'
           );
         }
         throw calcErr;
       }
 
       // Step 2: Purchase access on-chain (sends ETH, mints NFT, escrows payment)
-      const currentSigner = signer!;
+      const currentSigner = activeSigner;
       const { bookingId: tokenId, txHash } = await bookWifiAccess(
         currentSigner,
         onChainSpotId,
@@ -795,7 +843,11 @@ export default function BookWifi() {
               <div className="flex justify-between py-4 text-lg font-bold">
                 <span>Total</span>
                 <span className="text-blue-600">
-                  {costEth ? `${costEth} ETH` : <span className="text-gray-400 text-sm font-normal">Loading…</span>}
+                  {costEth
+                    ? `${costEth} ETH`
+                    : costLoading
+                      ? <span className="text-gray-400 text-sm font-normal">Loading…</span>
+                      : <span className="text-gray-400 text-sm font-normal">—</span>}
                 </span>
               </div>
 
@@ -809,6 +861,16 @@ export default function BookWifi() {
               {error && (
                 <div className="mb-4 p-3 bg-red-50 rounded-lg text-red-700 text-sm">
                   {error}
+                </div>
+              )}
+
+              {notOnChain && !error && (
+                <div className="mb-4 p-3 bg-red-50 rounded-lg text-red-700 text-sm">
+                  <p className="font-semibold mb-1">Spot not linked to blockchain</p>
+                  <p className="text-xs">
+                    If you are the owner, go to <strong>Owner Dashboard → Register on-chain</strong> or use
+                    <em> "Already on-chain? Set ID"</em> to manually enter the on-chain spot ID.
+                  </p>
                 </div>
               )}
 

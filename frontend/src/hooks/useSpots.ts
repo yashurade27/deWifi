@@ -51,6 +51,7 @@ interface UseSpotsReturn {
   spots: ApiSpot[];
   loading: boolean;
   error: string | null;
+  isUsingFallback: boolean;
   refetch: () => void;
 }
 
@@ -58,10 +59,12 @@ export function useSpots(): UseSpotsReturn {
   const [spots, setSpots]   = useState<ApiSpot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState<string | null>(null);
+  const [isUsingFallback, setIsUsingFallback] = useState(false);
 
   const fetchSpots = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setIsUsingFallback(false);
     try {
       const data = await apiFetch<SpotsResponse>('/api/spots?limit=100');
       // If the API returned spots, use them; otherwise fall back to dummy data
@@ -69,11 +72,15 @@ export function useSpots(): UseSpotsReturn {
         setSpots(data.spots);
       } else {
         setSpots(dummyApiSpots as unknown as ApiSpot[]);
+        setIsUsingFallback(true);
       }
     } catch (err) {
       // API unreachable or errored — fall back to dummy data so the UI still works
+      const message = err instanceof Error ? err.message : 'Could not reach the backend.';
       console.warn('API fetch failed, using dummy spots:', err);
+      setError(`Backend unreachable — showing demo data. (${message})`);
       setSpots(dummyApiSpots as unknown as ApiSpot[]);
+      setIsUsingFallback(true);
     } finally {
       setLoading(false);
     }
@@ -81,5 +88,5 @@ export function useSpots(): UseSpotsReturn {
 
   useEffect(() => { fetchSpots(); }, [fetchSpots]);
 
-  return { spots, loading, error, refetch: fetchSpots };
+  return { spots, loading, error, isUsingFallback, refetch: fetchSpots };
 }

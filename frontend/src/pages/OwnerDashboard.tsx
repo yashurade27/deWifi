@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { useAuth } from '@/context/AuthContext';
+import { useWeb3 } from '@/context/Web3Context';
 import { apiFetch } from '@/lib/api';
+import { registerSpot } from '@/lib/contracts';
 import { 
   Wifi, 
   Plus, 
@@ -21,6 +23,7 @@ import {
   Shield,
   ChevronDown,
   ChevronUp,
+  Link2,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
@@ -38,6 +41,7 @@ interface WifiSpot {
   reviewCount: number;
   isActive: boolean;
   tag: string;
+  blockchainSpotId: number;
   monitoring: {
     isOnline: boolean;
     uptimePercent: number;
@@ -55,10 +59,12 @@ interface OwnerStats {
 
 export default function OwnerDashboard() {
   const { user, token, isAuthenticated } = useAuth();
+  const { signer } = useWeb3();
   const navigate = useNavigate();
   const [spots, setSpots] = useState<WifiSpot[]>([]);
   const [stats, setStats] = useState<OwnerStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [registeringSpot, setRegisteringSpot] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -111,6 +117,77 @@ export default function OwnerDashboard() {
       setSpots(spots.filter(s => s._id !== spotId));
     } catch (err) {
       console.error('Failed to delete spot:', err);
+    }
+  };
+
+  const registerOnChain = async (spot: WifiSpot) => {
+    if (!signer) {
+      alert('Please connect your MetaMask wallet first.');
+      return;
+    }
+    if (spot.blockchainSpotId >= 0) {
+      alert(`This spot is already registered on-chain as spot #${spot.blockchainSpotId}.`);
+      return;
+    }
+    setRegisteringSpot(spot._id);
+    try {
+      const tagMap: Record<string, number> = { Home: 0, Cafe: 1, Office: 2, Library: 3, CoWorking: 4 };
+      const { spotId } = await registerSpot(signer, {
+        name: spot.name,
+        locationHash: `mongo:${spot._id}`,
+        metadataURI: `ipfs://placeholder-${spot._id}`,
+        pricePerHourEth: String(spot.pricePerHour),
+        speedMbps: spot.speedMbps,
+        maxUsers: spot.maxUsers,
+        tag: tagMap[spot.tag] ?? 0,
+      });
+      // Save blockchain ID to MongoDB — show it to user even if PATCH fails so they can recover
+      try {
+        await apiFetch(`/api/owner/spots/${spot._id}/blockchain`, {
+          method: 'PATCH',
+          token: token!,
+          body: { blockchainSpotId: spotId },
+        });
+        setSpots(spots.map(s => s._id === spot._id ? { ...s, blockchainSpotId: spotId } : s));
+        alert(`✅ Spot registered on-chain as ID #${spotId}!\n\nUsers can now book this spot.`);
+      } catch (patchErr) {
+        // Blockchain tx succeeded but DB update failed — give owner the ID to save manually
+        alert(
+          `⚠️ Spot registered on-chain (ID #${spotId}) but could not save to database.\n\n` +
+          `To fix: go to Edit Spot and set Blockchain ID = ${spotId}\n\n` +
+          `Error: ${patchErr instanceof Error ? patchErr.message : String(patchErr)}`
+        );
+      }
+    } catch (err) {
+      console.error('Failed to register spot on-chain:', err);
+      alert(`Registration failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setRegisteringSpot(null);
+    }
+  };
+
+  const linkBlockchainId = async (spot: WifiSpot) => {
+    const input = window.prompt(
+      `Enter the on-chain spot ID for "${spot.name}".\n` +
+      `(Check the blockchain seed output or your MetaMask transaction history)`,
+      spot.blockchainSpotId >= 0 ? String(spot.blockchainSpotId) : ''
+    );
+    if (input === null) return; // cancelled
+    const id = parseInt(input.trim(), 10);
+    if (isNaN(id) || id < 0) {
+      alert('Invalid ID. Please enter a non-negative integer.');
+      return;
+    }
+    try {
+      await apiFetch(`/api/owner/spots/${spot._id}/blockchain`, {
+        method: 'PATCH',
+        token: token!,
+        body: { blockchainSpotId: id },
+      });
+      setSpots(spots.map(s => s._id === spot._id ? { ...s, blockchainSpotId: id } : s));
+      alert(`✅ Blockchain ID #${id} saved. Users can now book this spot.`);
+    } catch (err) {
+      alert(`Failed to save: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -206,6 +283,9 @@ export default function OwnerDashboard() {
                   spot={spot}
                   onToggle={() => toggleSpotActive(spot._id)}
                   onDelete={() => deleteSpot(spot._id)}
+                  onRegisterOnChain={() => registerOnChain(spot)}
+                  onLinkBlockchainId={() => linkBlockchainId(spot)}
+                  isRegistering={registeringSpot === spot._id}
                 />
               ))}
             </div>
@@ -234,7 +314,14 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
   );
 }
 
-function SpotRow({ spot, onToggle, onDelete }: { spot: WifiSpot; onToggle: () => void; onDelete: () => void }) {
+function SpotRow({ spot, onToggle, onDelete, onRegisterOnChain, onLinkBlockchainId, isRegistering }: {
+  spot: WifiSpot;
+  onToggle: () => void;
+  onDelete: () => void;
+  onRegisterOnChain: () => void;
+  onLinkBlockchainId: () => void;
+  isRegistering: boolean;
+}) {
   const navigate = useNavigate();
   const [copiedId, setCopiedId] = useState(false);
 
@@ -286,6 +373,16 @@ function SpotRow({ spot, onToggle, onDelete }: { spot: WifiSpot; onToggle: () =>
               {copiedId ? <Check size={12} /> : <Copy size={12} />}
               {copiedId ? 'Copied!' : `ID: ${spot._id.slice(-8)}`}
             </button>
+            {spot.blockchainSpotId >= 0 ? (
+              <span className="flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 rounded text-xs font-mono">
+                <Link2 size={12} />
+                On-chain #{spot.blockchainSpotId}
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 px-2 py-0.5 bg-orange-50 text-orange-600 rounded text-xs">
+                Not on-chain
+              </span>
+            )}
           </div>
         </div>
 
@@ -309,6 +406,37 @@ function SpotRow({ spot, onToggle, onDelete }: { spot: WifiSpot; onToggle: () =>
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          {spot.blockchainSpotId < 0 ? (
+            <button
+              onClick={onRegisterOnChain}
+              disabled={isRegistering}
+              className="flex items-center gap-1 px-3 py-1.5 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg transition-colors text-sm font-medium disabled:opacity-50"
+              title="Register this spot on the Ethereum blockchain"
+            >
+              {isRegistering ? (
+                <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-700"></div> Registering…</>
+              ) : (
+                <><Link2 size={16} /> Register on-chain</>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={onLinkBlockchainId}
+              className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg transition-colors text-sm font-medium"
+              title="Change linked on-chain spot ID"
+            >
+              <Link2 size={15} /> #{spot.blockchainSpotId}
+            </button>
+          )}
+          {spot.blockchainSpotId < 0 && (
+            <button
+              onClick={onLinkBlockchainId}
+              className="flex items-center gap-1 px-2 py-1.5 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 rounded-lg transition-colors text-xs"
+              title="Already registered on-chain? Enter the chain ID manually"
+            >
+              Already on-chain? Set ID
+            </button>
+          )}
           <button
             onClick={onToggle}
             className={`p-2 rounded-lg transition-colors ${

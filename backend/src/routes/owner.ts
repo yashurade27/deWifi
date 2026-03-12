@@ -173,7 +173,7 @@ router.put("/spots/:id", async (req: AuthRequest, res: Response) => {
       "name", "description", "lat", "lng", "address", "city", "state",
       "pricePerHour", "speedMbps", "maxUsers", "amenities", "availableFrom",
       "availableTo", "ssid", "wifiPassword", "securityType", "tag", "images",
-      "paymentSetup", "isActive"
+      "paymentSetup", "isActive", "blockchainSpotId"
     ];
 
     for (const field of allowedFields) {
@@ -216,6 +216,38 @@ router.delete("/spots/:id", async (req: AuthRequest, res: Response) => {
     res.json({ success: true, message: "Spot deleted successfully." });
   } catch (err) {
     console.error("[DELETE /owner/spots/:id]", err);
+    res.status(500).json({ success: false, message: "Internal server error." });
+  }
+});
+
+// ─── PATCH /api/owner/spots/:id/blockchain - Set blockchainSpotId after on-chain registration ─
+router.patch("/spots/:id/blockchain", async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({ success: false, message: "Unauthorized." });
+      return;
+    }
+
+    const { blockchainSpotId } = req.body;
+    if (blockchainSpotId === undefined || blockchainSpotId === null || Number(blockchainSpotId) < 0) {
+      res.status(400).json({ success: false, message: "blockchainSpotId must be a non-negative integer." });
+      return;
+    }
+
+    const spot = await WifiSpot.findOneAndUpdate(
+      { _id: String(req.params.id), owner: req.userId },
+      { blockchainSpotId: Number(blockchainSpotId) },
+      { new: true }
+    );
+
+    if (!spot) {
+      res.status(404).json({ success: false, message: "Spot not found." });
+      return;
+    }
+
+    res.json({ success: true, blockchainSpotId: spot.blockchainSpotId });
+  } catch (err) {
+    console.error("[PATCH /owner/spots/:id/blockchain]", err);
     res.status(500).json({ success: false, message: "Internal server error." });
   }
 });

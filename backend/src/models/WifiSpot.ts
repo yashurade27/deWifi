@@ -91,8 +91,8 @@ const WifiSpotSchema = new Schema<IWifiSpot>(
       default: "Home",
       index: true,
     },
-    // On-chain spot ID (index in WiFiRegistry — seeded in order 0,1,2,...)
-    blockchainSpotId: { type: Number, default: 0 },
+    // On-chain spot ID (index in WiFiRegistry). -1 means the spot is not yet registered on-chain.
+    blockchainSpotId: { type: Number, default: -1 },
     // Payment setup for owner earnings
     paymentSetup: {
       walletAddress:     { type: String, default: "" },
