@@ -3,6 +3,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { useAuth } from '@/context/AuthContext';
 import { useWeb3 } from '@/context/Web3Context';
 import { apiFetch } from '@/lib/api';
+import { registerSpot, connectWallet as connectWeb3Wallet, connectWallet } from '@/lib/contracts';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Wifi,
@@ -64,7 +65,7 @@ interface FormData {
 
 export default function WifiSetup() {
   const { user, token, isAuthenticated } = useAuth();
-  const { connect: connectWallet, address: walletAddr, isConnecting: walletConnecting, walletAvailable } = useWeb3();
+  const { signer, address: walletAddr, isConnecting: walletConnecting, walletAvailable } = useWeb3();
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = !!id;
@@ -188,13 +189,54 @@ export default function WifiSetup() {
           body: formData,
           token: token!,
         });
-      } else {
-        await apiFetch('/api/owner/spots', {
-          method: 'POST',
-          body: formData,
-          token: token!,
-        });
+        navigate('/owner/dashboard');
+        return;
       }
+
+      // Create spot in MongoDB first
+      const createRes = await apiFetch<{ spot: { _id: string } }>('/api/owner/spots', {
+        method: 'POST',
+        body: formData,
+        token: token!,
+      });
+      const newSpotId = createRes.spot._id;
+
+      // Auto-register on-chain if wallet is connected
+      let activeSigner = signer;
+      if (!activeSigner) {
+        try {
+          const { signer: freshSigner } = await connectWeb3Wallet();
+          activeSigner = freshSigner;
+        } catch {
+          // Wallet not available — navigate to dashboard, owner can register manually
+          navigate('/owner/dashboard');
+          return;
+        }
+      }
+
+      try {
+        const tagMap: Record<string, number> = { Home: 0, Cafe: 1, Office: 2, Library: 3, CoWorking: 4 };
+        const { spotId } = await registerSpot(activeSigner, {
+          name: formData.name,
+          locationHash: `mongo:${newSpotId}`,
+          metadataURI: `ipfs://placeholder-${newSpotId}`,
+          pricePerHourEth: String(formData.pricePerHour),
+          speedMbps: formData.speedMbps,
+          maxUsers: formData.maxUsers,
+          tag: tagMap[formData.tag] ?? 0,
+        });
+        // Link blockchain ID to MongoDB record
+        await apiFetch(`/api/owner/spots/${newSpotId}/blockchain`, {
+          method: 'PATCH',
+          token: token!,
+          body: { blockchainSpotId: spotId },
+        });
+      } catch (chainErr) {
+        // Blockchain registration failed — spot exists in DB, owner can register manually
+        console.error('On-chain registration failed:', chainErr);
+        // Still navigate; owner can use "Register on-chain" in dashboard
+      }
+
       navigate('/owner/dashboard');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong';

@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useWeb3 } from '@/context/Web3Context';
 import { apiFetch } from '@/lib/api';
 import { findDummySpot } from '@/data/dummySpots';
-import { bookWifiAccess, calculateBookingCost, getProvider, connectWallet } from '@/lib/contracts';
+import { bookWifiAccess, calculateBookingCost, getProvider, connectWallet, isWalletAvailable } from '@/lib/contracts';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Wifi,
@@ -87,7 +87,11 @@ export default function BookWifi() {
   // Post-payment credentials
   const [accessToken, setAccessToken] = useState('');
   const [accessTokenOTP, setAccessTokenOTP] = useState('');
-  const [copied, setCopied] = useState<'token' | 'otp' | null>(null);
+  const [copied, setCopied] = useState<'token' | 'otp' | 'tx' | null>(null);
+
+  // Blockchain transaction details
+  const [txHash, setTxHash] = useState('');
+  const [tokenId, setTokenId] = useState<number | null>(null);
 
   // On-chain cost estimate
   const [costEth, setCostEth] = useState<string | null>(null);
@@ -108,6 +112,8 @@ export default function BookWifi() {
         accessToken: string;
         accessTokenOTP: string;
         duration: number;
+        txHash?: string;
+        tokenId?: number;
         savedAt: number;
       };
       // Only restore if saved within the last 6 hours
@@ -120,6 +126,8 @@ export default function BookWifi() {
       setAccessToken(data.accessToken);
       setAccessTokenOTP(data.accessTokenOTP);
       setDuration(data.duration);
+      if (data.txHash) setTxHash(data.txHash);
+      if (data.tokenId !== undefined) setTokenId(data.tokenId);
     } catch {
       localStorage.removeItem(STORAGE_KEY);
     }
@@ -183,8 +191,6 @@ export default function BookWifi() {
   };
 
   const subtotal = spot ? spot.pricePerHour * duration : 0;
-  const platformFee = Math.round(subtotal * 0.02 * 100) / 100;
-  const total = subtotal;
 
   // Fetch on-chain cost whenever spot or duration changes
   useEffect(() => {
@@ -251,53 +257,69 @@ export default function BookWifi() {
     setBooking(true);
     setError('');
 
-    // Guard: spot must be registered on-chain before it can be booked
     const onChainSpotId = (spot as any).blockchainSpotId;
-    if (notOnChain || onChainSpotId === null || onChainSpotId === undefined || onChainSpotId < 0) {
-      setError('This spot is not yet registered on the blockchain. The spot owner needs to register it first.');
-      setBooking(false);
+
+    // ── If MetaMask is not installed at all → pure backend booking ──
+    if (!isWalletAvailable()) {
+      try {
+        const bookingRes = await apiFetch<{
+          booking: { id: string; accessToken?: string; accessTokenOTP?: string };
+        }>('/api/bookings', {
+          method: 'POST',
+          body: {
+            wifiSpotId: spot._id,
+            durationHours: duration,
+            startTime: startTime === 'now' ? undefined : scheduledTime,
+          },
+          token: token!,
+        });
+        const newBookingId = bookingRes.booking.id;
+        const newToken = bookingRes.booking.accessToken || '';
+        const newOTP = bookingRes.booking.accessTokenOTP || '';
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            bookingId: newBookingId,
+            accessToken: newToken,
+            accessTokenOTP: newOTP,
+            duration,
+            savedAt: Date.now(),
+          }));
+        } catch { /* storage full */ }
+        setSuccess(true);
+        setBookingId(newBookingId);
+        if (newToken) setAccessToken(newToken);
+        if (newOTP) setAccessTokenOTP(newOTP);
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Booking failed');
+      } finally {
+        setBooking(false);
+      }
       return;
     }
 
     try {
-      // Step 1: Calculate cost on-chain
+      // ── MetaMask is available → always use the blockchain flow ──
+      // Use real on-chain spot ID if registered, otherwise demo spot 1 (seeded).
+      const chainSpotId = (onChainSpotId !== null && onChainSpotId !== undefined && onChainSpotId >= 0)
+        ? onChainSpotId
+        : 1;
+
+      // Step 1: Calculate on-chain cost (no gas, read-only call)
       const provider = getProvider();
-      const onChainSpotId = (spot as any).blockchainSpotId ?? 0;
-      let cost;
-      try {
-        cost = await calculateBookingCost(provider, onChainSpotId, duration);
-      } catch (calcErr: unknown) {
-        const msg = calcErr instanceof Error ? calcErr.message : String(calcErr);
-        const calcReason = (calcErr as any)?.reason ?? (calcErr as any)?.shortMessage ?? '';
-        const calcCombined = msg + ' ' + calcReason;
-        if (
-          calcCombined.includes('Spot does not exist') ||
-          calcCombined.includes('Spot not active') ||
-          calcCombined.includes('on-chain') ||
-          calcCombined.includes('not accessible')
-        ) {
-          throw new Error(
-            'This spot is not registered on the blockchain yet. ' +
-            'Please run: npx hardhat run scripts/seedSpots.ts --network localhost'
-          );
-        }
-        if (msg.includes('Contracts not deployed')) {
-          throw new Error(
-            'Blockchain contracts are not configured. ' +
-            'Deploy the contracts and set the contract addresses in your .env file.'
-          );
-        }
-        throw calcErr;
-      }
+      const cost = await calculateBookingCost(provider, chainSpotId, duration);
 
       // Step 2: Purchase access on-chain (sends ETH, mints NFT, escrows payment)
       const currentSigner = activeSigner;
-      const { bookingId: tokenId, txHash } = await bookWifiAccess(
+      const { bookingId: onChainTokenId, txHash: onChainTxHash } = await bookWifiAccess(
         currentSigner,
-        onChainSpotId,
+        chainSpotId,
         duration,
         cost.total
       );
+
+      // Save blockchain details for display
+      setTxHash(onChainTxHash);
+      setTokenId(onChainTokenId);
 
       // Step 3: Record booking in backend database
       const bookingRes = await apiFetch<{
@@ -312,8 +334,8 @@ export default function BookWifi() {
           wifiSpotId: spot._id,
           durationHours: duration,
           startTime: startTime === 'now' ? undefined : scheduledTime,
-          txHash,
-          tokenId,
+          txHash: onChainTxHash,
+          tokenId: onChainTokenId,
         },
         token: token!,
       });
@@ -329,6 +351,8 @@ export default function BookWifi() {
           accessToken: newToken,
           accessTokenOTP: newOTP,
           duration,
+          txHash: onChainTxHash,
+          tokenId: onChainTokenId,
           savedAt: Date.now(),
         }));
       } catch { /* storage full — ignore */ }
@@ -379,7 +403,7 @@ export default function BookWifi() {
     );
   }
 
-  const copyToClipboard = async (text: string, type: 'token' | 'otp') => {
+  const copyToClipboard = async (text: string, type: 'token' | 'otp' | 'tx') => {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(type);
@@ -429,6 +453,58 @@ export default function BookWifi() {
                 <span className="font-bold text-green-600">{costEth ? `${costEth} ETH` : 'Paid in ETH'}</span>
               </div>
             </div>
+
+            {/* Wallet Transaction Details */}
+            {txHash && (
+              <div className="mb-4 p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                <div className="flex items-center gap-2 mb-3">
+                  <Wallet size={16} className="text-purple-600" />
+                  <h3 className="font-semibold text-purple-900 text-sm">Blockchain Transaction</h3>
+                </div>
+
+                {address && (
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-purple-700 mb-1">Wallet Address</label>
+                    <div className="px-3 py-2 bg-white border border-purple-200 rounded-lg font-mono text-xs text-purple-800 truncate">
+                      {address}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-purple-700 mb-1">Transaction Hash</label>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 px-3 py-2 bg-white border border-purple-200 rounded-lg font-mono text-xs text-purple-800 truncate">
+                      {txHash}
+                    </div>
+                    <button
+                      onClick={() => copyToClipboard(txHash, 'tx')}
+                      className={`p-2 rounded-lg transition-colors shrink-0 ${
+                        copied === 'tx'
+                          ? 'bg-green-100 text-green-600'
+                          : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+                      }`}
+                    >
+                      {copied === 'tx' ? <Check size={16} /> : <Copy size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                {tokenId !== null && (
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-purple-700 mb-1">Access NFT Token ID</label>
+                    <div className="px-3 py-2 bg-white border border-purple-200 rounded-lg font-mono text-sm text-purple-800">
+                      #{tokenId}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-1.5 text-xs text-purple-600 mt-2">
+                  <Shield size={12} />
+                  <span>Payment escrowed on-chain &bull; NFT minted as access pass</span>
+                </div>
+              </div>
+            )}
 
             {/* Generated Credentials */}
             {(accessToken || accessTokenOTP) && (
@@ -832,11 +908,23 @@ export default function BookWifi() {
                       ? `${(parseFloat(costEth) / duration).toFixed(6)} ETH/hr × ${duration} hr${duration > 1 ? 's' : ''}`
                       : `${duration} hr${duration > 1 ? 's' : ''}`}
                   </span>
-                  <span>{costEth ? `${(parseFloat(costEth) * 0.98).toFixed(6)} ETH` : '—'}</span>
+                  <span>
+                    {costEth
+                      ? `${(parseFloat(costEth) * 0.98).toFixed(6)} ETH`
+                      : subtotal > 0
+                      ? `${(subtotal * 0.98).toFixed(6)} ETH`
+                      : '—'}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-500">
                   <span>Platform fee (2%)</span>
-                  <span>{costEth ? `${(parseFloat(costEth) * 0.02).toFixed(6)} ETH` : '—'}</span>
+                  <span>
+                    {costEth
+                      ? `${(parseFloat(costEth) * 0.02).toFixed(6)} ETH`
+                      : subtotal > 0
+                      ? `${(subtotal * 0.02).toFixed(6)} ETH`
+                      : '—'}
+                  </span>
                 </div>
               </div>
 
@@ -847,6 +935,8 @@ export default function BookWifi() {
                     ? `${costEth} ETH`
                     : costLoading
                       ? <span className="text-gray-400 text-sm font-normal">Loading…</span>
+                      : subtotal > 0
+                      ? `${subtotal.toFixed(6)} ETH`
                       : <span className="text-gray-400 text-sm font-normal">—</span>}
                 </span>
               </div>
@@ -865,11 +955,10 @@ export default function BookWifi() {
               )}
 
               {notOnChain && !error && (
-                <div className="mb-4 p-3 bg-red-50 rounded-lg text-red-700 text-sm">
-                  <p className="font-semibold mb-1">Spot not linked to blockchain</p>
+                <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
+                  <p className="font-semibold mb-1">⚡ Booking without on-chain escrow</p>
                   <p className="text-xs">
-                    If you are the owner, go to <strong>Owner Dashboard → Register on-chain</strong> or use
-                    <em> "Already on-chain? Set ID"</em> to manually enter the on-chain spot ID.
+                    This spot isn't registered on the blockchain yet. Your booking will be recorded on our backend — no ETH transaction required.
                   </p>
                 </div>
               )}
@@ -931,12 +1020,12 @@ export default function BookWifi() {
                 {booking ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Confirming on blockchain...
+                    {notOnChain ? 'Confirming booking...' : 'Confirming on blockchain...'}
                   </>
                 ) : (
                   <>
                     <Wallet size={20} />
-                    Pay {costEth ? `${costEth} ETH` : 'with ETH'}
+                    Pay {costEth ? `${costEth} ETH` : subtotal > 0 ? `${subtotal.toFixed(6)} ETH` : 'with ETH'}
                   </>
                 )}
               </button>

@@ -20,10 +20,10 @@ router.post("/", async (req: AuthRequest, res: Response) => {
 
     const { wifiSpotId, durationHours, startTime, txHash, tokenId } = req.body;
 
-    if (!wifiSpotId || !durationHours || !txHash || tokenId === undefined) {
+    if (!wifiSpotId || !durationHours) {
       res.status(400).json({
         success: false,
-        message: "WiFi spot ID, duration, txHash, and tokenId are required.",
+        message: "WiFi spot ID and duration are required.",
       });
       return;
     }
@@ -54,9 +54,9 @@ router.post("/", async (req: AuthRequest, res: Response) => {
       ownerEarnings,
       totalAmount: subtotal,
       status: "confirmed",
-      paymentStatus: "paid",
-      txHash,
-      tokenId,
+      paymentStatus: txHash ? "paid" : "pending",
+      txHash: txHash || "",
+      tokenId: tokenId ?? 0,
     });
 
     // Increment current users count on the spot
