@@ -3,25 +3,17 @@ import { useSearchParams } from 'react-router-dom';
 import { API_BASE } from '@/lib/api';
 import {
   Wifi,
-  WifiOff,
-  Shield,
-  Lock,
   Clock,
-  AlertCircle,
-  CheckCircle,
-  Loader2,
   Smartphone,
   Laptop,
   Tablet,
   Monitor,
-  RefreshCw,
-  ExternalLink,
   Check,
   AlertTriangle,
   XCircle,
   ShieldCheck,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface SpotInfo {
   id: string;
@@ -193,6 +185,7 @@ export default function CaptivePortal(): React.ReactElement {
     } else {
       detectCaptivePortal();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spotId]);
 
   // Auto-authenticate when token is passed via URL.
@@ -233,8 +226,8 @@ export default function CaptivePortal(): React.ReactElement {
             }
             return;
           } else {
-            setError(gatewayResult.message || 'Authentication failed. Please check your token.');
-            setErrorCode(gatewayResult.errorCode || '');
+            setError(gatewayResult.message || 'Authentication failed. Please check your token or OTP.');
+            setErrorCode(gatewayResult.errorCode || 'AUTH_FAILED');
             return;
           }
         }
@@ -249,7 +242,7 @@ export default function CaptivePortal(): React.ReactElement {
         });
         const data: AuthResult = await res.json();
 
-        if (data.success && data.sessionToken) {
+        if (res.ok && data.success && data.sessionToken) {
           setSessionToken(data.sessionToken);
           setAuthenticated(true);
           localStorage.removeItem(`airlink_payment_${spotId}`);
@@ -267,11 +260,12 @@ export default function CaptivePortal(): React.ReactElement {
           const registered = await notifyGateway(data.sessionToken);
           setGatewayRegistered(registered);
         } else {
-          setError(data.message || 'Authentication failed. Please try again.');
-          setErrorCode(data.errorCode || '');
+          setError(data.message || 'Authentication failed. Please check your token or OTP.');
+          setErrorCode(data.errorCode || 'AUTH_FAILED');
         }
       } catch {
-        setError('Auto-authentication failed. Please enter your token manually.');
+        setError('Authentication service is unreachable. Please try again in a moment.');
+        setErrorCode('NETWORK_ERROR');
       } finally {
         setAuthenticating(false);
       }
@@ -512,8 +506,8 @@ export default function CaptivePortal(): React.ReactElement {
           }
           return;
         } else {
-          setError(gatewayResult.message || 'Authentication failed. Please check your token.');
-          setErrorCode(gatewayResult.errorCode || '');
+          setError(gatewayResult.message || 'Authentication failed. Please check your token or OTP.');
+          setErrorCode(gatewayResult.errorCode || 'AUTH_FAILED');
           return;
         }
       }
@@ -531,7 +525,7 @@ export default function CaptivePortal(): React.ReactElement {
       
       const data: AuthResult = await res.json();
 
-      if (data.success && data.sessionToken) {
+      if (res.ok && data.success && data.sessionToken) {
         setSessionToken(data.sessionToken);
         setAuthenticated(true);
         localStorage.removeItem(`airlink_payment_${spotId}`);
@@ -550,8 +544,8 @@ export default function CaptivePortal(): React.ReactElement {
         const registered = await notifyGateway(data.sessionToken);
         setGatewayRegistered(registered);
       } else {
-        setError(data.message || 'Authentication failed. Please check your token and try again.');
-        setErrorCode(data.errorCode || '');
+        setError(data.message || 'Authentication failed. Please check your token or OTP.');
+        setErrorCode(data.errorCode || 'AUTH_FAILED');
       }
     } catch {
       // If on HTTPS and backend not reachable, the only remaining path is the
@@ -630,13 +624,13 @@ export default function CaptivePortal(): React.ReactElement {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-linear-to-br from-gray-50 via-blue-50/30 to-gray-50 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center"
         >
-          <div className="w-16 h-16 border-4 border-[#0055FF]/20 border-t-[#0055FF] rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-16 h-16 border-4 border-uplink-blue/20 border-t-uplink-blue rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-600 text-sm font-medium">Connecting to WiFi spot...</p>
         </motion.div>
       </div>
@@ -649,10 +643,10 @@ export default function CaptivePortal(): React.ReactElement {
   if (needsGatewayRedirect && !authenticated) {
     const gwUrl = getLocalGatewayUrl(accessToken || tokenParam || undefined);
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="min-h-screen bg-linear-to-br from-gray-50 via-blue-50/30 to-gray-50 flex items-center justify-center p-4 relative overflow-hidden">
         {/* Background effects */}
-        <div className="absolute top-[-120px] left-[-120px] w-[480px] h-[480px] rounded-full bg-[#0055FF]/5 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-80px] right-[-80px] w-[360px] h-[360px] rounded-full bg-[#66FF00]/5 blur-[100px] pointer-events-none" />
+        <div className="absolute -top-30 -left-30 w-120 h-120 rounded-full bg-uplink-blue/5 blur-[120px] pointer-events-none" />
+        <div className="absolute -bottom-20 -right-20 w-90 h-90 rounded-full bg-uplink-green/5 blur-[100px] pointer-events-none" />
         
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -660,8 +654,8 @@ export default function CaptivePortal(): React.ReactElement {
           className="w-full max-w-md relative z-10"
         >
           <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-2xl">
-            <div className="w-14 h-14 bg-[#0055FF]/10 rounded-2xl flex items-center justify-center mb-6 mx-auto">
-              <Wifi className="w-7 h-7 text-[#0055FF]" />
+            <div className="w-14 h-14 bg-uplink-blue/10 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+              <Wifi className="w-7 h-7 text-uplink-blue" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 text-center mb-3">
               Redirect Required
@@ -671,7 +665,7 @@ export default function CaptivePortal(): React.ReactElement {
             </p>
             <a
               href={gwUrl}
-              className="block w-full bg-gradient-to-r from-[#0055FF] to-[#0066FF] hover:from-[#0044CC] hover:to-[#0055DD] text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 text-center shadow-[0_4px_20px_rgba(0,85,255,0.4)]"
+              className="block w-full bg-linear-to-r from-uplink-blue to-[#0066FF] hover:from-[#0044CC] hover:to-[#0055DD] text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 text-center shadow-[0_4px_20px_rgba(0,85,255,0.4)]"
             >
               Open Portal
             </a>
@@ -682,10 +676,10 @@ export default function CaptivePortal(): React.ReactElement {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50 flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 via-blue-50/30 to-gray-50 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background gradient effects */}
-      <div className="absolute top-[-120px] left-[-120px] w-[480px] h-[480px] rounded-full bg-[#0055FF]/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-80px] right-[-80px] w-[360px] h-[360px] rounded-full bg-[#66FF00]/5 blur-[100px] pointer-events-none" />
+      <div className="absolute -top-30 -left-30 w-120 h-120 rounded-full bg-uplink-blue/5 blur-[120px] pointer-events-none" />
+      <div className="absolute -bottom-20 -right-20 w-90 h-90 rounded-full bg-uplink-green/5 blur-[100px] pointer-events-none" />
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -695,11 +689,11 @@ export default function CaptivePortal(): React.ReactElement {
         {/* Logo Header */}
         <div className="text-center">
           <div className="inline-flex items-center gap-2.5 mb-4">
-            <div className="w-14 h-14 bg-[#0055FF] rounded-2xl flex items-center justify-center shadow-[0_6px_24px_rgba(0,85,255,0.5)]">
+            <div className="w-14 h-14 bg-uplink-blue rounded-2xl flex items-center justify-center shadow-[0_6px_24px_rgba(0,85,255,0.5)]">
               <Wifi className="w-7 h-7 text-white" strokeWidth={2.5} />
             </div>
             <span className="text-[1.8rem] font-black tracking-tight text-gray-900 leading-none">
-              Air<span className="text-[#0055FF]">Link</span>
+              Air<span className="text-uplink-blue">Link</span>
             </span>
           </div>
         </div>
@@ -708,10 +702,10 @@ export default function CaptivePortal(): React.ReactElement {
         <div className="bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-hidden">
           {/* Spot Info Header */}
           {spot && (
-            <div className="bg-gradient-to-br from-blue-50 to-transparent p-6 border-b border-gray-200">
+            <div className="bg-linear-to-br from-blue-50 to-transparent p-6 border-b border-gray-200">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-[#0055FF]/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Wifi className="w-6 h-6 text-[#0055FF]" />
+                <div className="w-12 h-12 bg-uplink-blue/10 rounded-xl flex items-center justify-center shrink-0">
+                  <Wifi className="w-6 h-6 text-uplink-blue" />
                 </div>
                 <div className="flex-1">
                   <h2 className="text-lg font-bold text-gray-900 mb-1">{spot.name}</h2>
@@ -729,7 +723,7 @@ export default function CaptivePortal(): React.ReactElement {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", duration: 0.6 }}
-                  className="w-16 h-16 bg-gradient-to-br from-green-100 to-green-50 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                  className="w-16 h-16 bg-linear-to-br from-green-100 to-green-50 rounded-2xl flex items-center justify-center mx-auto mb-4"
                 >
                   <Check className="w-8 h-8 text-green-600" strokeWidth={3} />
                 </motion.div>
@@ -742,14 +736,14 @@ export default function CaptivePortal(): React.ReactElement {
                 <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-gray-600 text-sm font-medium">Time Remaining</span>
-                    <Clock className="w-4 h-4 text-[#0055FF]" />
+                    <Clock className="w-4 h-4 text-uplink-blue" />
                   </div>
-                  <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#0055FF] to-[#66FF00]">
+                  <div className="text-3xl font-black text-transparent bg-clip-text bg-linear-to-r from-uplink-blue to-uplink-green">
                     {formatTime(timeRemaining)}
                   </div>
                   <div className="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <motion.div
-                      className="h-full bg-gradient-to-r from-[#0055FF] to-[#66FF00]"
+                      className="h-full bg-linear-to-r from-uplink-blue to-uplink-green"
                       initial={{ width: '100%' }}
                       animate={{ 
                         width: expiresAt ? `${Math.max(0, (timeRemaining / ((expiresAt.getTime() - Date.now() + timeRemaining * 1000) / 1000)) * 100)}%` : '100%'
@@ -779,7 +773,7 @@ export default function CaptivePortal(): React.ReactElement {
               {gatewayRegistered === false && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
                   <div className="flex gap-3">
-                    <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <p className="text-yellow-900 text-sm font-semibold mb-2">
                         Internet access pending
@@ -817,10 +811,13 @@ export default function CaptivePortal(): React.ReactElement {
                   className="mb-5 bg-red-50 border border-red-200 rounded-xl p-4"
                 >
                   <div className="flex gap-3">
-                    <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <XCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                     <div className="flex-1">
                       <p className="text-red-900 text-sm font-semibold">Authentication Failed</p>
                       <p className="text-red-700 text-xs mt-1">{error}</p>
+                      {errorCode && (
+                        <p className="text-red-600/90 text-[11px] mt-1 font-mono">Code: {errorCode}</p>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -834,7 +831,7 @@ export default function CaptivePortal(): React.ReactElement {
                     onClick={() => setUseOTP(false)}
                     className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all duration-200 ${
                       !useOTP
-                        ? 'bg-[#0055FF] text-white shadow-[0_4px_16px_rgba(0,85,255,0.3)]'
+                        ? 'bg-uplink-blue text-white shadow-[0_4px_16px_rgba(0,85,255,0.3)]'
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
@@ -845,7 +842,7 @@ export default function CaptivePortal(): React.ReactElement {
                     onClick={() => setUseOTP(true)}
                     className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all duration-200 ${
                       useOTP
-                        ? 'bg-[#0055FF] text-white shadow-[0_4px_16px_rgba(0,85,255,0.3)]'
+                        ? 'bg-uplink-blue text-white shadow-[0_4px_16px_rgba(0,85,255,0.3)]'
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
@@ -865,7 +862,7 @@ export default function CaptivePortal(): React.ReactElement {
                       onChange={(e) => setOtp(e.target.value)}
                       placeholder="123456"
                       maxLength={6}
-                      className="w-full bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#0055FF] focus:border-transparent transition-all text-center text-2xl font-bold tracking-widest"
+                      className="w-full bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-uplink-blue focus:border-transparent transition-all text-center text-2xl font-bold tracking-widest"
                       required
                     />
                     <p className="text-gray-500 text-xs mt-2">
@@ -883,7 +880,7 @@ export default function CaptivePortal(): React.ReactElement {
                       onChange={(e) => setAccessToken(e.target.value.toUpperCase())}
                       placeholder="A3B5C7D9E1F2G4H6"
                       maxLength={16}
-                      className="w-full bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#0055FF] focus:border-transparent transition-all font-mono tracking-wider"
+                      className="w-full bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-uplink-blue focus:border-transparent transition-all font-mono tracking-wider"
                       required
                     />
                     <p className="text-gray-500 text-xs mt-2">
@@ -896,7 +893,7 @@ export default function CaptivePortal(): React.ReactElement {
                 <button
                   type="submit"
                   disabled={authenticating}
-                  className="w-full bg-gradient-to-r from-[#0055FF] to-[#0066FF] hover:from-[#0044CC] hover:to-[#0055DD] text-white font-bold py-3.5 px-4 rounded-xl transition-all duration-200 shadow-[0_4px_20px_rgba(0,85,255,0.4)] hover:shadow-[0_6px_24px_rgba(0,85,255,0.5)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-linear-to-r from-uplink-blue to-[#0066FF] hover:from-[#0044CC] hover:to-[#0055DD] text-white font-bold py-3.5 px-4 rounded-xl transition-all duration-200 shadow-[0_4px_20px_rgba(0,85,255,0.4)] hover:shadow-[0_6px_24px_rgba(0,85,255,0.5)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {authenticating ? (
                     <>
@@ -915,9 +912,9 @@ export default function CaptivePortal(): React.ReactElement {
               {/* Help Text */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <div className="flex items-start gap-3 text-gray-600 text-xs">
-                  <ShieldCheck className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                  <ShieldCheck className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
                   <p className="leading-relaxed">
-                    Your connection is secured with end-to-end encryption. Access token is valid for the duration of your booking.
+                    This hotspot uses access control and device isolation. Use HTTPS sites (or VPN) for end-to-end privacy while browsing.
                   </p>
                 </div>
               </div>
@@ -940,3 +937,4 @@ export default function CaptivePortal(): React.ReactElement {
     </div>
   );
 }
+
