@@ -18,6 +18,11 @@ const config: HardhatUserConfig = {
     hardhat: {
       chainId: 31337,
     },
+    // added
+    localhost: {
+  url: "http://blockchain:8545",
+  chainId: 31337,
+},
     sepolia: {
       url: process.env.SEPOLIA_RPC_URL || "",
       accounts: process.env.DEPLOYER_PRIVATE_KEY
