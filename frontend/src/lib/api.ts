@@ -26,7 +26,19 @@ export async function apiFetch<T>(path: string, options: ApiOptions = {}): Promi
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Something went wrong.");
+  const responseText = await res.text();
+  let data: T & { message?: string };
+
+  try {
+    data = responseText ? (JSON.parse(responseText) as T & { message?: string }) : ({} as T & { message?: string });
+  } catch {
+    throw new Error(
+      res.ok
+        ? "The server returned an invalid response."
+        : `Request failed (${res.status} ${res.statusText}).`
+    );
+  }
+
+  if (!res.ok) throw new Error(data.message || `Request failed (${res.status}).`);
   return data as T;
 }
