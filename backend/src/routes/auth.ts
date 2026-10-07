@@ -21,13 +21,46 @@ router.post("/signup", async (req: Request, res: Response) => {
       return;
     }
 
-    const existing = await User.findOne({ email });
+    if (
+      typeof name !== "string" ||
+      typeof email !== "string" ||
+      typeof phone !== "string" ||
+      typeof password !== "string"
+    ) {
+      res.status(400).json({ message: "Name, email, phone, and password must be text values." });
+      return;
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail.includes("@")) {
+      res.status(400).json({ message: "Please enter a valid email address." });
+      return;
+    }
+
+    if (password.length < 8) {
+      res.status(400).json({ message: "Password must be at least 8 characters." });
+      return;
+    }
+
+    if (role !== undefined && role !== "user" && role !== "owner") {
+      res.status(400).json({ message: "Invalid account role." });
+      return;
+    }
+
+    const existing = await User.findOne({ email: normalizedEmail });
     if (existing) {
       res.status(409).json({ message: "An account with this email already exists." });
       return;
     }
 
-    const user = await User.create({ name, email, phone, password, role: role ?? "user", walletAddress: walletAddress ?? "" });
+    const user = await User.create({
+      name: name.trim(),
+      email: normalizedEmail,
+      phone: phone.trim(),
+      password,
+      role: role ?? "user",
+      walletAddress: typeof walletAddress === "string" ? walletAddress : "",
+    });
     const token = signToken(String(user._id));
 
     res.status(201).json({
@@ -43,8 +76,16 @@ router.post("/signup", async (req: Request, res: Response) => {
         profilePhoto: user.profilePhoto || "",
       },
     });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("[signup]", err);
+    if (err && typeof err === "object" && "code" in err && err.code === 11000) {
+      res.status(409).json({ message: "An account with this email already exists." });
+      return;
+    }
+    if (err && typeof err === "object" && "name" in err && err.name === "ValidationError") {
+      res.status(400).json({ message: "Please check the signup details and try again." });
+      return;
+    }
     res.status(500).json({ message: "Internal server error." });
   }
 });
@@ -59,7 +100,12 @@ router.post("/signin", async (req: Request, res: Response) => {
       return;
     }
 
-    const user = await User.findOne({ email });
+    if (typeof email !== "string" || typeof password !== "string") {
+      res.status(400).json({ message: "Email and password must be text values." });
+      return;
+    }
+
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user || !(await user.comparePassword(password))) {
       res.status(401).json({ message: "Invalid email or password." });
       return;

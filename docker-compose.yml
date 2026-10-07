@@ -1,0 +1,88 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo:6
+    container_name: airlink-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Persistent local Hardhat blockchain node
+  blockchain:
+    build: ./blockchain
+    container_name: airlink-blockchain
+    ports:
+      - "8545:8545"
+    volumes:
+      - ./blockchain:/app
+      - blockchain-node-modules:/app/node_modules
+    command: npx hardhat node --hostname 0.0.0.0
+
+  # One-shot job: waits for the node, then compiles/deploys/seeds contracts
+  blockchain-setup:
+    build: ./blockchain
+    container_name: airlink-blockchain-setup
+    depends_on:
+      - blockchain
+    volumes:
+      - ./blockchain:/app
+      - blockchain-node-modules:/app/node_modules
+    entrypoint: ["sh", "./wait-and-deploy.sh"]
+
+  backend:
+    build: ./backend
+    container_name: airlink-backend
+    ports:
+      - "3000:3000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      blockchain-setup:
+        condition: service_completed_successfully
+    volumes:
+      - ./backend:/app
+      - backend-node-modules:/app/node_modules
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/dewifi
+    # Bypasses the "dev" script's local mongod launch (we use the mongo service instead)
+    command: sh -c "npx ts-node-dev --respawn --transpile-only src/server.ts"
+
+  # One-shot job: waits for backend, then seeds MongoDB
+  backend-seed:
+    build: ./backend
+    container_name: airlink-backend-seed
+    depends_on:
+      - backend
+    volumes:
+      - ./backend:/app
+      - backend-node-modules:/app/node_modules
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/dewifi
+    entrypoint: ["sh", "./wait-and-seed.sh"]
+
+  frontend:
+    build: ./frontend
+    container_name: airlink-frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_PROXY_TARGET=http://backend:3000
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+    command: sh -c "npm run dev -- --host 0.0.0.0"
+
+volumes:
+  mongo-data:
+  blockchain-node-modules:
+  backend-node-modules:
+  frontend-node-modules:
