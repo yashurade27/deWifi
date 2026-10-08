@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { useAuth } from '@/context/AuthContext';
 import { useWeb3 } from '@/context/Web3Context';
@@ -54,6 +54,7 @@ interface SpotDetails {
 }
 
 interface HealthData {
+  spotId: string;
   isActive: boolean;
   isOnline: boolean;
   uptimePercent: number;
@@ -128,25 +129,43 @@ export default function BookWifi() {
   const [healthData, setHealthData] = useState<HealthData | null>(null);
   const [healthLoading, setHealthLoading] = useState(false);
   const [healthError, setHealthError] = useState<string | null>(null);
-  const [justVerified, setJustVerified] = useState(false);
+  const healthRequestRef = useRef(0);
 
   const checkHealth = async () => {
     if (!spotId || healthLoading) return;
+    const requestId = ++healthRequestRef.current;
+    const requestedSpotId = spotId;
     setHealthLoading(true);
     setHealthError(null);
-    setJustVerified(false);
     try {
       const res = await apiFetch<{ health: HealthData }>(`/api/spots/${spotId}/health`);
-      setHealthData(res.health);
-      setJustVerified(true);
-      // Clear the "just verified" tick after 3 seconds
-      setTimeout(() => setJustVerified(false), 3000);
+      const responseSpotId = String(res.health.spotId);
+      if (
+        requestId === healthRequestRef.current &&
+        requestedSpotId === spotId &&
+        responseSpotId === requestedSpotId
+      ) {
+        setHealthData(res.health);
+      } else if (requestId === healthRequestRef.current && requestedSpotId === spotId) {
+        setHealthError('Health data was returned for a different spot.');
+      }
     } catch (err: unknown) {
-      setHealthError(err instanceof Error ? err.message : 'Health check failed');
+      if (requestId === healthRequestRef.current && requestedSpotId === spotId) {
+        setHealthError(err instanceof Error ? err.message : 'Health check failed');
+      }
     } finally {
-      setHealthLoading(false);
+      if (requestId === healthRequestRef.current && requestedSpotId === spotId) {
+        setHealthLoading(false);
+      }
     }
   };
+
+  useEffect(() => {
+    healthRequestRef.current += 1;
+    setHealthData(null);
+    setHealthError(null);
+    setHealthLoading(false);
+  }, [spotId]);
 
   // Auto-run health check when spot loads
   useEffect(() => {
@@ -583,7 +602,7 @@ export default function BookWifi() {
                       onClick={checkHealth}
                       disabled={healthLoading}
                       className={`mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                        justVerified
+                        healthData?.freshness === 'verified'
                           ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
                           : healthLoading
                           ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
@@ -592,7 +611,7 @@ export default function BookWifi() {
                     >
                       {healthLoading ? (
                         <><RefreshCw size={11} className="animate-spin" /> Checking…</>
-                      ) : justVerified ? (
+                      ) : healthData?.freshness === 'verified' ? (
                         <><CheckCircle2 size={11} /> Verified! ✓</>
                       ) : (
                         <><RefreshCw size={11} /> Verify now</>
