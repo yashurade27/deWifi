@@ -181,8 +181,8 @@ export default function BookWifi() {
   };
 
   const subtotal = spot ? spot.pricePerHour * duration : 0;
-  const platformFee = Math.round(subtotal * 0.02 * 100) / 100;
-  const total = subtotal;
+  const platformFee = subtotal * 0.02;
+  const total = subtotal + platformFee;
 
   // Fetch on-chain cost whenever spot or duration changes
   useEffect(() => {
@@ -780,22 +780,20 @@ export default function BookWifi() {
               <div className="space-y-3 pb-4 border-b border-gray-200">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">
-                    {costEth
-                      ? `${(parseFloat(costEth) / duration).toFixed(6)} ETH/hr × ${duration} hr${duration > 1 ? 's' : ''}`
-                      : `${duration} hr${duration > 1 ? 's' : ''}`}
+                    {duration} hr{duration > 1 ? 's' : ''}
                   </span>
-                  <span>{costEth ? `${(parseFloat(costEth) * 0.98).toFixed(6)} ETH` : '—'}</span>
+                  <span>{spot ? `${subtotal.toFixed(6)} ETH` : '—'}</span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-500">
                   <span>Platform fee (2%)</span>
-                  <span>{costEth ? `${(parseFloat(costEth) * 0.02).toFixed(6)} ETH` : '—'}</span>
+                  <span>{spot ? `${platformFee.toFixed(6)} ETH` : '—'}</span>
                 </div>
               </div>
 
               <div className="flex justify-between py-4 text-lg font-bold">
                 <span>Total</span>
                 <span className="text-blue-600">
-                  {costEth ? `${costEth} ETH` : <span className="text-gray-400 text-sm font-normal">Loading…</span>}
+                  {spot ? `${total.toFixed(6)} ETH` : <span className="text-gray-400 text-sm font-normal">Loading…</span>}
                 </span>
               </div>
 
