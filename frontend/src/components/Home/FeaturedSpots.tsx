@@ -113,7 +113,7 @@ export const FeaturedSpots = () => {
                                         <span className="text-2xl font-black text-gray-900 dark:text-white">{spot.price} ETH</span>
                                         <span className="text-gray-600 dark:text-gray-600 text-xs ml-1">/hour</span>
                                     </div>
-                                    <Button className="rounded-full bg-[#0055FF] hover:bg-[#0044CC] text-sm font-bold px-5 h-9 shadow-md shadow-blue-500/20 hover:shadow-blue-500/40 transition-all duration-300">
+                                    <Button className="rounded-full bg-[#0055FF] hover:bg-[#0044CC] text-white text-sm font-bold px-5 h-9 shadow-md shadow-blue-500/20 hover:shadow-blue-500/40 transition-all duration-300">
                                         Book Now
                                     </Button>
                                 </CardFooter>
